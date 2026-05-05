@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Business Registration - Socio-Sanitary Excellence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6cf8bb",
+                    "on-secondary-fixed": "#002113",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#005236",
+                    "tertiary-container": "#653e00",
+                    "inverse-surface": "#213145",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "primary": "#003354",
+                    "outline": "#72777f",
+                    "on-surface": "#0b1c30",
+                    "tertiary": "#472a00",
+                    "on-tertiary-container": "#faa213",
+                    "on-primary-fixed-variant": "#0b4a75",
+                    "inverse-on-surface": "#eaf1ff",
+                    "primary-container": "#0b4a75",
+                    "secondary-fixed-dim": "#4edea3",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-primary-container": "#89baeb",
+                    "inverse-primary": "#9acbfd",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-primary-fixed": "#001d33",
+                    "on-background": "#0b1c30",
+                    "on-secondary-container": "#00714d",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "primary-fixed-dim": "#9acbfd",
+                    "on-tertiary-fixed": "#2a1700",
+                    "surface-variant": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#e5eeff",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c1c7d0",
+                    "on-surface-variant": "#42474e",
+                    "tertiary-fixed": "#ffddb8",
+                    "primary-fixed": "#cfe5ff",
+                    "surface-tint": "#2e628e",
+                    "surface": "#f8f9ff",
+                    "surface-container-high": "#dce9ff",
+                    "background": "#f8f9ff",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#006c49",
+                    "surface-container-low": "#eff4ff",
+                    "on-primary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#cbdbf5",
+                    "surface-bright": "#f8f9ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sm": "12px",
+                    "lg": "40px",
+                    "base": "8px",
+                    "margin": "32px",
+                    "gutter": "24px",
+                    "xs": "4px",
+                    "md": "24px",
+                    "xl": "64px"
+            },
+            "fontFamily": {
+                    "label-md": ["Public Sans"],
+                    "headline-lg": ["Public Sans"],
+                    "body-lg": ["Public Sans"],
+                    "headline-md": ["Public Sans"],
+                    "label-sm": ["Public Sans"],
+                    "headline-xl": ["Public Sans"],
+                    "body-sm": ["Public Sans"],
+                    "body-md": ["Public Sans"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { background-color: #f8f9ff; } /* surface */
+    </style>
+</head>
+<body class="antialiased text-on-surface">
+<!-- TopAppBar from JSON -->
+<header class="bg-white text-sky-900 border-b border-slate-200 fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16 font-public-sans text-sm font-medium tracking-tight">
+<div class="text-lg font-bold text-sky-900 flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+            Socio-Sanitary Excellence
+        </div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 hover:text-sky-800 transition-colors" href="#">Support</a>
+<a class="text-slate-600 hover:text-sky-800 transition-colors" href="#">Guidelines</a>
+<a class="text-slate-600 hover:text-sky-800 transition-colors" href="#">FAQ</a>
+<a class="text-sky-700 font-bold border-b-2 border-transparent hover:border-sky-700 transition-colors ml-4" href="#">Login</a>
+</nav>
+</header>
+<!-- SideNavBar from JSON (Stepper mapping) -->
+<aside class="bg-slate-50 text-sky-800 font-public-sans text-xs uppercase font-semibold h-screen w-64 border-r border-slate-100 fixed left-0 top-16 z-40 hidden md:flex flex-col transition-all duration-200">
+<div class="p-6 border-b border-slate-100">
+<h2 class="font-headline-md text-headline-md normal-case text-primary tracking-tight">Registration</h2>
+<p class="font-body-sm text-body-sm normal-case text-outline mt-1">Step-by-step setup</p>
+</div>
+<nav class="flex-1 py-4">
+<!-- Active Step: Account Type (Mapped to Company Info based on JSON provided structure) -->
+<a class="flex items-center gap-3 bg-sky-50 text-sky-800 border-r-4 border-sky-800 px-6 py-4 opacity-100" href="#">
+<span class="material-symbols-outlined">person_add</span>
+                Account Type
+            </a>
+<a class="flex items-center gap-3 text-slate-500 px-6 py-4 hover:bg-slate-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+                Personal Info
+            </a>
+<a class="flex items-center gap-3 text-slate-500 px-6 py-4 hover:bg-slate-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+                Verification
+            </a>
+<a class="flex items-center gap-3 text-slate-500 px-6 py-4 hover:bg-slate-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+                Finalize
+            </a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-16 min-h-screen flex flex-col">
+<div class="flex-1 flex flex-col items-center justify-center p-8">
+<div class="w-full max-w-2xl bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-8">
+<div class="mb-8 border-b border-outline-variant pb-6">
+<h1 class="font-headline-lg text-headline-lg text-primary">Company Information</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Please provide the details of your healthcare facility or organization to begin the verification process.</p>
+</div>
+<form class="space-y-6 flex flex-col">
+<!-- Single Column Form Structure as per Style Guidance -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="companyName">Company Name</label>
+<input class="w-full bg-surface text-on-surface border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:bg-surface-container-lowest focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="companyName" name="companyName" placeholder="e.g. Villa Salus RSA" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="companyType">Facility Type</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface text-on-surface border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:bg-surface-container-lowest focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="companyType" name="companyType">
+<option disabled="" selected="" value="">Select facility type...</option>
+<option value="rsa">RSA (Residenza Sanitaria Assistenziale)</option>
+<option value="clinic">Private Clinic</option>
+<option value="hospital">Public Hospital</option>
+<option value="homecare">Home Care Agency</option>
+<option value="other">Other Socio-Sanitary Facility</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="address">Registered Address</label>
+<input class="w-full bg-surface text-on-surface border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:bg-surface-container-lowest focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="address" name="address" placeholder="Street Address, City, Postal Code" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="vat">VAT Number (Partita IVA)</label>
+<input class="w-full bg-surface text-on-surface border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:bg-surface-container-lowest focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="vat" name="vat" placeholder="IT 01234567890" type="text"/>
+</div>
+<div class="pt-6 mt-6 border-t border-outline-variant flex justify-end">
+<button class="bg-primary text-on-primary font-label-md text-label-md px-8 py-3 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm flex items-center gap-2" type="button">
+                            Continue to Personal Info
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Footer from JSON -->
+<footer class="w-full bg-white border-t border-slate-100 py-6 px-8 flex flex-col md:flex-row justify-between items-center gap-4 mt-auto font-public-sans text-xs">
+<p class="text-slate-500">© 2024 Socio-Sanitary Excellence. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-slate-500 hover:text-sky-600 transition-opacity duration-150" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-sky-600 transition-opacity duration-150" href="#">Terms of Service</a>
+<a class="text-slate-500 hover:text-sky-600 transition-opacity duration-150" href="#">Help Center</a>
+<a class="text-slate-500 hover:text-sky-600 transition-opacity duration-150" href="#">Contact Support</a>
+</div>
+</footer>
+</main>
+</body></html>
