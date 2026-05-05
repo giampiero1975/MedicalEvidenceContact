@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HealthMatch - Job Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-container-highest": "#d3e4fe",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#d3e4fe",
+                      "on-secondary-container": "#00714d",
+                      "tertiary-container": "#653e00",
+                      "outline": "#72777f",
+                      "secondary-container": "#6cf8bb",
+                      "outline-variant": "#c1c7d0",
+                      "surface-bright": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed-dim": "#9acbfd",
+                      "on-background": "#0b1c30",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#cbdbf5",
+                      "on-tertiary-fixed": "#2a1700",
+                      "error": "#ba1a1a",
+                      "surface": "#f8f9ff",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "surface-tint": "#2e628e",
+                      "on-primary-fixed": "#001d33",
+                      "on-surface": "#0b1c30",
+                      "secondary-fixed-dim": "#4edea3",
+                      "surface-container": "#e5eeff",
+                      "on-primary-container": "#89baeb",
+                      "surface-container-high": "#dce9ff",
+                      "inverse-on-surface": "#eaf1ff",
+                      "inverse-primary": "#9acbfd",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-container": "#faa213",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#0b4a75",
+                      "secondary-fixed": "#6ffbbe",
+                      "primary": "#003354",
+                      "surface-container-low": "#eff4ff",
+                      "primary-fixed": "#cfe5ff",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#ffddb8",
+                      "on-surface-variant": "#42474e",
+                      "on-secondary-fixed": "#002113",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "inverse-surface": "#213145",
+                      "on-error": "#ffffff",
+                      "background": "#f8f9ff",
+                      "on-primary-fixed-variant": "#0b4a75",
+                      "tertiary": "#472a00",
+                      "secondary": "#006c49"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "lg": "40px",
+                      "gutter": "24px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "xs": "4px",
+                      "margin": "32px",
+                      "xl": "64px"
+              },
+              "fontFamily": {
+                      "label-md": [
+                              "Public Sans"
+                      ],
+                      "label-sm": [
+                              "Public Sans"
+                      ],
+                      "body-sm": [
+                              "Public Sans"
+                      ],
+                      "headline-lg": [
+                              "Public Sans"
+                      ],
+                      "headline-md": [
+                              "Public Sans"
+                      ],
+                      "body-md": [
+                              "Public Sans"
+                      ],
+                      "headline-xl": [
+                              "Public Sans"
+                      ],
+                      "body-lg": [
+                              "Public Sans"
+                      ]
+              },
+              "fontSize": {
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "14px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-xl": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar Shared Component (Mapped to Design Tokens) -->
+<nav class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container-lowest border-r border-outline-variant z-40 hidden md:flex">
+<!-- Header -->
+<div class="p-md flex flex-col gap-xs border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<span class="font-headline-md text-headline-md text-primary tracking-tight">HealthMatch</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-[40px]">Management Portal</span>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col h-full p-sm gap-xs overflow-y-auto mt-sm">
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+                    Dashboard
+                </a>
+<!-- Active State -->
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg bg-surface-container text-primary shadow-sm border-l-4 border-primary font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">search</span>
+                    Job Search
+                </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">calendar_month</span>
+                    Interviews
+                </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">assignment</span>
+                    Applications
+                </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">mail</span>
+                    Messages
+                </a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">monitoring</span>
+                    Admin Stats
+                </a>
+</div>
+<!-- CTA -->
+<div class="p-sm mt-auto border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Post New Job
+                </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<div class="flex-1 flex flex-col md:ml-64 h-full relative">
+<!-- TopAppBar Shared Component (Mapped to Design Tokens) -->
+<header class="w-full top-0 sticky z-30 bg-surface-container-lowest border-b border-outline-variant shadow-sm flex items-center justify-between px-md py-sm flex-shrink-0">
+<div class="flex items-center gap-sm">
+<button class="md:hidden text-on-surface-variant hover:bg-surface-container p-xs rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Search Bar Concept (On Left per JSON config) -->
+<div class="hidden sm:flex items-center bg-surface-container-low rounded-full px-sm py-xs border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all w-64">
+<span class="material-symbols-outlined text-outline-variant text-[20px] ml-xs mr-xs">search</span>
+<input class="bg-transparent border-none outline-none font-body-sm text-body-sm text-on-surface w-full placeholder-outline" placeholder="Search profiles..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant">
+<button class="hover:bg-surface-container p-xs rounded-full transition-colors flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full border border-surface-container-lowest"></span>
+</button>
+<button class="hover:bg-surface-container p-xs rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden ml-sm border border-outline-variant cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a medical professional in a well-lit modern clinic. The lighting is high-key and soft, creating a pristine, light-mode corporate aesthetic. The practitioner wears a subtle expression of confidence and empathy. The color palette focuses on clean whites and clinical light grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3vJQ4DQvKJznx0pROtDHFvBsqY8sJeUcLUeGefklTvv-61249BhYoqd2HGGAXCCyMOIqRmNdXSCG4CrrkCv5C76cl5mevqDCiJdLfMxpeFivkCFdHNVdZhvMimPUIzplxRTTytAoJ9AeSajS-9zG-FaRnyGPoWr6SvsSJhXj1GqUg7cikKJ7vJt9918LzWoNsa8TqTL8L10s2Cj28WHmrGKcBzk_542dx1oWnDeDEF8g5IGkzH8hTu8b6IPq7JVsshSaA-WHUxuhq"/>
+</div>
+</div>
+</header>
+<!-- Main Scrollable Area -->
+<main class="flex-1 overflow-y-auto p-md lg:p-margin bg-background">
+<div class="max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-sm">
+<div>
+<h1 class="font-headline-xl text-headline-xl text-on-background tracking-tight">Available Professionals</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Discover verified healthcare staff ready to work.</p>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant font-label-sm text-label-sm">
+<span>Sort by:</span>
+<select class="bg-surface-container-lowest border border-outline-variant rounded-md py-xs pl-sm pr-lg text-on-surface focus:ring-primary focus:border-primary font-label-sm text-label-sm cursor-pointer outline-none">
+<option>Most Recent</option>
+<option>Relevance</option>
+</select>
+</div>
+</div>
+<!-- 12-Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Filters Sidebar (3 Columns) -->
+<aside class="lg:col-span-3 flex flex-col gap-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-[0_2px_8px_-2px_rgba(11,74,117,0.08)] sticky top-md">
+<div class="flex items-center justify-between mb-md pb-sm border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-on-surface">Filters</h2>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Clear All</button>
+</div>
+<form class="flex flex-col gap-md">
+<!-- Category Filter -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Category</label>
+<div class="flex flex-col gap-xs">
+<label class="flex items-center gap-sm cursor-pointer p-xs rounded hover:bg-surface-container-low transition-colors group">
+<input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Nurse</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer p-xs rounded hover:bg-surface-container-low transition-colors group">
+<input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">OSS</span>
+</label>
+</div>
+</div>
+<!-- Contract Filter -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Contract</label>
+<div class="flex flex-col gap-xs">
+<label class="flex items-center gap-sm cursor-pointer p-xs rounded hover:bg-surface-container-low transition-colors group">
+<input checked="" class="w-4 h-4 border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" name="contract" type="radio"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Full-time</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer p-xs rounded hover:bg-surface-container-low transition-colors group">
+<input class="w-4 h-4 border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" name="contract" type="radio"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Part-time</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer p-xs rounded hover:bg-surface-container-low transition-colors group">
+<input class="w-4 h-4 border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" name="contract" type="radio"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Shift Based</span>
+</label>
+</div>
+</div>
+<!-- Location Filter -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Location</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-sm text-outline-variant text-[20px] pointer-events-none">location_on</span>
+<input class="w-full bg-surface-bright border border-outline-variant rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-outline-variant" type="text" value="Milan"/>
+</div>
+</div>
+<button class="mt-sm w-full bg-surface-container text-primary font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors border border-transparent" type="button">
+                                        Apply Filters
+                                    </button>
+</form>
+</div>
+</aside>
+<!-- Main Feed (9 Columns) -->
+<div class="lg:col-span-9 flex flex-col gap-md">
+<!-- Job Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col gap-sm shadow-[0_4px_12px_-4px_rgba(11,74,117,0.05)] hover:shadow-[0_8px_24px_-8px_rgba(11,74,117,0.12)] hover:border-primary-fixed-dim transition-all duration-300 group cursor-pointer relative overflow-hidden">
+<!-- Subtle accent border top -->
+<div class="absolute top-0 left-0 w-full h-1 bg-secondary-fixed"></div>
+<div class="flex justify-between items-start pt-xs">
+<div class="flex flex-col items-start gap-xs">
+<!-- Semi-pill Status Badge -->
+<span class="inline-flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-sm py-[2px] font-label-sm text-label-sm tracking-wide">
+                                            Nuova
+                                        </span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface group-hover:text-primary transition-colors leading-tight">Senior Registered Nurse</h3>
+<p class="font-body-md text-body-md text-on-surface-variant font-medium">Ospedale San Raffaele</p>
+</div>
+<button class="text-outline-variant hover:text-primary p-xs rounded-full hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-md font-body-sm text-body-sm text-on-surface-variant mt-sm bg-surface-container-low w-fit px-sm py-xs rounded-md">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-primary">location_on</span> Milan</div>
+<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-primary">work</span> Full-time</div>
+</div>
+<div class="mt-sm pt-sm border-t border-outline-variant flex justify-between items-center">
+<div class="text-label-sm font-label-sm text-outline">Posted 2 hours ago</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md py-sm px-lg rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm active:scale-95 duration-150">
+                                        View Details
+                                    </button>
+</div>
+</div>
+<!-- Job Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col gap-sm shadow-[0_4px_12px_-4px_rgba(11,74,117,0.05)] hover:shadow-[0_8px_24px_-8px_rgba(11,74,117,0.12)] hover:border-primary-fixed-dim transition-all duration-300 group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-secondary-fixed"></div>
+<div class="flex justify-between items-start pt-xs">
+<div class="flex flex-col items-start gap-xs">
+<span class="inline-flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-sm py-[2px] font-label-sm text-label-sm tracking-wide">
+                                            Nuova
+                                        </span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface group-hover:text-primary transition-colors leading-tight">OSS - Night Shift Specialist</h3>
+<p class="font-body-md text-body-md text-on-surface-variant font-medium">Clinica La Madonnina</p>
+</div>
+<button class="text-outline-variant hover:text-primary p-xs rounded-full hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-md font-body-sm text-body-sm text-on-surface-variant mt-sm bg-surface-container-low w-fit px-sm py-xs rounded-md">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-primary">location_on</span> Milan</div>
+<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-primary">work</span> Full-time</div>
+</div>
+<div class="mt-sm pt-sm border-t border-outline-variant flex justify-between items-center">
+<div class="text-label-sm font-label-sm text-outline">Posted 5 hours ago</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md py-sm px-lg rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm active:scale-95 duration-150">
+                                        View Details
+                                    </button>
+</div>
+</div>
+<!-- Job Card 3 (No Badge) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col gap-sm shadow-[0_2px_8px_-2px_rgba(11,74,117,0.03)] hover:shadow-[0_8px_24px_-8px_rgba(11,74,117,0.12)] hover:border-primary-fixed-dim transition-all duration-300 group cursor-pointer relative overflow-hidden opacity-90 hover:opacity-100">
+<div class="flex justify-between items-start pt-xs">
+<div class="flex flex-col items-start gap-xs mt-sm"> <!-- Extra margin to align without badge -->
+<h3 class="font-headline-lg text-headline-lg text-on-surface group-hover:text-primary transition-colors leading-tight">Pediatric Nurse Practitioner</h3>
+<p class="font-body-md text-body-md text-on-surface-variant font-medium">Policlinico di Milano</p>
+</div>
+<button class="text-outline-variant hover:text-primary p-xs rounded-full hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap items-center gap-md font-body-sm text-body-sm text-on-surface-variant mt-sm bg-surface-container-low w-fit px-sm py-xs rounded-md">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-outline">location_on</span> Milan</div>
+<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-outline">work</span> Full-time</div>
+</div>
+<div class="mt-sm pt-sm border-t border-outline-variant flex justify-between items-center">
+<div class="text-label-sm font-label-sm text-outline">Posted 2 days ago</div>
+<button class="bg-surface-container-high text-primary font-label-md text-label-md py-sm px-lg rounded-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors active:scale-95 duration-150">
+                                        View Details
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

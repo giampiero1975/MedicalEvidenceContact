@@ -1,0 +1,311 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>HealthMatch Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-container-highest": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-container": "#00714d",
+                        "tertiary-container": "#653e00",
+                        "outline": "#72777f",
+                        "secondary-container": "#6cf8bb",
+                        "outline-variant": "#c1c7d0",
+                        "surface-bright": "#f8f9ff",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#9acbfd",
+                        "on-background": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed": "#2a1700",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-tint": "#2e628e",
+                        "on-primary-fixed": "#001d33",
+                        "on-surface": "#0b1c30",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container": "#e5eeff",
+                        "on-primary-container": "#89baeb",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "inverse-primary": "#9acbfd",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#faa213",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#0b4a75",
+                        "secondary-fixed": "#6ffbbe",
+                        "primary": "#003354",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#cfe5ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-surface-variant": "#42474e",
+                        "on-secondary-fixed": "#002113",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "inverse-surface": "#213145",
+                        "on-error": "#ffffff",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed-variant": "#0b4a75",
+                        "tertiary": "#472a00",
+                        "secondary": "#006c49"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "lg": "40px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "sm": "12px",
+                        "xs": "4px",
+                        "margin": "32px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-xl": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-slate-50 border-r border-gray-200 z-40">
+<div class="p-6">
+<h1 class="text-lg font-black tracking-tight text-sky-900 font-headline-md">HealthMatch</h1>
+<p class="text-sm font-medium text-gray-500 font-label-sm mt-1">Management Portal</p>
+</div>
+<nav class="flex flex-col h-full p-4 gap-2 font-public-sans text-sm font-medium">
+<a class="flex items-center gap-3 px-4 py-3 bg-white text-sky-900 shadow-sm border-l-4 border-sky-900 rounded-r-lg font-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-sky-700 hover:bg-gray-100 transition-all rounded-lg font-label-md" href="#">
+<span class="material-symbols-outlined">search</span>
+                Job Search
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-sky-700 hover:bg-gray-100 transition-all rounded-lg font-label-md" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+                Interviews
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-sky-700 hover:bg-gray-100 transition-all rounded-lg font-label-md" href="#">
+<span class="material-symbols-outlined">assignment</span>
+                Applications
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-sky-700 hover:bg-gray-100 transition-all rounded-lg font-label-md" href="#">
+<span class="material-symbols-outlined">mail</span>
+                Messages
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-sky-700 hover:bg-gray-100 transition-all rounded-lg font-label-md" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+                Admin Stats
+            </a>
+<div class="mt-auto pt-4">
+<button class="w-full bg-primary text-on-primary font-label-md py-3 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                    Post New Job
+                </button>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-white shadow-sm font-public-sans antialiased sticky top-0 z-50">
+<div class="flex items-center justify-between px-6 py-4 w-full h-16">
+<div class="flex-1 flex items-center">
+<!-- Search Bar placeholder as per JSON 'search_bar: on_left' -->
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm text-on-surface focus:ring-2 focus:ring-primary-container outline-none placeholder-outline" placeholder="Search..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4 text-sky-900">
+<button class="p-2 hover:bg-gray-50 rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-gray-50 rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-label-md ml-2 border border-outline-variant overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a female healthcare worker wearing standard blue medical scrubs, set against a clean, bright, white clinical background. The lighting is soft and even, typical of a modern hospital setting. She has a subtle, confident smile, conveying reliability and empathy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCozv0XP_A9GH7xzvkEVm42Xo1nzYaz5_CEvxvaUZJBXIuhUEDm_bk2AyMY3PEEcd_ctTzu-FUDWA22Q1A_jBByppO3-E006O0tfBSwFHOFrtRG-hm9N0ZA2rO9URKgR4GN0iGxzlfesffj6KMx5UrtWyMC1jE_OVavxsbXUej1f7iGtvWJOmkXxUe7ZUKdtgKQElarXOweux5xfB2LdPaO0G1RY5mrckrzipEQl1683HKgkbmK9Y7rJA9ql1F4ipik9DDvuyqgRSu-">
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<main class="flex-1 p-margin">
+<div class="max-w-7xl mx-auto">
+<header class="mb-lg">
+<h2 class="font-headline-lg text-on-surface">Welcome back, Sarah</h2>
+<p class="font-body-md text-on-surface-variant mt-1">Here is what is happening with your career profile today.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Profile Completion Card -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-[0_4px_24px_rgba(11,74,117,0.06)] flex flex-col justify-between">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-on-surface flex items-center gap-2">
+                                    Profile Strength
+                                    <span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                        Excellent
+                                    </span>
+</h3>
+<p class="font-body-sm text-on-surface-variant mt-2 max-w-md">Your profile is highly visible to top tier facilities.</p>
+</div>
+<div class="text-right">
+<span class="font-headline-xl text-primary">80%</span>
+</div>
+</div>
+<div class="mb-6">
+<div class="h-3 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 80%;"></div>
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-sm border border-outline-variant/50 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-0.5" style="font-variation-settings: &quot;FILL&quot; 1;">check_circle</span>
+<div>
+<h4 class="font-label-md text-on-surface">Moodle Certification Synced</h4>
+<p class="font-body-sm text-on-surface-variant mt-1">Your 'Advanced Patient Care' certificate was successfully imported from Moodle LMS. This adds +15% to your visibility score.</p>
+</div>
+</div>
+</div>
+<!-- Upcoming Interviews Card -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 bg-primary-container text-on-primary-container rounded-xl p-md shadow-[0_4px_24px_rgba(11,74,117,0.1)] relative overflow-hidden flex flex-col">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: &quot;FILL&quot; 1;">calendar_month</span>
+</div>
+<div class="relative z-10 flex-1">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary-fixed">schedule</span>
+<h3 class="font-label-md text-primary-fixed uppercase tracking-wider">Next Interview</h3>
+</div>
+<h4 class="font-headline-md text-on-primary mb-1">Tomorrow</h4>
+<p class="font-headline-lg text-primary-fixed font-light mb-6">10:00 AM</p>
+<div class="bg-primary/30 rounded-lg p-sm border border-primary-fixed/20">
+<p class="font-label-md text-on-primary">Senior Clinical Nurse</p>
+<p class="font-body-sm text-primary-fixed-dim mt-1">St. Jude Medical Center • Virtual</p>
+</div>
+</div>
+</div>
+<!-- Active Applications Summary -->
+<div class="col-span-12 md:col-span-6 lg:col-span-5 bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-[0_4px_24px_rgba(11,74,117,0.06)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-on-surface">Active Applications</h3>
+<div class="h-10 w-10 rounded-full bg-surface-container-highest text-primary-container flex items-center justify-center font-headline-md">
+                                3
+                            </div>
+</div>
+<div class="space-y-4">
+<!-- App Item -->
+<div class="flex items-center justify-between p-3 hover:bg-surface-bright rounded-lg transition-colors border border-transparent hover:border-outline-variant/30 cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">local_hospital</span>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">ER Specialist</h4>
+<p class="font-body-sm text-on-surface-variant">General Hospital</p>
+</div>
+</div>
+<span class="bg-surface-container-high text-on-surface px-2 py-1 rounded-md font-label-sm">Under Review</span>
+</div>
+<!-- App Item -->
+<div class="flex items-center justify-between p-3 hover:bg-surface-bright rounded-lg transition-colors border border-transparent hover:border-outline-variant/30 cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">medical_services</span>
+</div>
+<div>
+<h4 class="font-label-md text-on-surface">Night Supervisor</h4>
+<p class="font-body-sm text-on-surface-variant">CareBridge Facility</p>
+</div>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded-md font-label-sm">Interviewing</span>
+</div>
+</div>
+</div>
+<!-- Quick Job Search Widget -->
+<div class="col-span-12 lg:col-span-7 bg-surface-container-highest rounded-xl p-md border border-outline-variant shadow-[0_4px_24px_rgba(11,74,117,0.06)] flex flex-col justify-center">
+<h3 class="font-headline-md text-on-surface mb-2">Quick Job Search</h3>
+<p class="font-body-sm text-on-surface-variant mb-6">Find your next role in our network of verified healthcare facilities.</p>
+<div class="flex flex-col sm:flex-row gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">work</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-3 pl-12 pr-4 text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none placeholder-outline-variant" placeholder="Job title or specialty" type="text">
+</div>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">location_on</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-3 pl-12 pr-4 text-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none placeholder-outline-variant" placeholder="Location or ZIP" type="text">
+</div>
+<button class="bg-primary hover:bg-primary/90 text-on-primary font-label-md py-3 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap">
+<span class="material-symbols-outlined">search</span>
+                                Find Jobs
+                            </button>
+</div>
+<div class="mt-4 flex gap-2 flex-wrap">
+<span class="font-label-sm text-on-surface-variant mr-2 self-center">Popular:</span>
+<span class="px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded-full font-label-sm text-on-surface cursor-pointer hover:bg-surface-container-low">Registered Nurse</span>
+<span class="px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded-full font-label-sm text-on-surface cursor-pointer hover:bg-surface-container-low">Phlebotomist</span>
+<span class="px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded-full font-label-sm text-on-surface cursor-pointer hover:bg-surface-container-low">Social Worker</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+
+</body></html>
