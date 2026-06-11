@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\ProfessionalDocumentController;
 use Illuminate\Http\Request;
 
 /*
@@ -67,4 +68,5 @@ Route::middleware([
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
+    Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
 });

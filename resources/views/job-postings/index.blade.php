@@ -27,6 +27,60 @@
             @endsession
 
             @if ($role === 'professional')
+                @php
+                    $nationality = strtolower(trim(auth()->user()->nationality ?? ''));
+                    $isItalian = in_array($nationality, ['italiana', 'italiano', 'italia', 'italian'], true);
+                @endphp
+
+                <section class="mb-8 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                    <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Documenti professionali</h3>
+                            <p class="mt-1 text-sm text-gray-600">Carica attestato ATA e, se richiesto dalla nazionalita, il permesso di soggiorno.</p>
+                        </div>
+                    </div>
+
+                    <x-validation-errors class="mt-5" />
+
+                    <form method="POST" action="{{ route('professional-documents.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-5 lg:grid-cols-2">
+                        @csrf
+
+                        <div class="rounded-md border border-gray-200 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <x-label for="ata_certificate_document" value="Attestato ATA" />
+                                    <p class="mt-1 text-sm text-gray-600">PDF, JPG o PNG fino a 5 MB.</p>
+                                </div>
+                                @if (auth()->user()->ata_certificate_path)
+                                    <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">Caricato</span>
+                                @endif
+                            </div>
+                            <input id="ata_certificate_document" type="file" name="ata_certificate_document" accept=".pdf,.jpg,.jpeg,.png" class="mt-4 block w-full text-sm text-gray-700" />
+                        </div>
+
+                        @if (! $isItalian)
+                            <div class="rounded-md border border-gray-200 p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <x-label for="residence_permit_document" value="Permesso di soggiorno" />
+                                        <p class="mt-1 text-sm text-gray-600">Richiesto per nazionalita diversa da italiana.</p>
+                                    </div>
+                                    @if (auth()->user()->residence_permit_path)
+                                        <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">Caricato</span>
+                                    @endif
+                                </div>
+                                <input id="residence_permit_document" type="file" name="residence_permit_document" accept=".pdf,.jpg,.jpeg,.png" class="mt-4 block w-full text-sm text-gray-700" />
+                            </div>
+                        @endif
+
+                        <div class="lg:col-span-2 flex justify-end border-t border-gray-100 pt-5">
+                            <x-button>
+                                Salva documenti
+                            </x-button>
+                        </div>
+                    </form>
+                </section>
+
                 <section class="mb-8 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
                     <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                         <div>
