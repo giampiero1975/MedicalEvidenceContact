@@ -25,7 +25,7 @@ class JobApplicationController extends Controller
         ]);
 
         return redirect()
-            ->route('job-postings.index')
+            ->route('dashboard')
             ->with('status', 'Candidatura inviata. Annuncio aggiunto alla tua lista.');
     }
 }

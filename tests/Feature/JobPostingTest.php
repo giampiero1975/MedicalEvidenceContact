@@ -82,11 +82,27 @@ class JobPostingTest extends TestCase
             'status' => 'expired',
         ]);
 
-        $response = $this->actingAs($professional)->get('/dashboard');
+        $response = $this->actingAs($professional)->get('/annunci');
 
         $response->assertStatus(200);
         $response->assertSee('OSS struttura residenziale');
         $response->assertDontSee('Annuncio scaduto');
+    }
+
+
+    public function test_professional_announcements_page_does_not_show_dashboard_sections(): void
+    {
+        $professional = User::factory()->create([
+            'role' => 'professional',
+        ]);
+
+        $this->actingAs($professional)
+            ->get(route('job-postings.index'))
+            ->assertOk()
+            ->assertSee('Annunci disponibili')
+            ->assertDontSee('Documenti professionali')
+            ->assertDontSee('Esperienze e percorsi di studio')
+            ->assertDontSee('Le tue candidature');
     }
 
     public function test_professional_user_cannot_create_job_postings(): void
@@ -124,7 +140,7 @@ class JobPostingTest extends TestCase
         $response = $this->actingAs($professional)
             ->post(route('job-applications.store', $jobPosting));
 
-        $response->assertRedirect(route('job-postings.index', absolute: false));
+        $response->assertRedirect(route('dashboard', absolute: false));
         $this->assertDatabaseHas('job_applications', [
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,

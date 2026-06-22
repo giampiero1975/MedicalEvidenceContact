@@ -10,6 +10,7 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\ProfessionalDocumentController;
 use App\Http\Controllers\ProfessionalProfileItemController;
+use App\Http\Controllers\ProfessionalDashboardController;
 use Illuminate\Http\Request;
 
 /*
@@ -49,6 +50,10 @@ Route::middleware([
     Route::get('/dashboard', function (Request $request) {
         if ($request->user()->role === 'admin') {
             return redirect()->route('admin.dashboard');
+        }
+
+        if ($request->user()->role === 'professional') {
+            return app(ProfessionalDashboardController::class)($request);
         }
 
         return app(JobPostingController::class)->index($request);
