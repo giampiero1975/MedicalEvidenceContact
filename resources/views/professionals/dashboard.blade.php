@@ -202,6 +202,88 @@
                             @endforeach
                         </div>
                     @endif
-                </section>        </div>
+                </section>
+
+                <section class="mb-8 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                    <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Colloqui</h3>
+                            <p class="mt-1 text-sm text-gray-600">Inviti ricevuti, slot proposti e prossimi colloqui saranno gestiti da questa area.</p>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">Anteprima frontend</span>
+                    </div>
+
+                    <div class="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                        <article class="rounded-md border border-indigo-100 bg-indigo-50/60 p-4">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase text-indigo-700">Invito da confermare</p>
+                                    <h4 class="mt-1 text-base font-semibold text-gray-900">Operatore Socio Sanitario - RSA Milano Nord</h4>
+                                    <p class="mt-1 text-sm text-gray-600">Seleziona uno degli slot proposti dal business e conferma la richiesta di colloquio.</p>
+                                </div>
+                                <span class="inline-flex w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                                    Invito ricevuto
+                                </span>
+                            </div>
+
+                            <div class="mt-4 grid gap-3 md:grid-cols-3">
+                                <label class="flex cursor-not-allowed flex-col rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                    <span class="text-sm font-semibold text-gray-900">Martedi</span>
+                                    <span class="mt-1 text-sm text-gray-600">10:00 - 10:30</span>
+                                    <span class="mt-2 text-xs font-semibold text-indigo-700">Videochiamata</span>
+                                </label>
+                                <label class="flex cursor-not-allowed flex-col rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                    <span class="text-sm font-semibold text-gray-900">Mercoledi</span>
+                                    <span class="mt-1 text-sm text-gray-600">15:00 - 15:45</span>
+                                    <span class="mt-2 text-xs font-semibold text-indigo-700">In presenza</span>
+                                </label>
+                                <label class="flex cursor-not-allowed flex-col rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                    <span class="text-sm font-semibold text-gray-900">Venerdi</span>
+                                    <span class="mt-1 text-sm text-gray-600">09:00 - 09:30</span>
+                                    <span class="mt-2 text-xs font-semibold text-indigo-700">Telefono</span>
+                                </label>
+                            </div>
+
+                            <div class="mt-4 flex flex-col gap-3 border-t border-indigo-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p class="text-sm text-gray-600">Alla conferma lo stato passera a "Richiesto" e il business dovra accettare o rifiutare.</p>
+                                <button type="button" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white opacity-60" disabled>
+                                    Conferma colloquio
+                                </button>
+                            </div>
+                        </article>
+
+                        <aside class="rounded-md border border-gray-200 p-4">
+                            <h4 class="text-sm font-semibold text-gray-900">Stati colloquio</h4>
+                            <div class="mt-3 space-y-3 text-sm">
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Richiesto</p>
+                                        <p class="text-gray-600">Slot scelto, in attesa del business.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Accettato</p>
+                                        <p class="text-gray-600">Colloquio confermato e contatti sbloccati.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Annullato o rifiutato</p>
+                                        <p class="text-gray-600">Serve nuova proposta o riprogrammazione.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 rounded-md bg-gray-50 p-3 text-sm text-gray-600">
+                                I contatti restano nascosti finche il colloquio non viene accettato da entrambe le parti.
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+        </div>
     </div>
 </x-app-layout>

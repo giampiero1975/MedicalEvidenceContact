@@ -70,23 +70,28 @@ Legenda:
   - Riferimenti: RF-044.
 - [ ] Rifiuto candidatura con email automatica al professionista.
   - Riferimenti: RF-046, RF-059.
-- [ ] Invito a colloquio da candidatura.
+- [~] Invito a colloquio da candidatura.
   - Riferimenti: RF-047, RF-049, US-007.
+  - Stato: frontend presente nella lista candidature business; mancano salvataggio slot, invio email e cambio stato candidatura.
 
 ### Colloqui e calendario
 
-- [ ] Creazione slot colloquio da business.
+- [~] Creazione slot colloquio da business.
   - Riferimenti: RF-048, US-007, INT-001.
+  - Stato: interfaccia frontend con data, ora inizio/fine e modalita; mancano modello dati, controller, validazione e integrazione calendario.
 - [ ] Invio slot al professionista con link diretto.
   - Riferimenti: RF-049, RF-050.
-- [ ] Conferma/rifiuto slot scelto dal professionista.
+- [~] Conferma/rifiuto slot scelto dal professionista.
   - Riferimenti: RF-052, RF-053.
-- [ ] Stati colloquio: richiesto, accettato, rifiutato, completato, annullato.
+  - Stato: frontend professionista con scelta slot e pulsante conferma non attivo; manca persistenza e gestione richieste business.
+- [~] Stati colloquio: richiesto, accettato, rifiutato, completato, annullato.
   - Riferimenti: RF-055.
+  - Stato: stati rappresentati in UI; manca tabella/stato reale nel database e transizioni lato backend.
 - [ ] Riprogrammazione e annullamento colloquio.
   - Riferimenti: RF-056, RF-057, US-016.
-- [ ] Sblocco contatti solo a colloquio accettato e con consenso.
+- [~] Sblocco contatti solo a colloquio accettato e con consenso.
   - Riferimenti: RF-054, US-009, US-010, RNF-014.
+  - Stato: avviso frontend presente e contatti ancora non esposti; manca logica di consenso/sblocco.
 
 ### Dashboard business
 
@@ -97,8 +102,9 @@ Legenda:
   - Riferimenti: RF-064.
 - [ ] Tab candidature aggregate.
   - Riferimenti: RF-064.
-- [ ] Tab colloqui.
+- [~] Tab colloqui.
   - Riferimenti: RF-064.
+  - Stato: primo blocco colloquio presente nella lista candidature business; manca tab dedicato aggregato.
 - [~] Tab/area POC.
   - Riferimenti: RF-064, RF-065.
 
@@ -121,9 +127,9 @@ Legenda:
 
 - [~] Modifica dati anagrafici e indirizzo.
   - Riferimenti: RF-015.
-- [ ] Esperienze professionali CRUD.
+- [x] Esperienze professionali CRUD.
   - Riferimenti: RF-016.
-- [ ] Formazione CRUD.
+- [x] Formazione CRUD.
   - Riferimenti: RF-016.
 - [ ] Lingue conosciute CRUD.
   - Riferimenti: RF-016.
@@ -161,8 +167,9 @@ Legenda:
   - Riferimenti: RF-035, RF-037, RF-039.
 - [~] Dettaglio annuncio.
   - Riferimenti: RF-039.
-- [ ] Filtri ricerca annunci: keyword, localita, tipo contratto, categoria azienda, range retribuzione, categoria professionale, data pubblicazione.
+- [~] Filtri ricerca annunci: keyword, localita, tipo contratto, categoria azienda, range retribuzione, categoria professionale, data pubblicazione.
   - Riferimenti: RF-035, US-004.
+  - Stato: filtri frontend/backend presenti; categoria professionale cercata su titolo e competenze finche non esiste un campo dedicato.
 - [ ] Paginazione risultati 20 per pagina.
   - Riferimenti: RF-036.
 - [ ] Badge nuova pubblicazione ultimi 3 giorni.
@@ -189,16 +196,20 @@ Legenda:
 
 ### Colloqui
 
-- [ ] Ricezione invito a colloquio con lista slot.
+- [~] Ricezione invito a colloquio con lista slot.
   - Riferimenti: RF-050, RF-051, US-008.
-- [ ] Selezione slot e invio richiesta al business.
+  - Stato: frontend dashboard professionista presente con slot dimostrativi; manca recupero inviti reali.
+- [~] Selezione slot e invio richiesta al business.
   - Riferimenti: RF-052.
-- [ ] Visualizzazione colloqui in dashboard.
+  - Stato: selezione rappresentata in UI con pulsante disabilitato; manca endpoint di conferma.
+- [~] Visualizzazione colloqui in dashboard.
   - Riferimenti: RF-062.
+  - Stato: sezione "Colloqui" aggiunta alla dashboard professionista.
 - [ ] Riprogrammazione/annullamento colloquio accettato.
   - Riferimenti: RF-056, US-016.
-- [ ] Visualizzazione contatti solo quando colloquio accettato.
+- [~] Visualizzazione contatti solo quando colloquio accettato.
   - Riferimenti: RF-054, US-010, RNF-014.
+  - Stato: avviso privacy presente e contatti non renderizzati; manca sblocco condizionale su stato accettato.
 
 ### Dashboard professionista
 
@@ -208,9 +219,9 @@ Legenda:
   - Riferimenti: RF-062.
 - [ ] Tab candidature con filtri.
   - Riferimenti: RF-062.
-- [ ] Tab colloqui.
+- [~] Tab colloqui.
   - Riferimenti: RF-062.
-- [ ] Tab inviti ricevuti.
+- [~] Tab inviti ricevuti.
   - Riferimenti: RF-062.
 - [ ] Tab annunci salvati.
   - Riferimenti: RF-062.
@@ -235,6 +246,6 @@ Legenda:
 
 ## Ultimo aggiornamento
 
-- Data: 2026-06-16
+- Data: 2026-06-23
 - Ambiente principale: `C:\laragon\www\MedicalEvidenceContact`
 - Stato applicativo ultimo controllo: `http://medicalevidencecontact.test` raggiungibile

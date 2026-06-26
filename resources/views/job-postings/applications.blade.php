@@ -123,6 +123,66 @@
                                     </span>
                                 </div>
                             </div>
+
+                            <div class="mt-6 rounded-md border border-indigo-100 bg-indigo-50/60 p-4">
+                                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-900">Fissa colloquio</h4>
+                                        <p class="mt-1 text-sm leading-6 text-gray-600">
+                                            Prepara gli slot da proporre al professionista. Nel prossimo step questa azione inviera l'invito e cambiera lo stato della candidatura.
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                                        Frontend preview
+                                    </span>
+                                </div>
+
+                                <div class="mt-4 grid gap-3 lg:grid-cols-3">
+                                    <label class="block">
+                                        <span class="text-sm font-semibold text-gray-800">Data</span>
+                                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+                                    </label>
+                                    <label class="block">
+                                        <span class="text-sm font-semibold text-gray-800">Ora inizio</span>
+                                        <input type="time" class="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+                                    </label>
+                                    <label class="block">
+                                        <span class="text-sm font-semibold text-gray-800">Ora fine</span>
+                                        <input type="time" class="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+                                    </label>
+                                    <label class="block lg:col-span-2">
+                                        <span class="text-sm font-semibold text-gray-800">Modalita colloquio</span>
+                                        <select class="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+                                            <option>Videochiamata</option>
+                                            <option>In presenza</option>
+                                            <option>Telefono</option>
+                                        </select>
+                                    </label>
+                                    <div class="flex items-end">
+                                        <button type="button" class="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white opacity-60" disabled>
+                                            Proponi slot
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 grid gap-3 md:grid-cols-3">
+                                    <div class="rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                        <p class="text-xs font-semibold uppercase text-gray-500">Slot esempio</p>
+                                        <p class="mt-1 text-sm font-semibold text-gray-900">Martedi 10:00 - 10:30</p>
+                                        <p class="mt-1 text-sm text-gray-600">Videochiamata</p>
+                                    </div>
+                                    <div class="rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                        <p class="text-xs font-semibold uppercase text-gray-500">Slot esempio</p>
+                                        <p class="mt-1 text-sm font-semibold text-gray-900">Mercoledi 15:00 - 15:45</p>
+                                        <p class="mt-1 text-sm text-gray-600">In presenza</p>
+                                    </div>
+                                    <div class="rounded-md bg-white p-3 ring-1 ring-indigo-100">
+                                        <p class="text-xs font-semibold uppercase text-gray-500">Stato previsto</p>
+                                        <p class="mt-1 text-sm font-semibold text-gray-900">Invito a colloquio inviato</p>
+                                        <p class="mt-1 text-sm text-gray-600">Contatti ancora nascosti.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </article>
                     @endforeach
                 </div>

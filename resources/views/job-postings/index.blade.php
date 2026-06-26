@@ -26,6 +26,83 @@
                 </div>
             @endsession
 
+            <section class="mb-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
+                <form method="GET" action="{{ route('job-postings.index') }}" class="grid gap-4 lg:grid-cols-12">
+                    <div class="lg:col-span-3">
+                        <x-label for="keyword" value="Keyword" />
+                        <x-input id="keyword" class="mt-1 block w-full" type="search" name="keyword" :value="$filters['keyword'] ?? ''" placeholder="Titolo, descrizione, competenze" />
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <x-label for="location" value="Localita" />
+                        <x-input id="location" class="mt-1 block w-full" type="search" name="location" :value="$filters['location'] ?? ''" placeholder="Citta, provincia, sede" />
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <x-label for="contract_type" value="Tipo contratto" />
+                        <select id="contract_type" name="contract_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Tutti</option>
+                            @foreach ($contractTypes as $contractType)
+                                <option value="{{ $contractType }}" @selected(($filters['contract_type'] ?? '') === $contractType)>{{ $contractType }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <x-label for="professional_category" value="Categoria professionale" />
+                        <x-input id="professional_category" class="mt-1 block w-full" type="search" name="professional_category" :value="$filters['professional_category'] ?? ''" placeholder="OSS, Infermiere, Fisioterapista" />
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <x-label for="company_category" value="Categoria azienda" />
+                        <x-input id="company_category" class="mt-1 block w-full" type="search" name="company_category" :value="$filters['company_category'] ?? ''" placeholder="RSA, clinica, farmacia" />
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <x-label for="salary_min" value="Retribuzione da" />
+                        <x-input id="salary_min" class="mt-1 block w-full" type="number" min="0" step="100" name="salary_min" :value="$filters['salary_min'] ?? ''" />
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <x-label for="salary_max" value="Retribuzione a" />
+                        <x-input id="salary_max" class="mt-1 block w-full" type="number" min="0" step="100" name="salary_max" :value="$filters['salary_max'] ?? ''" />
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <x-label for="published_from" value="Pubblicato da" />
+                        <x-input id="published_from" class="mt-1 block w-full" type="date" name="published_from" :value="$filters['published_from'] ?? ''" />
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <x-label for="published_to" value="Pubblicato a" />
+                        <x-input id="published_to" class="mt-1 block w-full" type="date" name="published_to" :value="$filters['published_to'] ?? ''" />
+                    </div>
+
+                    @if ($role === 'business')
+                        <div class="lg:col-span-1">
+                            <x-label for="status" value="Stato" />
+                            <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Tutti</option>
+                                <option value="active" @selected(($filters['status'] ?? '') === 'active')>Attivo</option>
+                                <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Scaduto</option>
+                            </select>
+                        </div>
+                    @endif
+
+                    <div class="flex items-end gap-2 lg:col-span-12">
+                        <x-button>
+                            Filtra
+                        </x-button>
+                        <a href="{{ route('job-postings.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50">
+                            Pulisci
+                        </a>
+                        <span class="ml-auto text-sm font-semibold text-gray-700">
+                            {{ $jobPostings->total() }} risultati
+                        </span>
+                    </div>
+                </form>
+            </section>
+
             @if ($jobPostings->isEmpty())
                 <section class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
                     <h3 class="text-lg font-semibold text-gray-900">

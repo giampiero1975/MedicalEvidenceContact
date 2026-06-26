@@ -89,6 +89,84 @@ class JobPostingTest extends TestCase
         $response->assertDontSee('Annuncio scaduto');
     }
 
+    public function test_professional_user_can_filter_active_job_postings(): void
+    {
+        $professional = User::factory()->create([
+            'role' => 'professional',
+        ]);
+
+        $matchingBusiness = User::factory()->create([
+            'role' => 'business',
+        ]);
+
+        $matchingProfile = $matchingBusiness->businessProfile()->create([
+            'user_id' => $matchingBusiness->id,
+            'company_name' => 'RSA Milano Nord',
+            'company_type' => 'RSA',
+            'location' => 'Milano',
+            'employee_count' => 60,
+        ]);
+
+        JobPosting::create([
+            'user_id' => $matchingBusiness->id,
+            'business_profile_id' => $matchingProfile->id,
+            'title' => 'OSS RSA Milano',
+            'description' => 'Posizione per reparto assistenziale.',
+            'positions' => 2,
+            'workplace_address' => 'Via Padova 10, Milano',
+            'required_skills' => 'OSS, turni diurni',
+            'contract_type' => 'Tempo indeterminato',
+            'salary_min' => 28000,
+            'salary_max' => 32000,
+            'expires_at' => now()->addWeek()->toDateString(),
+            'status' => 'active',
+        ]);
+
+        $otherBusiness = User::factory()->create([
+            'role' => 'business',
+        ]);
+
+        $otherProfile = $otherBusiness->businessProfile()->create([
+            'user_id' => $otherBusiness->id,
+            'company_name' => 'Clinica Bologna',
+            'company_type' => 'Clinica privata',
+            'location' => 'Bologna',
+            'employee_count' => 120,
+        ]);
+
+        JobPosting::create([
+            'user_id' => $otherBusiness->id,
+            'business_profile_id' => $otherProfile->id,
+            'title' => 'Infermiere sala operatoria',
+            'description' => 'Posizione non coerente con i filtri.',
+            'positions' => 1,
+            'workplace_address' => 'Via Indipendenza 2, Bologna',
+            'required_skills' => 'OPI, sala operatoria',
+            'contract_type' => 'Part-time',
+            'salary_min' => 42000,
+            'salary_max' => 46000,
+            'expires_at' => now()->addWeek()->toDateString(),
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($professional)
+            ->get(route('job-postings.index', [
+                'keyword' => 'assistenziale',
+                'location' => 'Milano',
+                'contract_type' => 'Tempo indeterminato',
+                'company_category' => 'RSA',
+                'professional_category' => 'OSS',
+                'salary_min' => 25000,
+                'salary_max' => 35000,
+                'published_from' => now()->subDay()->toDateString(),
+                'published_to' => now()->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('OSS RSA Milano')
+            ->assertSee('1 risultati')
+            ->assertDontSee('Infermiere sala operatoria');
+    }
+
 
     public function test_professional_announcements_page_does_not_show_dashboard_sections(): void
     {
@@ -150,6 +228,9 @@ class JobPostingTest extends TestCase
         $this->actingAs($professional)
             ->get('/dashboard')
             ->assertSee('Le tue candidature')
+            ->assertSee('Colloqui')
+            ->assertSee('Invito da confermare')
+            ->assertSee('Conferma colloquio')
             ->assertSee('Fisioterapista ambulatoriale')
             ->assertSee('Candidatura inviata');
     }
@@ -216,6 +297,9 @@ class JobPostingTest extends TestCase
             ->assertSee('Giulia Rossi')
             ->assertSee('Bologna')
             ->assertSee('inviata')
+            ->assertSee('Fissa colloquio')
+            ->assertSee('Proponi slot')
+            ->assertSee('Invito a colloquio inviato')
             ->assertDontSee('giulia.rossi@example.test')
             ->assertDontSee('3331234567');
     }
