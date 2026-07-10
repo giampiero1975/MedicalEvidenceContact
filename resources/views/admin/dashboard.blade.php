@@ -38,7 +38,7 @@
                     </a>
                 </div>
 
-                @forelse ($recentUsers as $user)
+                @if ($recentUsers->isNotEmpty())
                     <div class="mt-5 divide-y divide-slate-100 border-t border-slate-100">
                         @foreach ($recentUsers as $user)
                             <a href="{{ route('admin.users.edit', $user) }}" class="flex items-center justify-between gap-4 py-3 text-sm transition hover:text-teal-800">
@@ -50,14 +50,14 @@
                             </a>
                         @endforeach
                     </div>
-                @empty
+                @else
                     <div class="mt-5">
                         <x-ui.empty-state
                             title="Nessun utente"
                             description="Non sono ancora presenti account sulla piattaforma."
                         />
                     </div>
-                @endforelse
+                @endif
             </x-ui.card>
 
             <x-ui.card>
@@ -72,7 +72,7 @@
                     </a>
                 </div>
 
-                @forelse ($recentJobPostings as $jobPosting)
+                @if ($recentJobPostings->isNotEmpty())
                     <div class="mt-5 divide-y divide-slate-100 border-t border-slate-100">
                         @foreach ($recentJobPostings as $jobPosting)
                             <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="block py-3 text-sm transition hover:text-teal-800">
@@ -81,14 +81,14 @@
                             </a>
                         @endforeach
                     </div>
-                @empty
+                @else
                     <div class="mt-5">
                         <x-ui.empty-state
                             title="Nessun annuncio"
                             description="Non sono ancora state pubblicate offerte di lavoro."
                         />
                     </div>
-                @endforelse
+                @endif
             </x-ui.card>
         </div>
     </div>
