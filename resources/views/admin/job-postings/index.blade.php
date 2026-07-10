@@ -1,55 +1,78 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Annunci admin</h2>
-                <p class="mt-1 text-sm text-gray-600">Gestione completa degli annunci pubblicati.</p>
-            </div>
-            <a href="{{ route('admin.job-postings.create') }}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">Crea annuncio</a>
-        </div>
-    </x-slot>
+@extends('layouts.admin')
 
-    <div class="py-10">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            @session('status')
-                <div class="mb-6 rounded-md bg-green-50 p-4 text-sm font-medium text-green-700">{{ $value }}</div>
-            @endsession
+@section('content')
+    <div class="space-y-6">
+        <x-ui.page-header
+            title="Annunci"
+            subtitle="Gestisci tutti gli annunci pubblicati sulla piattaforma."
+        >
+            <a href="{{ route('admin.job-postings.create') }}" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">
+                Crea annuncio
+            </a>
+        </x-ui.page-header>
 
-            <div class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-left font-semibold text-gray-900">
-                        <tr>
-                            <th class="px-4 py-3">Titolo</th>
-                            <th class="px-4 py-3">Business</th>
-                            <th class="px-4 py-3">Stato</th>
-                            <th class="px-4 py-3">Scadenza</th>
-                            <th class="px-4 py-3">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach ($jobPostings as $jobPosting)
+        @if ($jobPostings->isEmpty())
+            <x-ui.empty-state
+                title="Nessun annuncio"
+                description="Non sono ancora presenti annunci sulla piattaforma."
+            >
+                <a href="{{ route('admin.job-postings.create') }}" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
+                    Crea il primo annuncio
+                </a>
+            </x-ui.empty-state>
+        @else
+            <x-ui.card :padding="false">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                             <tr>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $jobPosting->title }}</td>
-                                <td class="px-4 py-3 text-gray-600">{{ $jobPosting->owner?->name }}</td>
-                                <td class="px-4 py-3 text-gray-600">{{ $jobPosting->status }}</td>
-                                <td class="px-4 py-3 text-gray-600">{{ $jobPosting->expires_at->format('d/m/Y') }}</td>
-                                <td class="px-4 py-3">
-                                    <div class="flex flex-wrap gap-2">
-                                        <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Modifica</a>
-                                        <form method="POST" action="{{ route('admin.job-postings.destroy', $jobPosting) }}" onsubmit="return confirm('Eliminare questo annuncio?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-sm font-semibold text-red-600 hover:text-red-800">Elimina</button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <th class="px-5 py-3">Annuncio</th>
+                                <th class="px-5 py-3">Business</th>
+                                <th class="px-5 py-3">Stato</th>
+                                <th class="px-5 py-3">Scadenza</th>
+                                <th class="px-5 py-3 text-right">Azioni</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                            @foreach ($jobPostings as $jobPosting)
+                                <tr class="transition hover:bg-slate-50/70">
+                                    <td class="px-5 py-4">
+                                        <p class="font-semibold text-slate-900">{{ $jobPosting->title }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">{{ $jobPosting->positions }} {{ $jobPosting->positions === 1 ? 'posizione' : 'posizioni' }}</p>
+                                    </td>
+                                    <td class="px-5 py-4 text-slate-600">
+                                        {{ $jobPosting->owner?->businessProfile?->company_name ?: $jobPosting->owner?->name ?: 'Non assegnato' }}
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'neutral'">
+                                            {{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}
+                                        </x-ui.badge>
+                                    </td>
+                                    <td class="px-5 py-4 text-slate-600">
+                                        {{ optional($jobPosting->expires_at)->format('d/m/Y') ?: '—' }}
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        <div class="flex items-center justify-end gap-3">
+                                            <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="text-sm font-semibold text-teal-700 hover:text-teal-900">
+                                                Modifica
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.job-postings.destroy', $jobPosting) }}" onsubmit="return confirm('Eliminare definitivamente questo annuncio?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-sm font-semibold text-rose-600 hover:text-rose-800">
+                                                    Elimina
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-ui.card>
 
-            <div class="mt-6">{{ $jobPostings->links() }}</div>
-        </div>
+            <div>{{ $jobPostings->links() }}</div>
+        @endif
     </div>
-</x-app-layout>
+@endsection
