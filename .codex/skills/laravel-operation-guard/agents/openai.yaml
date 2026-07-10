@@ -1,4 +1,0 @@
-interface:
-  display_name: "Laravel Operation Guard"
-  short_description: "Esegui modifiche Laravel con dry-run, backup e PHPUnit mirato."
-  default_prompt: "Usa Laravel Operation Guard per applicare una modifica al progetto Laravel con dry-run e PHPUnit mirato."
