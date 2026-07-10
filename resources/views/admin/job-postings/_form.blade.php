@@ -2,16 +2,31 @@
     $selectedBusiness = old('user_id', $jobPosting->user_id);
 @endphp
 
-<div>
-    <x-label for="user_id" value="Business proprietario" />
-    <select id="user_id" name="user_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-        <option value="">Seleziona business</option>
-        @foreach ($businessUsers as $businessUser)
-            <option value="{{ $businessUser->id }}" @selected((int) $selectedBusiness === $businessUser->id)>
-                {{ $businessUser->name }} - {{ $businessUser->email }}
-            </option>
-        @endforeach
-    </select>
-</div>
+<div class="space-y-8">
+    <section>
+        <div class="mb-4">
+            <h2 class="text-base font-semibold text-slate-900">Proprietario dell’annuncio</h2>
+            <p class="mt-1 text-sm text-slate-500">Seleziona il business per conto del quale viene pubblicato.</p>
+        </div>
 
-@include('job-postings._form', ['jobPosting' => $jobPosting])
+        <x-ui.select name="user_id" label="Business proprietario" required>
+            <option value="">Seleziona business</option>
+            @foreach ($businessUsers as $businessUser)
+                <option value="{{ $businessUser->id }}" @selected((int) $selectedBusiness === $businessUser->id)>
+                    {{ $businessUser->businessProfile?->company_name ?: $businessUser->name }} · {{ $businessUser->email }}
+                </option>
+            @endforeach
+        </x-ui.select>
+    </section>
+
+    <div class="border-t border-slate-200"></div>
+
+    <section>
+        <div class="mb-5">
+            <h2 class="text-base font-semibold text-slate-900">Dettagli dell’annuncio</h2>
+            <p class="mt-1 text-sm text-slate-500">Inserisci le informazioni mostrate ai professionisti.</p>
+        </div>
+
+        @include('job-postings._form', ['jobPosting' => $jobPosting])
+    </section>
+</div>
