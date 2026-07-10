@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -69,6 +70,15 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (blank($user->uuid)) {
+                $user->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -111,6 +121,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProfessionalProfileItem::class);
     }
+
     public function moodleUserLinks(): HasMany
     {
         return $this->hasMany(MoodleUserLink::class, 'laravel_user_id');
