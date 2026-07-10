@@ -1,54 +1,95 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Dashboard admin</h2>
-                <p class="mt-1 text-sm text-gray-600">Vista operativa su utenti e annunci della piattaforma.</p>
-            </div>
-        </div>
-    </x-slot>
+@extends('layouts.admin')
 
-    <div class="py-10">
-        <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-            <div class="grid gap-4 sm:grid-cols-2">
-                <a href="{{ route('admin.users.index') }}" class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200 transition hover:ring-indigo-300">
-                    <p class="text-sm font-semibold uppercase tracking-wide text-indigo-600">Utenti</p>
-                    <p class="mt-3 text-3xl font-semibold text-gray-900">{{ $usersCount }}</p>
-                    <p class="mt-1 text-sm text-gray-600">Visualizza e gestisci tutti gli account.</p>
-                </a>
+@php($title = 'Dashboard admin')
 
-                <a href="{{ route('admin.job-postings.index') }}" class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200 transition hover:ring-indigo-300">
-                    <p class="text-sm font-semibold uppercase tracking-wide text-indigo-600">Annunci</p>
-                    <p class="mt-3 text-3xl font-semibold text-gray-900">{{ $jobPostingsCount }}</p>
-                    <p class="mt-1 text-sm text-gray-600">Visualizza e gestisci tutti gli annunci.</p>
-                </a>
-            </div>
+@section('content')
+    <div class="space-y-8">
+        <x-ui.page-header
+            title="Dashboard admin"
+            subtitle="Vista operativa su utenti, annunci e attività della piattaforma."
+        />
 
-            <div class="grid gap-6 lg:grid-cols-2">
-                <section class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Ultimi utenti</h3>
-                    <div class="mt-4 divide-y divide-gray-100">
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Riepilogo piattaforma">
+            <x-ui.stat-card
+                label="Utenti"
+                :value="$usersCount"
+                description="Account registrati sulla piattaforma"
+                :href="route('admin.users.index')"
+            />
+
+            <x-ui.stat-card
+                label="Annunci"
+                :value="$jobPostingsCount"
+                description="Offerte di lavoro presenti"
+                :href="route('admin.job-postings.index')"
+            />
+        </section>
+
+        <div class="grid gap-6 xl:grid-cols-2">
+            <x-ui.card>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-950">Ultimi utenti</h2>
+                        <p class="mt-1 text-sm text-slate-500">Gli account creati più recentemente.</p>
+                    </div>
+
+                    <a href="{{ route('admin.users.index') }}" class="text-sm font-semibold text-teal-700 hover:text-teal-900">
+                        Vedi tutti
+                    </a>
+                </div>
+
+                @forelse ($recentUsers as $user)
+                    <div class="mt-5 divide-y divide-slate-100 border-t border-slate-100">
                         @foreach ($recentUsers as $user)
-                            <a href="{{ route('admin.users.edit', $user) }}" class="block py-3 text-sm hover:text-indigo-700">
-                                <span class="font-semibold text-gray-900">{{ $user->name }}</span>
-                                <span class="text-gray-500">- {{ $user->role }} - {{ $user->email }}</span>
+                            <a href="{{ route('admin.users.edit', $user) }}" class="flex items-center justify-between gap-4 py-3 text-sm transition hover:text-teal-800">
+                                <div class="min-w-0">
+                                    <p class="truncate font-semibold text-slate-900">{{ $user->name }}</p>
+                                    <p class="truncate text-slate-500">{{ $user->email }}</p>
+                                </div>
+                                <x-ui.badge>{{ ucfirst($user->role) }}</x-ui.badge>
                             </a>
                         @endforeach
                     </div>
-                </section>
+                @empty
+                    <div class="mt-5">
+                        <x-ui.empty-state
+                            title="Nessun utente"
+                            description="Non sono ancora presenti account sulla piattaforma."
+                        />
+                    </div>
+                @endforelse
+            </x-ui.card>
 
-                <section class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Ultimi annunci</h3>
-                    <div class="mt-4 divide-y divide-gray-100">
+            <x-ui.card>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-950">Ultimi annunci</h2>
+                        <p class="mt-1 text-sm text-slate-500">Le offerte pubblicate più recentemente.</p>
+                    </div>
+
+                    <a href="{{ route('admin.job-postings.index') }}" class="text-sm font-semibold text-teal-700 hover:text-teal-900">
+                        Vedi tutti
+                    </a>
+                </div>
+
+                @forelse ($recentJobPostings as $jobPosting)
+                    <div class="mt-5 divide-y divide-slate-100 border-t border-slate-100">
                         @foreach ($recentJobPostings as $jobPosting)
-                            <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="block py-3 text-sm hover:text-indigo-700">
-                                <span class="font-semibold text-gray-900">{{ $jobPosting->title }}</span>
-                                <span class="text-gray-500">- {{ $jobPosting->owner?->name }}</span>
+                            <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="block py-3 text-sm transition hover:text-teal-800">
+                                <p class="font-semibold text-slate-900">{{ $jobPosting->title }}</p>
+                                <p class="mt-1 text-slate-500">{{ $jobPosting->owner?->name ?? 'Azienda non disponibile' }}</p>
                             </a>
                         @endforeach
                     </div>
-                </section>
-            </div>
+                @empty
+                    <div class="mt-5">
+                        <x-ui.empty-state
+                            title="Nessun annuncio"
+                            description="Non sono ancora state pubblicate offerte di lavoro."
+                        />
+                    </div>
+                @endforelse
+            </x-ui.card>
         </div>
     </div>
-</x-app-layout>
+@endsection
