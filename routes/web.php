@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminJobPostingController;
 use App\Http\Controllers\AdminRegistrationController;
+use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\InterviewController;
@@ -62,6 +63,7 @@ Route::middleware([
     })->name('dashboard');
 
     Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');
+    Route::get('/admin/ui', AdminUiPlaygroundController::class)->name('admin.ui.index');
     Route::resource('/admin/users', AdminUserController::class)->names('admin.users')->except('show');
     Route::resource('/admin/annunci', AdminJobPostingController::class)->names('admin.job-postings')->parameters(['annunci' => 'jobPosting'])->except('show');
 
