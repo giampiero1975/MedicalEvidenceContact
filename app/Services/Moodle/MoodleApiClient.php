@@ -13,8 +13,7 @@ class MoodleApiClient
     public function __construct(
         private readonly MoodleSite $moodleSite,
         private readonly bool $verifySsl = true
-    )
-    {
+    ) {
     }
 
     public static function forUserLink(MoodleUserLink $moodleUserLink): self
@@ -22,49 +21,31 @@ class MoodleApiClient
         return new self($moodleUserLink->moodleSite);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getSiteInfo(): array
     {
         return $this->call('core_webservice_get_site_info');
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function callFunction(string $function, array $parameters = []): array
     {
         return $this->call($function, $parameters);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
     public function getUserByEmail(string $email): array
     {
         return $this->getUsersByField('email', $email);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
     public function getUserByUsername(string $username): array
     {
         return $this->getUsersByField('username', $username);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
     public function getUserById(int $moodleUserId): array
     {
         return $this->getUsersByField('id', (string) $moodleUserId);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
     public function getUsersByField(string $field, string $value): array
     {
         $response = $this->call('core_user_get_users_by_field', [
@@ -84,9 +65,6 @@ class MoodleApiClient
             ->all();
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getCustomcertIssuesForLinkedUser(
         MoodleUserLink $moodleUserLink,
         ?int $timecreatedFrom = null,
@@ -96,15 +74,12 @@ class MoodleApiClient
         return $this->call('mod_customcert_list_issues', array_filter([
             'userid' => $moodleUserLink->moodle_user_id,
             'timecreatedfrom' => $timecreatedFrom,
-            'includepdf' => 0,
+            'includepdf' => 1,
             'limit' => min($limit, 500),
             'offset' => $offset,
         ], fn ($value) => $value !== null));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getUserCertificatesViaLocalPlugin(
         MoodleUserLink $moodleUserLink,
         ?int $timecreatedFrom = null,
@@ -114,15 +89,12 @@ class MoodleApiClient
         return $this->call('local_laravelcertsync_get_user_certificates', array_filter([
             'userid' => $moodleUserLink->moodle_user_id,
             'timecreatedfrom' => $timecreatedFrom,
-            'includepdf' => 0,
+            'includepdf' => 1,
             'limit' => min($limit, 500),
             'offset' => $offset,
         ], fn ($value) => $value !== null));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getCertificatePdf(MoodleUserLink $moodleUserLink, int $issueId): array
     {
         return $this->call('local_laravelcertsync_get_certificate_pdf', [
@@ -131,15 +103,12 @@ class MoodleApiClient
         ]);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function call(string $function, array $parameters = []): array
     {
         try {
             $response = Http::asForm()
                 ->when(! $this->verifySsl, fn ($pendingRequest) => $pendingRequest->withoutVerifying())
-                ->timeout(10)
+                ->timeout(30)
                 ->post($this->endpoint(), [
                     'wstoken' => $this->moodleSite->api_token_encrypted,
                     'wsfunction' => $function,
