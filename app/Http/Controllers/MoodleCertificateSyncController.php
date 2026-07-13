@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\MoodleUserLink;
-use App\Services\Moodle\MoodleApiException;
 use App\Services\Moodle\MoodleCertificateSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,7 @@ class MoodleCertificateSyncController extends Controller
 
         try {
             $result = $sync->sync($moodleUserLink);
-        } catch (MoodleApiException|Throwable $exception) {
+        } catch (Throwable $exception) {
             report($exception);
 
             return redirect()
