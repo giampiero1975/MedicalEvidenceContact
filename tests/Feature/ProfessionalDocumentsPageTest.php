@@ -64,7 +64,59 @@ class ProfessionalDocumentsPageTest extends TestCase
         Storage::disk('professional_documents')->assertExists($professional->ata_certificate_path);
     }
 
-    public function test_business_cannot_open_documents_page(): void
+    public function test_professional_can_view_and_download_own_document(): void
+    {
+        Storage::fake('professional_documents');
+
+        $professional = User::factory()->create([
+            'role' => 'professional',
+            'nationality' => 'Italiana',
+        ]);
+
+        $this->actingAs($professional)->post(route('professional-documents.store'), [
+            'ata_certificate_document' => UploadedFile::fake()->create('attestato-ata.pdf', 120, 'application/pdf'),
+            'redirect_to' => 'documents',
+        ]);
+
+        $this->actingAs($professional)
+            ->get(route('professional-documents.view', 'ata_certificate'))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        $this->actingAs($professional)
+            ->get(route('professional-documents.download', 'ata_certificate'))
+            ->assertOk()
+            ->assertDownload('attestato-ata.pdf');
+    }
+
+    public function test_professional_can_delete_own_document(): void
+    {
+        Storage::fake('professional_documents');
+
+        $professional = User::factory()->create([
+            'role' => 'professional',
+            'nationality' => 'Italiana',
+        ]);
+
+        $this->actingAs($professional)->post(route('professional-documents.store'), [
+            'ata_certificate_document' => UploadedFile::fake()->create('ata.pdf', 120, 'application/pdf'),
+            'redirect_to' => 'documents',
+        ]);
+
+        $professional->refresh();
+        $path = $professional->ata_certificate_path;
+
+        $this->actingAs($professional)
+            ->delete(route('professional-documents.destroy', 'ata_certificate'))
+            ->assertRedirect(route('professional.documents.index', absolute: false))
+            ->assertSessionHas('status', 'Documento eliminato.');
+
+        $professional->refresh();
+        $this->assertNull($professional->ata_certificate_path);
+        Storage::disk('professional_documents')->assertMissing($path);
+    }
+
+    public function test_business_cannot_open_or_manage_professional_documents(): void
     {
         $business = User::factory()->create([
             'role' => 'business',
@@ -72,6 +124,14 @@ class ProfessionalDocumentsPageTest extends TestCase
 
         $this->actingAs($business)
             ->get(route('professional.documents.index'))
+            ->assertForbidden();
+
+        $this->actingAs($business)
+            ->get(route('professional-documents.view', 'ata_certificate'))
+            ->assertForbidden();
+
+        $this->actingAs($business)
+            ->delete(route('professional-documents.destroy', 'ata_certificate'))
             ->assertForbidden();
     }
 }
