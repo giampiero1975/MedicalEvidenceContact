@@ -50,6 +50,28 @@ class ProfessionalDashboardController extends Controller
 
         $profileCompletion = (int) round(($completedFields / count($profileFields)) * 100);
 
+        $isItalian = in_array(
+            strtolower(trim((string) $user->nationality)),
+            ['italiana', 'italiano', 'italia', 'italian'],
+            true
+        );
+
+        $documents = [
+            [
+                'label' => 'Attestato ATA',
+                'uploaded' => filled($user->ata_certificate_path),
+                'required' => true,
+            ],
+        ];
+
+        if (! $isItalian) {
+            $documents[] = [
+                'label' => 'Permesso di soggiorno',
+                'uploaded' => filled($user->residence_permit_path),
+                'required' => true,
+            ];
+        }
+
         return view('professionals.dashboard-overview', [
             'jobApplications' => $jobApplications,
             'activeApplicationsCount' => $jobApplications->whereNotIn('status', ['rifiutata', 'ritirata'])->count(),
@@ -58,18 +80,7 @@ class ProfessionalDashboardController extends Controller
             'profileCompletion' => $profileCompletion,
             'moodleSites' => $moodleSites,
             'moodleUserLinks' => $moodleUserLinks,
-            'documents' => [
-                [
-                    'label' => 'Attestato ATA',
-                    'uploaded' => filled($user->ata_certificate_path),
-                    'required' => true,
-                ],
-                [
-                    'label' => 'Permesso di soggiorno',
-                    'uploaded' => filled($user->residence_permit_path),
-                    'required' => ! in_array(strtolower(trim((string) $user->nationality)), ['italiana', 'italiano', 'italia', 'italian'], true),
-                ],
-            ],
+            'documents' => $documents,
         ]);
     }
 }
