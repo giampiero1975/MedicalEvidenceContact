@@ -133,13 +133,15 @@
                         <article class="rounded-2xl border border-slate-200 p-5">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">{{ $certificate->course_shortname ?: 'Corso Moodle' }}</p>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">{{ $certificate->course_shortname ?: 'Formazione Moodle' }}</p>
                                     <h3 class="mt-2 text-lg font-semibold text-slate-950">{{ $certificate->certificate_name ?: $certificate->course_fullname ?: 'Attestato' }}</h3>
                                     @if ($certificate->course_fullname)
                                         <p class="mt-1 text-sm text-slate-600">{{ $certificate->course_fullname }}</p>
                                     @endif
                                 </div>
-                                <x-ui.badge variant="success">Disponibile</x-ui.badge>
+                                <x-ui.badge :variant="$certificate->pdf_stored_path ? 'success' : 'warning'">
+                                    {{ $certificate->pdf_stored_path ? 'PDF disponibile' : 'Dati sincronizzati' }}
+                                </x-ui.badge>
                             </div>
 
                             <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
@@ -153,12 +155,16 @@
                                 </div>
                             </dl>
 
-                            @if ($certificate->verification_url || $certificate->download_url)
+                            @if ($certificate->pdf_stored_path || $certificate->verification_url || $certificate->download_url)
                                 <div class="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                                    @if ($certificate->pdf_stored_path)
+                                        <x-ui.button variant="secondary" :href="route('professional.moodle.certificates.view', $certificate)" target="_blank" rel="noopener">Visualizza</x-ui.button>
+                                        <x-ui.button :href="route('professional.moodle.certificates.download', $certificate)">Scarica PDF</x-ui.button>
+                                    @endif
                                     @if ($certificate->verification_url)
                                         <x-ui.button variant="secondary" :href="$certificate->verification_url" target="_blank" rel="noopener">Verifica</x-ui.button>
                                     @endif
-                                    @if ($certificate->download_url)
+                                    @if (! $certificate->pdf_stored_path && $certificate->download_url)
                                         <x-ui.button :href="$certificate->download_url" target="_blank" rel="noopener">Apri attestato</x-ui.button>
                                     @endif
                                 </div>
