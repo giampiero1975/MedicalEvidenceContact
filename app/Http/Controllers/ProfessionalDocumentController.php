@@ -15,12 +15,17 @@ class ProfessionalDocumentController extends Controller
         $data = $request->validate([
             'ata_certificate_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'residence_permit_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'redirect_to' => ['nullable', 'string', 'in:documents'],
         ]);
 
         $documents->store($request->user(), $data);
 
+        $route = $request->input('redirect_to') === 'documents'
+            ? 'professional.documents.index'
+            : 'dashboard';
+
         return redirect()
-            ->route('dashboard')
+            ->route($route)
             ->with('status', 'Documenti aggiornati.');
     }
 }
