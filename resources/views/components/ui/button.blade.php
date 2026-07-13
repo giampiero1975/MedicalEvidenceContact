@@ -19,8 +19,17 @@
         'md' => 'px-4 py-2.5 text-sm',
         'lg' => 'px-5 py-3 text-base',
     ];
+
+    $classes = [$base, $variants[$variant] ?? $variants['primary'], $sizes[$size] ?? $sizes['md']];
+    $href = $attributes->get('href');
 @endphp
 
-<button type="{{ $type }}" {{ $attributes->class([$base, $variants[$variant] ?? $variants['primary'], $sizes[$size] ?? $sizes['md']]) }}>
-    {{ $slot }}
-</button>
+@if ($href)
+    <a {{ $attributes->class($classes) }}>
+        {{ $slot }}
+    </a>
+@else
+    <button type="{{ $type }}" {{ $attributes->class($classes) }}>
+        {{ $slot }}
+    </button>
+@endif
