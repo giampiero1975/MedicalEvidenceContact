@@ -8,44 +8,107 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use RuntimeException;
+use Throwable;
 
 class MoodleCertificateSyncService
 {
+    public function __construct(
+        private readonly MoodleFlowLogger $logger
+    ) {
+    }
+
     /**
-     * @return array{received:int,saved:int,driver:string}
+     * @return array{received:int,saved:int,driver:string,trace_id:string}
      */
     public function sync(MoodleUserLink $link): array
     {
-        abort_unless($link->status === 'active', 422, 'Il collegamento Moodle non è attivo.');
+        $flow = 'certificate_sync';
+        $startedAt = microtime(true);
+        $traceId = $this->logger->begin($flow, [
+            'moodle_user_link_id' => $link->id,
+            'laravel_user_id' => $link->laravel_user_id,
+            'moodle_site_id' => $link->moodle_site_id,
+            'moodle_user_id' => $link->moodle_user_id,
+            'link_status' => $link->status,
+        ]);
 
-        $link->loadMissing('moodleSite');
-        $driver = $link->moodleSite->certificate_sync_driver ?: 'local_plugin';
-        $client = MoodleApiClient::forUserLink($link);
+        try {
+            abort_unless($link->status === 'active', 422, 'Il collegamento Moodle non è attivo.');
 
-        $payload = match ($driver) {
-            'local_plugin', 'local_laravelcertsync' => $client->getUserCertificatesViaLocalPlugin($link),
-            'customcert', 'mod_customcert' => $client->getCustomcertIssuesForLinkedUser($link),
-            default => throw new RuntimeException("Driver sincronizzazione attestati non supportato: {$driver}"),
-        };
+            $link->loadMissing('moodleSite');
+            $driver = $link->moodleSite->certificate_sync_driver ?: 'local_plugin';
 
-        $items = $this->extractItems($payload);
-        $saved = 0;
+            $this->logger->step($traceId, $flow, 'driver.resolved', [
+                'driver' => $driver,
+                'site_name' => $link->moodleSite->name,
+                'elapsed_ms' => $this->elapsedMs($startedAt),
+            ]);
 
-        foreach ($items as $item) {
-            if ($this->persist($link, $item)) {
-                $saved++;
+            $client = MoodleApiClient::forUserLink($link);
+
+            $this->logger->step($traceId, $flow, 'moodle_api.sync.started', [
+                'driver' => $driver,
+            ]);
+
+            $payload = match ($driver) {
+                'local_plugin', 'local_laravelcertsync' => $client->getUserCertificatesViaLocalPlugin($link),
+                'customcert', 'mod_customcert' => $client->getCustomcertIssuesForLinkedUser($link),
+                default => throw new RuntimeException("Driver sincronizzazione attestati non supportato: {$driver}"),
+            };
+
+            $this->logger->step($traceId, $flow, 'moodle_api.sync.completed', [
+                'driver' => $driver,
+                'payload_top_level_keys' => array_keys($payload),
+                'elapsed_ms' => $this->elapsedMs($startedAt),
+            ]);
+
+            $items = $this->extractItems($payload);
+            $saved = 0;
+            $skipped = 0;
+
+            $this->logger->step($traceId, $flow, 'certificates.extracted', [
+                'received' => $items->count(),
+            ]);
+
+            foreach ($items as $index => $item) {
+                if ($this->persist($link, $item)) {
+                    $saved++;
+                    continue;
+                }
+
+                $skipped++;
+                $this->logger->warning($traceId, $flow, 'certificate.skipped', [
+                    'index' => $index,
+                    'available_keys' => array_keys($item),
+                    'reason' => 'missing_issue_id_and_certificate_code',
+                ]);
             }
+
+            $now = now();
+            $link->forceFill(['last_certificate_sync_at' => $now])->save();
+            $link->moodleSite->forceFill(['last_certificate_sync_at' => $now])->save();
+
+            $result = [
+                'received' => $items->count(),
+                'saved' => $saved,
+                'driver' => $driver,
+                'trace_id' => $traceId,
+            ];
+
+            $this->logger->success($traceId, $flow, [
+                ...$result,
+                'skipped' => $skipped,
+                'elapsed_ms' => $this->elapsedMs($startedAt),
+            ]);
+
+            return $result;
+        } catch (Throwable $exception) {
+            $this->logger->failure($traceId, $flow, 'flow.failed', $exception, [
+                'elapsed_ms' => $this->elapsedMs($startedAt),
+            ]);
+
+            throw $exception;
         }
-
-        $now = now();
-        $link->forceFill(['last_certificate_sync_at' => $now])->save();
-        $link->moodleSite->forceFill(['last_certificate_sync_at' => $now])->save();
-
-        return [
-            'received' => $items->count(),
-            'saved' => $saved,
-            'driver' => $driver,
-        ];
     }
 
     /** @return Collection<int, array<string, mixed>> */
@@ -146,8 +209,13 @@ class MoodleCertificateSyncService
             return is_numeric($value)
                 ? Carbon::createFromTimestamp((int) $value)
                 : Carbon::parse($value);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
+    }
+
+    private function elapsedMs(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 }
