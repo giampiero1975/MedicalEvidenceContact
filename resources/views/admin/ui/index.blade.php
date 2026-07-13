@@ -70,6 +70,8 @@
                         <option>Business</option>
                         <option>Admin</option>
                     </x-ui.select>
+                    <x-ui.textarea name="playground_notes" label="Note" help="Usare per testi brevi o descrizioni operative.">Esempio di contenuto.</x-ui.textarea>
+                    <x-ui.checkbox name="playground_consent" label="Confermo i dati inseriti" help="Le checkbox devono avere sempre una label esplicita." />
                 </div>
             </x-ui.card>
 
@@ -88,6 +90,15 @@
                 </div>
             </x-ui.card>
         </div>
+
+        <x-ui.card>
+            <h2 class="text-lg font-semibold text-slate-950">Identità utente</h2>
+            <div class="mt-6 flex flex-wrap items-center gap-6">
+                <x-ui.avatar name="Mario Rossi" size="sm" />
+                <x-ui.avatar name="Giulia Bianchi" />
+                <x-ui.avatar name="Azienda Sanitaria Milano" size="lg" />
+            </div>
+        </x-ui.card>
 
         <div class="grid gap-6 md:grid-cols-3">
             <x-ui.stat-card label="Professionisti" value="1.248" hint="Totale registrati" />
