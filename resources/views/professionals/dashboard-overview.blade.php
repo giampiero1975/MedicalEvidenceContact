@@ -119,5 +119,57 @@
                 </x-ui.card>
             </div>
         </section>
+
+        <section>
+            <x-ui.card>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Curriculum</p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Esperienze e percorsi di studio</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Aggiungi le informazioni che saranno visibili ai business quando valuteranno una candidatura.</p>
+                </div>
+
+                <form method="POST" action="{{ route('professional-profile-items.store') }}" class="mt-6 grid gap-4 lg:grid-cols-[180px_1fr_180px]">
+                    @csrf
+
+                    <div>
+                        <label for="profile_item_type" class="text-sm font-semibold text-slate-800">Tipo</label>
+                        <select id="profile_item_type" name="type" class="mt-2 block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-teal-600 focus:ring-teal-600" required>
+                            <option value="work_experience">Esperienza lavorativa</option>
+                            <option value="education">Percorso di studio</option>
+                        </select>
+                    </div>
+
+                    <x-ui.input id="profile_item_title" name="title" label="Titolo" :value="old('title')" required />
+                    <x-ui.input id="profile_item_duration" name="duration" label="Durata" :value="old('duration')" placeholder="Es. 2021 - 2024" required />
+
+                    <div class="lg:col-span-3">
+                        <x-ui.textarea id="profile_item_description" name="description" label="Descrizione" rows="4">{{ old('description') }}</x-ui.textarea>
+                    </div>
+
+                    <div class="flex justify-end border-t border-slate-100 pt-5 lg:col-span-3">
+                        <x-ui.button type="submit">Aggiungi al profilo</x-ui.button>
+                    </div>
+                </form>
+
+                @if ($profileItems->isNotEmpty())
+                    <div class="mt-8 grid gap-4 md:grid-cols-2">
+                        @foreach ($profileItems as $item)
+                            <article class="rounded-xl border border-slate-200 p-5">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <x-ui.badge>{{ $item->type === 'education' ? 'Percorso di studio' : 'Esperienza lavorativa' }}</x-ui.badge>
+                                        <h3 class="mt-3 font-semibold text-slate-950">{{ $item->title }}</h3>
+                                        <p class="mt-1 text-sm text-slate-500">{{ $item->duration }}</p>
+                                    </div>
+                                </div>
+                                @if ($item->description)
+                                    <p class="mt-4 text-sm leading-6 text-slate-600">{{ $item->description }}</p>
+                                @endif
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </x-ui.card>
+        </section>
     </div>
 </x-app-layout>
