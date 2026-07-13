@@ -11,6 +11,7 @@ use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MoodleAccountLinkController;
+use App\Http\Controllers\MoodleCertificateSyncController;
 use App\Http\Controllers\ProfessionalDocumentController;
 use App\Http\Controllers\ProfessionalDocumentsPageController;
 use App\Http\Controllers\ProfessionalExperienceController;
@@ -95,6 +96,8 @@ Route::middleware([
         ->name('professional-documents.destroy');
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
+    Route::post('/professionista/moodle/collegamenti/{moodleUserLink}/sincronizza-attestati', MoodleCertificateSyncController::class)
+        ->name('professional.moodle.certificates.sync');
     Route::get('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'showVerify'])->name('professional.moodle.verify.show');
     Route::post('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'verify'])->name('professional.moodle.verify');
     Route::post('/professionista/moodle/tentativi/{attempt}/annulla', [MoodleAccountLinkController::class, 'cancel'])->name('professional.moodle.cancel');
