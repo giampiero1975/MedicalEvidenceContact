@@ -65,6 +65,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'moodle' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/moodle.log'),
+            'level' => env('MOODLE_LOG_LEVEL', 'debug'),
+            'days' => env('MOODLE_LOG_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
@@ -127,5 +135,4 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
     ],
-
 ];
