@@ -13,9 +13,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Throwable;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Throwable;
 
 class MoodleAccountLinkController extends Controller
 {
@@ -56,7 +56,8 @@ class MoodleAccountLinkController extends Controller
             ->exists()) {
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Hai gia un collegamento attivo per questo sito Moodle.');
+                ->with('status', 'Hai gia un collegamento attivo per questo sito Moodle.')
+                ->with('status_variant', 'info');
         }
 
         $attempt = MoodleLinkAttempt::create([
@@ -72,7 +73,8 @@ class MoodleAccountLinkController extends Controller
 
         try {
             $users = (new MoodleApiClient($moodleSite))->getUsersByField($data['lookup_type'], $lookupValue);
-        } catch (MoodleApiException) {
+        } catch (MoodleApiException $exception) {
+            report($exception);
             $attempt->update(['status' => 'failed']);
 
             return $this->genericStartRedirect();
@@ -99,33 +101,33 @@ class MoodleAccountLinkController extends Controller
 
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.');
+                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.')
+                ->with('status_variant', 'danger');
         }
 
         $code = (string) random_int(100000, 999999);
 
         try {
             DB::transaction(function () use ($attempt, $moodleUser, $code, $moodleSite): void {
-            MoodleLinkAttempt::query()
-                ->where('laravel_user_id', $attempt->laravel_user_id)
-                ->where('moodle_site_id', $attempt->moodle_site_id)
-                ->where('id', '!=', $attempt->id)
-                ->whereIn('status', ['created', 'sent'])
-                ->update(['status' => 'cancelled', 'consumed_at' => now()]);
+                MoodleLinkAttempt::query()
+                    ->where('laravel_user_id', $attempt->laravel_user_id)
+                    ->where('moodle_site_id', $attempt->moodle_site_id)
+                    ->where('id', '!=', $attempt->id)
+                    ->whereIn('status', ['created', 'sent'])
+                    ->update(['status' => 'cancelled', 'consumed_at' => now()]);
 
-            $attempt->update([
-                'moodle_user_id' => $moodleUser['id'],
-                'moodle_email_masked' => $this->maskEmail((string) $moodleUser['email']),
-                'verification_code_hash' => Hash::make($code),
-                'expires_at' => now()->addMinutes(15),
-                'status' => 'sent',
-            ]);
+                $attempt->update([
+                    'moodle_user_id' => $moodleUser['id'],
+                    'moodle_email_masked' => $this->maskEmail((string) $moodleUser['email']),
+                    'verification_code_hash' => Hash::make($code),
+                    'expires_at' => now()->addMinutes(15),
+                    'status' => 'sent',
+                ]);
 
                 app(MoodleSiteMailer::class)->sendMoodleAccountLinkCode((string) $moodleUser['email'], $code, $moodleSite);
             });
         } catch (Throwable $exception) {
             report($exception);
-
             $attempt->update(['status' => 'failed']);
 
             return $this->genericStartRedirect();
@@ -133,7 +135,8 @@ class MoodleAccountLinkController extends Controller
 
         return redirect()
             ->route('professional.moodle.verify.show', $attempt)
-            ->with('status', 'Se i dati corrispondono a un account Moodle, riceverai un codice all email associata.');
+            ->with('status', 'Se i dati corrispondono a un account Moodle, riceverai un codice all email associata.')
+            ->with('status_variant', 'info');
     }
 
     public function showVerify(Request $request, MoodleLinkAttempt $attempt): View
@@ -179,7 +182,9 @@ class MoodleAccountLinkController extends Controller
         try {
             $moodleUsers = (new MoodleApiClient($attempt->moodleSite))->getUserById((int) $attempt->moodle_user_id);
             $moodleUser = $moodleUsers[0] ?? [];
-        } catch (MoodleApiException) {
+        } catch (MoodleApiException $exception) {
+            report($exception);
+
             return back()->withErrors(['code' => 'Non e stato possibile verificare lo snapshot Moodle. Riprova piu tardi.']);
         }
 
@@ -203,17 +208,20 @@ class MoodleAccountLinkController extends Controller
                     'consumed_at' => now(),
                 ]);
             });
-        } catch (QueryException) {
+        } catch (QueryException $exception) {
+            report($exception);
             $attempt->update(['status' => 'failed']);
 
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.');
+                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.')
+                ->with('status_variant', 'danger');
         }
 
         return redirect()
             ->route('professional.moodle.index')
-            ->with('status', 'Account Moodle collegato.');
+            ->with('status', 'Account Moodle collegato.')
+            ->with('status_variant', 'success');
     }
 
     public function cancel(Request $request, MoodleLinkAttempt $attempt): RedirectResponse
@@ -229,7 +237,8 @@ class MoodleAccountLinkController extends Controller
 
         return redirect()
             ->route('professional.moodle.index')
-            ->with('status', 'Collegamento Moodle annullato.');
+            ->with('status', 'Collegamento Moodle annullato.')
+            ->with('status_variant', 'info');
     }
 
     private function authorizeAttemptOwner(Request $request, MoodleLinkAttempt $attempt): void
@@ -242,7 +251,8 @@ class MoodleAccountLinkController extends Controller
     {
         return redirect()
             ->route('professional.moodle.index')
-            ->with('status', 'Se i dati corrispondono a un account Moodle, riceverai un codice all email associata.');
+            ->with('status', 'Non e stato possibile completare il collegamento. Verifica i dati inseriti o riprova piu tardi.')
+            ->with('status_variant', 'danger');
     }
 
     private function maskLookupValue(string $lookupType, string $value): string
