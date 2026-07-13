@@ -7,10 +7,6 @@
     </x-slot>
 
     <div class="space-y-8">
-        @if (session('status'))
-            <x-ui.alert variant="success">{{ session('status') }}</x-ui.alert>
-        @endif
-
         @if ($errors->any())
             <x-ui.alert variant="danger" title="Controlla i dati inseriti">
                 <ul class="list-disc space-y-1 pl-5">
