@@ -36,7 +36,7 @@ class MoodleCertificateSyncService
             abort_unless($link->status === 'active', 422, 'Il collegamento Moodle non è attivo.');
 
             $link->loadMissing('moodleSite');
-            $driver = $link->moodleSite->certificate_sync_driver ?: 'local_plugin';
+            $driver = $link->moodleSite->certificate_sync_driver ?: 'disabled';
 
             $this->logger->step($traceId, $flow, 'driver.resolved', [
                 'driver' => $driver,
@@ -52,7 +52,7 @@ class MoodleCertificateSyncService
 
             $payload = match ($driver) {
                 'local_plugin', 'local_laravelcertsync' => $client->getUserCertificatesViaLocalPlugin($link),
-                'customcert', 'mod_customcert' => $client->getCustomcertIssuesForLinkedUser($link),
+                'customcert', 'mod_customcert', 'native_mod_customcert' => $client->getCustomcertIssuesForLinkedUser($link),
                 default => throw new RuntimeException("Driver sincronizzazione attestati non supportato: {$driver}"),
             };
 
@@ -131,8 +131,8 @@ class MoodleCertificateSyncService
     /** @param array<string, mixed> $item */
     private function persist(MoodleUserLink $link, array $item): bool
     {
-        $issueId = $this->int($item, ['issueid', 'issue_id', 'id']);
-        $certificateCode = $this->string($item, ['code', 'certificatecode', 'certificate_code']);
+        $issueId = $this->int($item, ['issue.id', 'issueid', 'issue_id', 'id']);
+        $certificateCode = $this->string($item, ['issue.code', 'code', 'certificatecode', 'certificate_code']);
 
         if (! $issueId && ! $certificateCode) {
             return false;
@@ -152,20 +152,20 @@ class MoodleCertificateSyncService
         $certificate = $query->first() ?? new UserCertificate($identity);
 
         $certificate->fill([
-            'moodle_customcert_id' => $this->int($item, ['customcertid', 'customcert_id', 'certificateid']),
+            'moodle_customcert_id' => $this->int($item, ['issue.customcertid', 'customcertid', 'customcert_id', 'certificateid']),
             'moodle_customcert_issue_id' => $issueId,
             'moodle_course_module_id' => $this->int($item, ['coursemoduleid', 'course_module_id', 'cmid']),
-            'moodle_context_id' => $this->int($item, ['contextid', 'context_id']),
-            'course_id' => $this->int($item, ['courseid', 'course_id']),
-            'course_fullname' => $this->string($item, ['coursefullname', 'course_fullname', 'fullname']),
-            'course_shortname' => $this->string($item, ['courseshortname', 'course_shortname', 'shortname']),
-            'certificate_name' => $this->string($item, ['certificatename', 'certificate_name', 'name']),
-            'template_id' => $this->int($item, ['templateid', 'template_id']),
-            'template_name' => $this->string($item, ['templatename', 'template_name']),
+            'moodle_context_id' => $this->int($item, ['template.contextid', 'contextid', 'context_id']),
+            'course_id' => $this->int($item, ['course.id', 'courseid', 'course_id']),
+            'course_fullname' => $this->string($item, ['course.fullname', 'coursefullname', 'course_fullname', 'fullname']),
+            'course_shortname' => $this->string($item, ['course.shortname', 'courseshortname', 'course_shortname', 'shortname']),
+            'certificate_name' => $this->string($item, ['certificate.name', 'certificatename', 'certificate_name', 'template.name', 'name']),
+            'template_id' => $this->int($item, ['template.id', 'templateid', 'template_id']),
+            'template_name' => $this->string($item, ['template.name', 'templatename', 'template_name']),
             'certificate_code' => $certificateCode,
-            'issued_at' => $this->date($item, ['timecreated', 'issuedat', 'issued_at', 'issueddate']),
-            'expires_at' => $this->date($item, ['expiresat', 'expires_at', 'expirydate']),
-            'download_url' => $this->string($item, ['downloadurl', 'download_url']),
+            'issued_at' => $this->date($item, ['issue.timecreated', 'timecreated', 'issuedat', 'issued_at', 'issueddate']),
+            'expires_at' => $this->date($item, ['issue.expiresat', 'expiresat', 'expires_at', 'expirydate']),
+            'download_url' => $this->string($item, ['pdf.url', 'downloadurl', 'download_url']),
             'verification_url' => $this->string($item, ['verificationurl', 'verification_url', 'verifyurl']),
             'verification_is_public' => (bool) ($item['verification_is_public'] ?? $item['verificationispublic'] ?? false),
             'raw_payload_json' => $item,
