@@ -34,6 +34,10 @@
                     <x-ui.sidebar-link :href="route('admin.job-postings.index')" :active="request()->routeIs('admin.job-postings.*')">
                         Annunci
                     </x-ui.sidebar-link>
+                    <div class="my-3 border-t border-slate-200"></div>
+                    <x-ui.sidebar-link :href="route('admin.ui.index')" :active="request()->routeIs('admin.ui.*')">
+                        UI Playground
+                    </x-ui.sidebar-link>
                 </nav>
 
                 <div class="border-t border-slate-200 p-4">
