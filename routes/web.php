@@ -12,23 +12,13 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MoodleAccountLinkController;
 use App\Http\Controllers\MoodleCertificateSyncController;
+use App\Http\Controllers\ProfessionalCertificateController;
 use App\Http\Controllers\ProfessionalDocumentController;
 use App\Http\Controllers\ProfessionalDocumentsPageController;
 use App\Http\Controllers\ProfessionalExperienceController;
 use App\Http\Controllers\ProfessionalProfileItemController;
 use App\Http\Controllers\ProfessionalDashboardController;
 use Illuminate\Http\Request;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
 
 Route::get('/', function () {
     return view('welcome');
@@ -94,10 +84,15 @@ Route::middleware([
     Route::delete('/professionista/documenti/{type}', [ProfessionalDocumentController::class, 'destroy'])
         ->whereIn('type', ['ata_certificate', 'residence_permit'])
         ->name('professional-documents.destroy');
+
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
     Route::post('/professionista/moodle/collegamenti/{moodleUserLink}/sincronizza-attestati', MoodleCertificateSyncController::class)
         ->name('professional.moodle.certificates.sync');
+    Route::get('/professionista/moodle/attestati/{certificate}/visualizza', [ProfessionalCertificateController::class, 'view'])
+        ->name('professional.moodle.certificates.view');
+    Route::get('/professionista/moodle/attestati/{certificate}/scarica', [ProfessionalCertificateController::class, 'download'])
+        ->name('professional.moodle.certificates.download');
     Route::get('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'showVerify'])->name('professional.moodle.verify.show');
     Route::post('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'verify'])->name('professional.moodle.verify');
     Route::post('/professionista/moodle/tentativi/{attempt}/annulla', [MoodleAccountLinkController::class, 'cancel'])->name('professional.moodle.cancel');
