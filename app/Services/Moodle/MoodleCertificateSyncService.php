@@ -7,6 +7,7 @@ use App\Models\UserCertificate;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
 
@@ -17,9 +18,7 @@ class MoodleCertificateSyncService
     ) {
     }
 
-    /**
-     * @return array{received:int,saved:int,driver:string,trace_id:string}
-     */
+    /** @return array{received:int,saved:int,driver:string,trace_id:string} */
     public function sync(MoodleUserLink $link): array
     {
         $flow = 'certificate_sync';
@@ -45,10 +44,7 @@ class MoodleCertificateSyncService
             ]);
 
             $client = MoodleApiClient::forUserLink($link);
-
-            $this->logger->step($traceId, $flow, 'moodle_api.sync.started', [
-                'driver' => $driver,
-            ]);
+            $this->logger->step($traceId, $flow, 'moodle_api.sync.started', ['driver' => $driver]);
 
             $payload = match ($driver) {
                 'local_plugin', 'local_laravelcertsync' => $client->getUserCertificatesViaLocalPlugin($link),
@@ -66,12 +62,10 @@ class MoodleCertificateSyncService
             $saved = 0;
             $skipped = 0;
 
-            $this->logger->step($traceId, $flow, 'certificates.extracted', [
-                'received' => $items->count(),
-            ]);
+            $this->logger->step($traceId, $flow, 'certificates.extracted', ['received' => $items->count()]);
 
             foreach ($items as $index => $item) {
-                if ($this->persist($link, $item)) {
+                if ($this->persist($link, $item, $traceId, $flow)) {
                     $saved++;
                     continue;
                 }
@@ -114,22 +108,17 @@ class MoodleCertificateSyncService
     /** @return Collection<int, array<string, mixed>> */
     private function extractItems(array $payload): Collection
     {
-        $items = $payload['certificates']
-            ?? $payload['issues']
-            ?? $payload['data']
-            ?? $payload;
+        $items = $payload['certificates'] ?? $payload['issues'] ?? $payload['data'] ?? $payload;
 
         if (! is_array($items)) {
             return collect();
         }
 
-        return collect($items)
-            ->filter(fn ($item) => is_array($item))
-            ->values();
+        return collect($items)->filter(fn ($item) => is_array($item))->values();
     }
 
     /** @param array<string, mixed> $item */
-    private function persist(MoodleUserLink $link, array $item): bool
+    private function persist(MoodleUserLink $link, array $item, string $traceId, string $flow): bool
     {
         $issueId = $this->int($item, ['issue.id', 'issueid', 'issue_id', 'id']);
         $certificateCode = $this->string($item, ['issue.code', 'code', 'certificatecode', 'certificate_code']);
@@ -150,6 +139,13 @@ class MoodleCertificateSyncService
             : $query->where('certificate_code', $certificateCode);
 
         $certificate = $query->first() ?? new UserCertificate($identity);
+        $storedPdfPath = $this->storePdf($link, $item, $issueId, $certificateCode, $traceId, $flow);
+
+        $rawPayload = $item;
+        if (isset($rawPayload['pdf']['content'])) {
+            $rawPayload['pdf']['content'] = null;
+            $rawPayload['pdf']['haspdf'] = filled($storedPdfPath);
+        }
 
         $certificate->fill([
             'moodle_customcert_id' => $this->int($item, ['issue.customcertid', 'customcertid', 'customcert_id', 'certificateid']),
@@ -168,12 +164,52 @@ class MoodleCertificateSyncService
             'download_url' => $this->string($item, ['pdf.url', 'downloadurl', 'download_url']),
             'verification_url' => $this->string($item, ['verificationurl', 'verification_url', 'verifyurl']),
             'verification_is_public' => (bool) ($item['verification_is_public'] ?? $item['verificationispublic'] ?? false),
-            'raw_payload_json' => $item,
+            'pdf_stored_path' => $storedPdfPath ?: $certificate->pdf_stored_path,
+            'raw_payload_json' => $rawPayload,
         ]);
 
         $certificate->save();
 
         return true;
+    }
+
+    /** @param array<string, mixed> $item */
+    private function storePdf(
+        MoodleUserLink $link,
+        array $item,
+        ?int $issueId,
+        ?string $certificateCode,
+        string $traceId,
+        string $flow
+    ): ?string {
+        $encoded = $this->string($item, ['pdf.content', 'pdfcontent', 'pdf_content']);
+
+        if (blank($encoded)) {
+            return null;
+        }
+
+        $binary = base64_decode($encoded, true);
+        if ($binary === false || ! str_starts_with($binary, '%PDF-')) {
+            $this->logger->warning($traceId, $flow, 'certificate.pdf_invalid', [
+                'issue_id' => $issueId,
+                'certificate_code' => $certificateCode,
+            ]);
+
+            return null;
+        }
+
+        $fileKey = $issueId ?: preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $certificateCode);
+        $path = "moodle-certificates/{$link->laravel_user_id}/{$link->moodle_site_id}/{$fileKey}.pdf";
+
+        Storage::disk('local')->put($path, $binary);
+
+        $this->logger->step($traceId, $flow, 'certificate.pdf_stored', [
+            'issue_id' => $issueId,
+            'path' => $path,
+            'bytes' => strlen($binary),
+        ]);
+
+        return $path;
     }
 
     /** @param array<string, mixed> $item */
@@ -193,6 +229,7 @@ class MoodleCertificateSyncService
     private function int(array $item, array $keys): ?int
     {
         $value = $this->string($item, $keys);
+
         return is_numeric($value) ? (int) $value : null;
     }
 
@@ -206,9 +243,7 @@ class MoodleCertificateSyncService
         }
 
         try {
-            return is_numeric($value)
-                ? Carbon::createFromTimestamp((int) $value)
-                : Carbon::parse($value);
+            return is_numeric($value) ? Carbon::createFromTimestamp((int) $value) : Carbon::parse($value);
         } catch (Throwable) {
             return null;
         }
