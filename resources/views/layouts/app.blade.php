@@ -71,7 +71,7 @@
 
                 <main class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                     @if (session('status'))
-                        <x-ui.alert variant="success" class="mb-6">
+                        <x-ui.alert :variant="session('status_variant', 'success')" class="mb-6">
                             {{ session('status') }}
                         </x-ui.alert>
                     @endif
