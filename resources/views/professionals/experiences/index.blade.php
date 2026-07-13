@@ -15,14 +15,14 @@
             <form method="POST" action="{{ route('professional-profile-items.store') }}" class="mt-6 space-y-5">
                 @csrf
 
-                <x-ui.select name="type" label="Tipo" required>
+                <x-ui.select name="type" id="new_profile_item_type" label="Tipo" required>
                     <option value="work_experience" @selected(old('type') === 'work_experience')>Esperienza lavorativa</option>
                     <option value="education" @selected(old('type') === 'education')>Percorso di studio</option>
                 </x-ui.select>
 
-                <x-ui.input name="title" label="Titolo" :value="old('title')" required />
-                <x-ui.input name="duration" label="Durata" :value="old('duration')" placeholder="Es. 2021 - 2024" required />
-                <x-ui.textarea name="description" label="Descrizione" rows="5">{{ old('description') }}</x-ui.textarea>
+                <x-ui.input name="title" id="new_profile_item_title" label="Titolo" :value="old('title')" required />
+                <x-ui.input name="duration" id="new_profile_item_duration" label="Durata" :value="old('duration')" placeholder="Es. 2021 - 2024" required />
+                <x-ui.textarea name="description" id="new_profile_item_description" label="Descrizione" rows="5">{{ old('description') }}</x-ui.textarea>
 
                 <div class="flex justify-end border-t border-slate-100 pt-5">
                     <x-ui.button type="submit">Aggiungi al profilo</x-ui.button>
@@ -49,27 +49,48 @@
             @else
                 <div class="mt-6 space-y-4">
                     @foreach ($profileItems as $item)
-                        <article class="rounded-2xl border border-slate-200 p-5">
-                            <form method="POST" action="{{ route('professional-profile-items.update', $item) }}" class="space-y-5">
-                                @csrf
-                                @method('PUT')
-
-                                <div class="grid gap-4 md:grid-cols-[180px_1fr_180px]">
-                                    <x-ui.select name="type" label="Tipo" required>
-                                        <option value="work_experience" @selected($item->type === 'work_experience')>Esperienza lavorativa</option>
-                                        <option value="education" @selected($item->type === 'education')>Percorso di studio</option>
-                                    </x-ui.select>
-
-                                    <x-ui.input name="title" label="Titolo" :value="$item->title" required />
-                                    <x-ui.input name="duration" label="Durata" :value="$item->duration" required />
+                        <article class="rounded-2xl border border-slate-200 bg-white p-5">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="font-semibold text-slate-950">{{ $item->title }}</h3>
+                                        <x-ui.badge variant="neutral">
+                                            {{ $item->type === 'education' ? 'Percorso di studio' : 'Esperienza lavorativa' }}
+                                        </x-ui.badge>
+                                    </div>
+                                    <p class="mt-2 text-sm font-medium text-slate-600">{{ $item->duration }}</p>
+                                    @if ($item->description)
+                                        <p class="mt-3 text-sm leading-6 text-slate-600">{{ $item->description }}</p>
+                                    @endif
                                 </div>
+                            </div>
 
-                                <x-ui.textarea name="description" label="Descrizione" rows="4">{{ $item->description }}</x-ui.textarea>
+                            <details class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <summary class="cursor-pointer select-none text-sm font-semibold text-teal-700">
+                                    Modifica elemento
+                                </summary>
 
-                                <div class="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-4">
-                                    <x-ui.button type="submit" variant="secondary">Salva modifiche</x-ui.button>
-                                </div>
-                            </form>
+                                <form method="POST" action="{{ route('professional-profile-items.update', $item) }}" class="mt-5 space-y-5">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <div class="grid gap-4 md:grid-cols-[180px_1fr_180px]">
+                                        <x-ui.select name="type" id="profile_item_type_{{ $item->id }}" label="Tipo" required>
+                                            <option value="work_experience" @selected($item->type === 'work_experience')>Esperienza lavorativa</option>
+                                            <option value="education" @selected($item->type === 'education')>Percorso di studio</option>
+                                        </x-ui.select>
+
+                                        <x-ui.input name="title" id="profile_item_title_{{ $item->id }}" label="Titolo" :value="$item->title" required />
+                                        <x-ui.input name="duration" id="profile_item_duration_{{ $item->id }}" label="Durata" :value="$item->duration" required />
+                                    </div>
+
+                                    <x-ui.textarea name="description" id="profile_item_description_{{ $item->id }}" label="Descrizione" rows="4">{{ $item->description }}</x-ui.textarea>
+
+                                    <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-4">
+                                        <x-ui.button type="submit">Salva modifiche</x-ui.button>
+                                    </div>
+                                </form>
+                            </details>
 
                             <form method="POST" action="{{ route('professional-profile-items.destroy', $item) }}" class="mt-3 flex justify-end" onsubmit="return confirm('Eliminare questo elemento dal profilo?');">
                                 @csrf
