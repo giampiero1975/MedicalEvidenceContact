@@ -69,7 +69,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Candidature</p>
-                        <h2 class="mt-2 text-xl font-semibold text-slate-950">Attività recente</h2>
+                        <h2 class="mt-2 text-xl font-semibold text-slate-950">Le tue candidature</h2>
                     </div>
                     <x-ui.button variant="secondary" size="sm" :href="route('job-postings.index')">Vedi annunci</x-ui.button>
                 </div>
@@ -87,7 +87,7 @@
                                     <p class="mt-1 text-sm text-slate-500">Inviata il {{ $application->created_at?->format('d/m/Y') }}</p>
                                 </div>
                                 <x-ui.badge :variant="in_array($application->status, ['accettata', 'colloquio'], true) ? 'success' : ($application->status === 'rifiutata' ? 'danger' : 'warning')">
-                                    {{ ucfirst(str_replace('_', ' ', $application->status)) }}
+                                    {{ $application->status === 'inviata' ? 'Candidatura inviata' : ucfirst(str_replace('_', ' ', $application->status)) }}
                                 </x-ui.badge>
                             </div>
                         @endforeach
