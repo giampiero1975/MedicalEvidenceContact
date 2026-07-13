@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JobPosting;
 use App\Models\MoodleSite;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,7 +13,9 @@ class ProfessionalDashboardController extends Controller
     {
         abort_unless($request->user()->role === 'professional', 403);
 
-        $acceptedJobApplications = $request->user()
+        $user = $request->user();
+
+        $jobApplications = $user
             ->jobApplications()
             ->with('jobPosting')
             ->latest()
@@ -23,16 +26,50 @@ class ProfessionalDashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $moodleUserLinks = $request->user()
+        $moodleUserLinks = $user
             ->moodleUserLinks()
             ->with('moodleSite')
             ->latest()
             ->get();
 
-        return view('professionals.dashboard', [
-            'acceptedJobApplications' => $acceptedJobApplications,
+        $profileFields = [
+            $user->first_name,
+            $user->last_name,
+            $user->phone,
+            $user->nationality,
+            $user->address_city,
+            $user->address_country,
+            $user->address_province,
+            $user->postal_code,
+            $user->street_address,
+        ];
+
+        $completedFields = collect($profileFields)
+            ->filter(fn ($value) => filled($value))
+            ->count();
+
+        $profileCompletion = (int) round(($completedFields / count($profileFields)) * 100);
+
+        return view('professionals.dashboard-overview', [
+            'jobApplications' => $jobApplications,
+            'activeApplicationsCount' => $jobApplications->whereNotIn('status', ['rifiutata', 'ritirata'])->count(),
+            'acceptedApplicationsCount' => $jobApplications->where('status', 'accettata')->count(),
+            'availableJobsCount' => JobPosting::query()->visibleToProfessionals()->count(),
+            'profileCompletion' => $profileCompletion,
             'moodleSites' => $moodleSites,
             'moodleUserLinks' => $moodleUserLinks,
+            'documents' => [
+                [
+                    'label' => 'Attestato ATA',
+                    'uploaded' => filled($user->ata_certificate_path),
+                    'required' => true,
+                ],
+                [
+                    'label' => 'Permesso di soggiorno',
+                    'uploaded' => filled($user->residence_permit_path),
+                    'required' => ! in_array(strtolower(trim((string) $user->nationality)), ['italiana', 'italiano', 'italia', 'italian'], true),
+                ],
+            ],
         ]);
     }
 }
