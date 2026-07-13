@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE users MODIFY uuid CHAR(36) NOT NULL DEFAULT (UUID())');
     }
 
@@ -18,6 +22,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE users MODIFY uuid CHAR(36) NOT NULL');
     }
 };
