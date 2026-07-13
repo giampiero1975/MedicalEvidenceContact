@@ -20,6 +20,10 @@
         </x-ui.sidebar-link>
 
         @if ($isProfessional)
+            <x-ui.sidebar-link :href="route('professional.experiences.index')" :active="request()->routeIs('professional.experiences.*')">
+                Esperienze e studi
+            </x-ui.sidebar-link>
+
             <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.*')">
                 Offerte di lavoro
             </x-ui.sidebar-link>
