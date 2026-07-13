@@ -24,6 +24,10 @@
                 Esperienze e studi
             </x-ui.sidebar-link>
 
+            <x-ui.sidebar-link :href="route('professional.documents.index')" :active="request()->routeIs('professional.documents.*')">
+                Documenti
+            </x-ui.sidebar-link>
+
             <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.*')">
                 Offerte di lavoro
             </x-ui.sidebar-link>
