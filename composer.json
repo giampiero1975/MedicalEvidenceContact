@@ -48,7 +48,9 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "test": "php artisan test",
+        "test:dry-run": "php artisan test --testsuite=Feature --stop-on-failure"
     },
     "extra": {
         "laravel": {
