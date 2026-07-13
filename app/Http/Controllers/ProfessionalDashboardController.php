@@ -32,6 +32,11 @@ class ProfessionalDashboardController extends Controller
             ->latest()
             ->get();
 
+        $profileItems = $user
+            ->professionalProfileItems()
+            ->latest()
+            ->get();
+
         $profileFields = [
             $user->first_name,
             $user->last_name,
@@ -78,6 +83,7 @@ class ProfessionalDashboardController extends Controller
             'acceptedApplicationsCount' => $jobApplications->where('status', 'accettata')->count(),
             'availableJobsCount' => JobPosting::query()->visibleToProfessionals()->count(),
             'profileCompletion' => $profileCompletion,
+            'profileItems' => $profileItems,
             'moodleSites' => $moodleSites,
             'moodleUserLinks' => $moodleUserLinks,
             'documents' => $documents,
