@@ -53,7 +53,8 @@ class ProfileInformationTest extends TestCase
 
     public function test_professional_can_upload_required_profile_documents(): void
     {
-        Storage::fake('public');
+        $disk = config('filesystems.professional_documents_disk', 'professional_documents');
+        Storage::fake($disk);
 
         $this->actingAs($user = User::factory()->create([
             'nationality' => 'Argentina',
@@ -78,8 +79,8 @@ class ProfileInformationTest extends TestCase
 
         $this->assertNotNull($user->residence_permit_path);
         $this->assertNotNull($user->ata_certificate_path);
-        Storage::disk('public')->assertExists($user->residence_permit_path);
-        Storage::disk('public')->assertExists($user->ata_certificate_path);
+        Storage::disk($disk)->assertExists($user->residence_permit_path);
+        Storage::disk($disk)->assertExists($user->ata_certificate_path);
     }
 
     public function test_profile_information_rejects_manual_nationality_values(): void
