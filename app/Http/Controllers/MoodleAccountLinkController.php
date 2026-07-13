@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\MoodleLinkAttempt;
 use App\Models\MoodleSite;
 use App\Models\MoodleUserLink;
+use App\Services\Mail\MoodleSiteMailer;
 use App\Services\Moodle\MoodleApiClient;
 use App\Services\Moodle\MoodleApiException;
-use App\Services\Mail\MoodleSiteMailer;
+use App\Services\Moodle\MoodleFlowLogger;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,9 +37,11 @@ class MoodleAccountLinkController extends Controller
         ]);
     }
 
-    public function start(Request $request): RedirectResponse
+    public function start(Request $request, MoodleFlowLogger $flowLogger): RedirectResponse
     {
         abort_unless($request->user()->role === 'professional', 403);
+
+        $startedAt = microtime(true);
 
         $data = $request->validate([
             'moodle_site_id' => ['required', 'integer', Rule::exists('moodle_sites', 'id')->where('enabled', true)],
@@ -49,11 +52,25 @@ class MoodleAccountLinkController extends Controller
         $moodleSite = MoodleSite::query()->whereKey($data['moodle_site_id'])->firstOrFail();
         $lookupValue = trim((string) $data['lookup_value']);
         $lookupHash = hash('sha256', mb_strtolower($lookupValue));
+        $maskedLookup = $this->maskLookupValue($data['lookup_type'], $lookupValue);
+
+        $traceId = $flowLogger->begin('account_link.start', [
+            'laravel_user_id' => $request->user()->id,
+            'moodle_site_id' => $moodleSite->id,
+            'moodle_site_name' => $moodleSite->name,
+            'lookup_type' => $data['lookup_type'],
+            'lookup_masked' => $maskedLookup,
+            'ip_address' => $request->ip(),
+        ]);
 
         if ($request->user()->moodleUserLinks()
             ->where('moodle_site_id', $moodleSite->id)
             ->where('status', 'active')
             ->exists()) {
+            $flowLogger->warning($traceId, 'account_link.start', 'active_link.already_exists', [
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
+
             return redirect()
                 ->route('professional.moodle.index')
                 ->with('status', 'Hai gia un collegamento attivo per questo sito Moodle.')
@@ -65,15 +82,34 @@ class MoodleAccountLinkController extends Controller
             'moodle_site_id' => $moodleSite->id,
             'lookup_type' => $data['lookup_type'],
             'lookup_value_hash' => $lookupHash,
-            'lookup_value_masked' => $this->maskLookupValue($data['lookup_type'], $lookupValue),
+            'lookup_value_masked' => $maskedLookup,
             'status' => 'created',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
 
+        $flowLogger->step($traceId, 'account_link.start', 'attempt.created', [
+            'attempt_id' => $attempt->id,
+            'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+        ]);
+
         try {
+            $flowLogger->step($traceId, 'account_link.start', 'moodle_api.lookup.started', [
+                'attempt_id' => $attempt->id,
+            ]);
+
             $users = (new MoodleApiClient($moodleSite))->getUsersByField($data['lookup_type'], $lookupValue);
+
+            $flowLogger->step($traceId, 'account_link.start', 'moodle_api.lookup.completed', [
+                'attempt_id' => $attempt->id,
+                'users_found' => count($users),
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
         } catch (MoodleApiException $exception) {
+            $flowLogger->failure($traceId, 'account_link.start', 'moodle_api.lookup.failed', $exception, [
+                'attempt_id' => $attempt->id,
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
             report($exception);
             $attempt->update(['status' => 'failed']);
 
@@ -81,21 +117,41 @@ class MoodleAccountLinkController extends Controller
         }
 
         if (count($users) !== 1 || blank($users[0]['id'] ?? null) || blank($users[0]['email'] ?? null)) {
+            $flowLogger->warning($traceId, 'account_link.start', 'moodle_api.lookup.invalid_result', [
+                'attempt_id' => $attempt->id,
+                'users_found' => count($users),
+                'first_user_has_id' => filled($users[0]['id'] ?? null),
+                'first_user_has_email' => filled($users[0]['email'] ?? null),
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
             $attempt->update(['status' => 'failed']);
 
             return $this->genericStartRedirect();
         }
 
         $moodleUser = $users[0];
+        $maskedEmail = $this->maskEmail((string) $moodleUser['email']);
+
+        $flowLogger->step($traceId, 'account_link.start', 'moodle_user.resolved', [
+            'attempt_id' => $attempt->id,
+            'moodle_user_id' => $moodleUser['id'],
+            'moodle_email_masked' => $maskedEmail,
+        ]);
 
         if (MoodleUserLink::query()
             ->where('moodle_site_id', $moodleSite->id)
             ->where('moodle_user_id', $moodleUser['id'])
             ->where('status', 'active')
             ->exists()) {
+            $flowLogger->warning($traceId, 'account_link.start', 'moodle_user.already_linked', [
+                'attempt_id' => $attempt->id,
+                'moodle_user_id' => $moodleUser['id'],
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
+
             $attempt->update([
                 'moodle_user_id' => $moodleUser['id'],
-                'moodle_email_masked' => $this->maskEmail((string) $moodleUser['email']),
+                'moodle_email_masked' => $maskedEmail,
                 'status' => 'failed',
             ]);
 
@@ -108,7 +164,12 @@ class MoodleAccountLinkController extends Controller
         $code = (string) random_int(100000, 999999);
 
         try {
-            DB::transaction(function () use ($attempt, $moodleUser, $code, $moodleSite): void {
+            $flowLogger->step($traceId, 'account_link.start', 'verification.prepare.started', [
+                'attempt_id' => $attempt->id,
+                'recipient_masked' => $maskedEmail,
+            ]);
+
+            DB::transaction(function () use ($attempt, $moodleUser, $code, $moodleSite, $flowLogger, $traceId, $maskedEmail): void {
                 MoodleLinkAttempt::query()
                     ->where('laravel_user_id', $attempt->laravel_user_id)
                     ->where('moodle_site_id', $attempt->moodle_site_id)
@@ -118,20 +179,41 @@ class MoodleAccountLinkController extends Controller
 
                 $attempt->update([
                     'moodle_user_id' => $moodleUser['id'],
-                    'moodle_email_masked' => $this->maskEmail((string) $moodleUser['email']),
+                    'moodle_email_masked' => $maskedEmail,
                     'verification_code_hash' => Hash::make($code),
                     'expires_at' => now()->addMinutes(15),
                     'status' => 'sent',
                 ]);
 
+                $flowLogger->step($traceId, 'account_link.start', 'verification.attempt_marked_sent', [
+                    'attempt_id' => $attempt->id,
+                    'expires_at' => $attempt->expires_at?->toISOString(),
+                ]);
+
                 app(MoodleSiteMailer::class)->sendMoodleAccountLinkCode((string) $moodleUser['email'], $code, $moodleSite);
+
+                $flowLogger->step($traceId, 'account_link.start', 'verification.email.sent', [
+                    'attempt_id' => $attempt->id,
+                    'recipient_masked' => $maskedEmail,
+                ]);
             });
         } catch (Throwable $exception) {
+            $flowLogger->failure($traceId, 'account_link.start', 'verification.prepare.failed', $exception, [
+                'attempt_id' => $attempt->id,
+                'recipient_masked' => $maskedEmail,
+                'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+            ]);
             report($exception);
             $attempt->update(['status' => 'failed']);
 
             return $this->genericStartRedirect();
         }
+
+        $flowLogger->success($traceId, 'account_link.start', [
+            'attempt_id' => $attempt->id,
+            'redirect_route' => 'professional.moodle.verify.show',
+            'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
+        ]);
 
         return redirect()
             ->route('professional.moodle.verify.show', $attempt)
@@ -269,5 +351,10 @@ class MoodleAccountLinkController extends Controller
         [$local, $domain] = explode('@', $email, 2);
 
         return mb_substr($local, 0, 1).'***@'.$domain;
+    }
+
+    private function elapsedMilliseconds(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 }
