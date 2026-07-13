@@ -59,12 +59,18 @@ class MoodleCertificateSyncService
             ]);
 
             $items = $this->extractItems($payload);
+            $courseIndex = $this->buildCourseIndex($client, $link, $traceId, $flow);
             $saved = 0;
             $skipped = 0;
 
-            $this->logger->step($traceId, $flow, 'certificates.extracted', ['received' => $items->count()]);
+            $this->logger->step($traceId, $flow, 'certificates.extracted', [
+                'received' => $items->count(),
+                'course_matches_available' => count($courseIndex),
+            ]);
 
             foreach ($items as $index => $item) {
+                $item = $this->enrichWithCourse($item, $courseIndex, $traceId, $flow);
+
                 if ($this->persist($link, $item, $traceId, $flow)) {
                     $saved++;
                     continue;
@@ -115,6 +121,93 @@ class MoodleCertificateSyncService
         }
 
         return collect($items)->filter(fn ($item) => is_array($item))->values();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function buildCourseIndex(
+        MoodleApiClient $client,
+        MoodleUserLink $link,
+        string $traceId,
+        string $flow
+    ): array {
+        try {
+            $this->logger->step($traceId, $flow, 'course_enrichment.started');
+            $courses = $client->getUserCourses((int) $link->moodle_user_id);
+            $index = [];
+
+            foreach ($courses as $course) {
+                if (! is_array($course) || blank($course['id'] ?? null)) {
+                    continue;
+                }
+
+                $courseId = (int) $course['id'];
+                $sections = $client->getCourseContents($courseId);
+
+                foreach ($sections as $section) {
+                    foreach (($section['modules'] ?? []) as $module) {
+                        if (($module['modname'] ?? null) !== 'customcert' || blank($module['instance'] ?? null)) {
+                            continue;
+                        }
+
+                        $index[(int) $module['instance']] = [
+                            'course' => [
+                                'id' => $courseId,
+                                'fullname' => $course['fullname'] ?? null,
+                                'shortname' => $course['shortname'] ?? null,
+                            ],
+                            'coursemoduleid' => isset($module['id']) ? (int) $module['id'] : null,
+                            'certificate' => [
+                                'name' => $module['name'] ?? null,
+                            ],
+                        ];
+                    }
+                }
+            }
+
+            $this->logger->step($traceId, $flow, 'course_enrichment.completed', [
+                'courses_received' => count($courses),
+                'customcert_modules_indexed' => count($index),
+            ]);
+
+            return $index;
+        } catch (Throwable $exception) {
+            $this->logger->warning($traceId, $flow, 'course_enrichment.unavailable', [
+                'exception_class' => $exception::class,
+                'exception_message' => $exception->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /** @param array<string, mixed> $item @param array<int, array<string, mixed>> $courseIndex */
+    private function enrichWithCourse(array $item, array $courseIndex, string $traceId, string $flow): array
+    {
+        $customcertId = $this->int($item, ['issue.customcertid', 'customcertid', 'customcert_id', 'certificateid']);
+
+        if (! $customcertId || ! isset($courseIndex[$customcertId])) {
+            $this->logger->warning($traceId, $flow, 'certificate.course_not_resolved', [
+                'customcert_id' => $customcertId,
+                'issue_id' => $this->int($item, ['issue.id', 'issueid', 'issue_id', 'id']),
+            ]);
+
+            return $item;
+        }
+
+        $enrichment = $courseIndex[$customcertId];
+        $item['course'] = $enrichment['course'];
+        $item['coursemoduleid'] = $enrichment['coursemoduleid'];
+        $item['certificate'] = array_filter([
+            'name' => $enrichment['certificate']['name'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $this->logger->step($traceId, $flow, 'certificate.course_resolved', [
+            'customcert_id' => $customcertId,
+            'course_id' => $item['course']['id'] ?? null,
+            'course_module_id' => $item['coursemoduleid'] ?? null,
+        ]);
+
+        return $item;
     }
 
     /** @param array<string, mixed> $item */
