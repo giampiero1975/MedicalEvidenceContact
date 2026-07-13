@@ -84,6 +84,15 @@ Route::middleware([
     Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
     Route::get('/professionista/documenti', ProfessionalDocumentsPageController::class)->name('professional.documents.index');
     Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
+    Route::get('/professionista/documenti/{type}/visualizza', [ProfessionalDocumentController::class, 'view'])
+        ->whereIn('type', ['ata_certificate', 'residence_permit'])
+        ->name('professional-documents.view');
+    Route::get('/professionista/documenti/{type}/scarica', [ProfessionalDocumentController::class, 'download'])
+        ->whereIn('type', ['ata_certificate', 'residence_permit'])
+        ->name('professional-documents.download');
+    Route::delete('/professionista/documenti/{type}', [ProfessionalDocumentController::class, 'destroy'])
+        ->whereIn('type', ['ata_certificate', 'residence_permit'])
+        ->name('professional-documents.destroy');
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
     Route::get('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'showVerify'])->name('professional.moodle.verify.show');
