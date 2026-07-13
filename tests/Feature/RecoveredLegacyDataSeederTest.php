@@ -46,7 +46,7 @@ class RecoveredLegacyDataSeederTest extends TestCase
             'contract_type' => 'Part-time',
             'salary_min' => 2000,
             'salary_max' => 2500,
-            'expires_at' => '2026-05-27',
+            'expires_at' => '2026-05-27 00:00:00',
         ]);
 
         $this->assertDatabaseHas('job_applications', [
