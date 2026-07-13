@@ -1,99 +1,168 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-1">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">I miei Moodle</h2>
-            <p class="text-sm text-gray-600">Collega i tuoi account Moodle e prepara la sincronizzazione degli attestati.</p>
-        </div>
+        <x-ui.page-header
+            title="Moodle e attestati"
+            subtitle="Collega i tuoi account Moodle e prepara la sincronizzazione di corsi, certificazioni e attestati."
+        />
     </x-slot>
 
-    <div class="py-10">
-        <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            @session('status')
-                <div class="mb-6 rounded-md bg-green-50 p-4 text-sm font-medium text-green-700">{{ $value }}</div>
-            @endsession
+    <div class="space-y-8">
+        @if (session('status'))
+            <x-ui.alert variant="success">{{ session('status') }}</x-ui.alert>
+        @endif
 
-            <x-validation-errors class="mb-6" />
+        @if ($errors->any())
+            <x-ui.alert variant="danger" title="Controlla i dati inseriti">
+                <ul class="list-disc space-y-1 pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-ui.alert>
+        @endif
 
-            <section class="mb-8 bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:rounded-lg">
-                <div class="flex flex-col gap-1">
-                    <h3 class="text-lg font-semibold text-gray-900">Collega account Moodle</h3>
-                    <p class="text-sm text-gray-600">Se i dati corrispondono a un account Moodle, riceverai un codice all email associata.</p>
-                </div>
+        <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <x-ui.stat-card
+                label="Siti disponibili"
+                :value="$moodleSites->count()"
+                hint="Piattaforme Moodle attive"
+            />
+            <x-ui.stat-card
+                label="Account collegati"
+                :value="$moodleUserLinks->where('status', 'active')->count()"
+                hint="Collegamenti verificati"
+            />
+            <x-ui.stat-card
+                label="Sincronizzazione"
+                :value="$moodleUserLinks->where('status', 'active')->isNotEmpty() ? 'Pronta' : 'Da configurare'"
+                hint="Stato integrazione formazione"
+            />
+        </section>
+
+        <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <x-ui.card>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Nuovo collegamento</p>
+                <h2 class="mt-2 text-xl font-semibold text-slate-950">Collega un account Moodle</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600">
+                    Cerca il tuo account tramite email o username. Se i dati corrispondono, riceverai un codice all'indirizzo email registrato su Moodle.
+                </p>
 
                 @if ($moodleSites->isEmpty())
-                    <div class="mt-5 rounded-md border border-dashed border-gray-300 p-5 text-sm text-gray-600">
-                        Nessun sito Moodle disponibile.
+                    <div class="mt-6">
+                        <x-ui.empty-state
+                            title="Nessun sito Moodle disponibile"
+                            description="Al momento non ci sono piattaforme abilitate al collegamento."
+                        />
                     </div>
                 @else
-                    <form method="POST" action="{{ route('professional.moodle.start') }}" class="mt-5 grid gap-4 lg:grid-cols-3">
+                    <form method="POST" action="{{ route('professional.moodle.start') }}" class="mt-6 space-y-5">
                         @csrf
 
-                        <div>
-                            <x-label for="moodle_site_id" value="Sito Moodle" />
-                            <select id="moodle_site_id" name="moodle_site_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @foreach ($moodleSites as $moodleSite)
-                                    <option value="{{ $moodleSite->id }}" @selected(old('moodle_site_id') == $moodleSite->id)>{{ $moodleSite->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <x-ui.select name="moodle_site_id" label="Sito Moodle" required>
+                            @foreach ($moodleSites as $moodleSite)
+                                <option value="{{ $moodleSite->id }}" @selected(old('moodle_site_id') == $moodleSite->id)>
+                                    {{ $moodleSite->name }}
+                                </option>
+                            @endforeach
+                        </x-ui.select>
 
-                        <div>
-                            <x-label for="lookup_type" value="Tipo dato" />
-                            <select id="lookup_type" name="lookup_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                <option value="email" @selected(old('lookup_type') === 'email')>Email Moodle</option>
-                                <option value="username" @selected(old('lookup_type') === 'username')>Username Moodle</option>
-                            </select>
-                        </div>
+                        <x-ui.select name="lookup_type" label="Come vuoi cercare l'account?" required>
+                            <option value="email" @selected(old('lookup_type', 'email') === 'email')>Email Moodle</option>
+                            <option value="username" @selected(old('lookup_type') === 'username')>Username Moodle</option>
+                        </x-ui.select>
 
-                        <div>
-                            <x-label for="lookup_value" value="Email o username Moodle" />
-                            <x-input id="lookup_value" name="lookup_value" type="text" class="mt-1 block w-full" value="{{ old('lookup_value') }}" required />
-                        </div>
+                        <x-ui.input
+                            name="lookup_value"
+                            label="Email o username Moodle"
+                            :value="old('lookup_value')"
+                            placeholder="Inserisci il dato usato su Moodle"
+                            help="Il dato viene usato solo per individuare l'account e avviare la verifica."
+                            required
+                        />
 
-                        <div class="flex justify-end border-t border-gray-100 pt-5 lg:col-span-3">
-                            <x-button>Collega account</x-button>
+                        <div class="flex justify-end border-t border-slate-100 pt-5">
+                            <x-ui.button type="submit">Collega account</x-ui.button>
                         </div>
                     </form>
                 @endif
-            </section>
+            </x-ui.card>
 
-            <section class="bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:rounded-lg">
-                <div class="flex flex-col gap-1">
-                    <h3 class="text-lg font-semibold text-gray-900">Account collegati</h3>
-                    <p class="text-sm text-gray-600">I collegamenti attivi saranno usati per la sincronizzazione attestati nella fase successiva.</p>
+            <x-ui.card>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Formazione collegata</p>
+                        <h2 class="mt-2 text-xl font-semibold text-slate-950">I tuoi account Moodle</h2>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">
+                            I collegamenti attivi saranno usati per sincronizzare corsi completati e attestati disponibili.
+                        </p>
+                    </div>
+                    <x-ui.badge>{{ $moodleUserLinks->count() }} collegamenti</x-ui.badge>
                 </div>
 
                 @if ($moodleUserLinks->isEmpty())
-                    <div class="mt-5 rounded-md border border-dashed border-gray-300 p-5 text-sm text-gray-600">
-                        Nessun account Moodle collegato.
+                    <div class="mt-6">
+                        <x-ui.empty-state
+                            title="Nessun account Moodle collegato"
+                            description="Usa il modulo accanto per collegare il tuo primo account."
+                        />
                     </div>
                 @else
-                    <div class="mt-5 overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50 text-left text-xs font-semibold uppercase text-gray-500">
-                                <tr>
-                                    <th class="px-3 py-2">Sito</th>
-                                    <th class="px-3 py-2">Username</th>
-                                    <th class="px-3 py-2">ID Moodle</th>
-                                    <th class="px-3 py-2">Stato</th>
-                                    <th class="px-3 py-2">Collegato il</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach ($moodleUserLinks as $link)
-                                    <tr>
-                                        <td class="px-3 py-2 text-gray-700">{{ $link->moodleSite->name }}</td>
-                                        <td class="px-3 py-2 text-gray-700">{{ $link->moodle_username ?: '-' }}</td>
-                                        <td class="px-3 py-2 text-gray-700">{{ $link->moodle_user_id }}</td>
-                                        <td class="px-3 py-2 text-gray-700">{{ $link->status }}</td>
-                                        <td class="px-3 py-2 text-gray-700">{{ $link->linked_at?->format('d/m/Y H:i') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="mt-6 space-y-4">
+                        @foreach ($moodleUserLinks as $link)
+                            <article class="rounded-2xl border border-slate-200 p-5">
+                                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-3">
+                                            <h3 class="font-semibold text-slate-950">{{ $link->moodleSite->name }}</h3>
+                                            <x-ui.badge :variant="$link->status === 'active' ? 'success' : 'warning'">
+                                                {{ $link->status === 'active' ? 'Attivo' : ucfirst($link->status) }}
+                                            </x-ui.badge>
+                                        </div>
+
+                                        <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                                            <div class="rounded-xl bg-slate-50 p-4">
+                                                <dt class="font-semibold text-slate-900">Username</dt>
+                                                <dd class="mt-1 break-all text-slate-600">{{ $link->moodle_username ?: 'Non disponibile' }}</dd>
+                                            </div>
+                                            <div class="rounded-xl bg-slate-50 p-4">
+                                                <dt class="font-semibold text-slate-900">ID Moodle</dt>
+                                                <dd class="mt-1 text-slate-600">{{ $link->moodle_user_id }}</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+
+                                    <div class="text-left text-xs text-slate-500 sm:text-right">
+                                        <p class="font-semibold uppercase tracking-wide text-slate-600">Collegato il</p>
+                                        <p class="mt-1">{{ $link->linked_at?->format('d/m/Y H:i') ?: 'Data non disponibile' }}</p>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
                     </div>
                 @endif
-            </section>
-        </div>
+            </x-ui.card>
+        </section>
+
+        <x-ui.card>
+            <div class="grid gap-6 lg:grid-cols-3">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Come funziona</p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Collegamento sicuro in tre passaggi</h2>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-5">
+                    <p class="text-sm font-semibold text-slate-950">1. Individua l'account</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Seleziona il sito Moodle e inserisci email o username.</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-5">
+                    <p class="text-sm font-semibold text-slate-950">2. Verifica via email</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Ricevi un codice temporaneo all'email associata all'account Moodle.</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-5 lg:col-start-2">
+                    <p class="text-sm font-semibold text-slate-950">3. Attiva la sincronizzazione</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Dopo la verifica, il collegamento risulta attivo e pronto per gli attestati.</p>
+                </div>
+            </div>
+        </x-ui.card>
     </div>
 </x-app-layout>
