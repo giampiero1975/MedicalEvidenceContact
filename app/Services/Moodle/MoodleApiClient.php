@@ -65,6 +65,21 @@ class MoodleApiClient
             ->all();
     }
 
+    public function getUserCourses(int $moodleUserId): array
+    {
+        return $this->call('core_enrol_get_users_courses', [
+            'userid' => $moodleUserId,
+            'returnusercount' => 0,
+        ]);
+    }
+
+    public function getCourseContents(int $courseId): array
+    {
+        return $this->call('core_course_get_contents', [
+            'courseid' => $courseId,
+        ]);
+    }
+
     public function getCustomcertIssuesForLinkedUser(
         MoodleUserLink $moodleUserLink,
         ?int $timecreatedFrom = null,
