@@ -6,6 +6,7 @@ use App\Services\ProfessionalDocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProfessionalDocumentController extends Controller
@@ -41,7 +42,14 @@ class ProfessionalDocumentController extends Controller
         return Storage::disk($document['disk'])->response(
             $document['path'],
             $document['original_name'],
-            array_filter(['Content-Type' => $document['mime_type']])
+            [
+                'Content-Type' => $document['mime_type'] ?: 'application/octet-stream',
+                'Content-Disposition' => HeaderUtils::makeDisposition(
+                    HeaderUtils::DISPOSITION_INLINE,
+                    $document['original_name']
+                ),
+                'X-Content-Type-Options' => 'nosniff',
+            ]
         );
     }
 
