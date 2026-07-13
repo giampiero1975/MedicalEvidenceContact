@@ -43,7 +43,7 @@
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Documenti</p>
-                        <h2 class="mt-2 text-xl font-semibold text-slate-950">Stato documentazione</h2>
+                        <h2 class="mt-2 text-xl font-semibold text-slate-950">Documenti professionali</h2>
                     </div>
                     <x-ui.button variant="ghost" size="sm" :href="route('profile.show')">Gestisci</x-ui.button>
                 </div>
