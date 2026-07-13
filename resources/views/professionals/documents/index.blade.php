@@ -13,13 +13,15 @@
 
         <div class="grid gap-6 xl:grid-cols-2">
             @foreach ($documents as $document)
+                @php($hasFile = filled($document['file']))
+
                 <x-ui.card>
                     <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-3">
                                 <h2 class="text-xl font-semibold text-slate-950">{{ $document['label'] }}</h2>
-                                <x-ui.badge :variant="filled($document['path']) ? 'success' : 'warning'">
-                                    {{ filled($document['path']) ? 'Caricato' : 'Da caricare' }}
+                                <x-ui.badge :variant="$hasFile ? 'success' : 'warning'">
+                                    {{ $hasFile ? 'Caricato' : 'Da caricare' }}
                                 </x-ui.badge>
                             </div>
 
@@ -32,18 +34,60 @@
                                 </div>
                                 <div class="rounded-xl bg-slate-50 p-4">
                                     <dt class="font-semibold text-slate-900">Stato</dt>
-                                    <dd class="mt-1 text-slate-600">{{ filled($document['path']) ? 'Documento disponibile' : 'Nessun file presente' }}</dd>
+                                    <dd class="mt-1 text-slate-600">{{ $hasFile ? 'Documento disponibile' : 'Nessun file presente' }}</dd>
                                 </div>
                             </dl>
+
+                            @if ($hasFile)
+                                <div class="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+                                    <p class="truncate font-semibold text-slate-900">{{ $document['file']['original_name'] }}</p>
+                                    @if ($document['file']['uploaded_at'])
+                                        <p class="mt-1 text-xs text-slate-500">
+                                            Caricato il {{ \Illuminate\Support\Carbon::parse($document['file']['uploaded_at'])->format('d/m/Y H:i') }}
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
+
+                    @if ($hasFile)
+                        <div class="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-6">
+                            <x-ui.button
+                                variant="secondary"
+                                :href="route('professional-documents.view', $document['type'])"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                Visualizza
+                            </x-ui.button>
+
+                            <x-ui.button
+                                variant="secondary"
+                                :href="route('professional-documents.download', $document['type'])"
+                            >
+                                Scarica
+                            </x-ui.button>
+
+                            <form
+                                method="POST"
+                                action="{{ route('professional-documents.destroy', $document['type']) }}"
+                                class="sm:ml-auto"
+                                onsubmit="return confirm('Eliminare definitivamente questo documento?');"
+                            >
+                                @csrf
+                                @method('DELETE')
+                                <x-ui.button type="submit" variant="danger">Elimina</x-ui.button>
+                            </form>
+                        </div>
+                    @endif
 
                     <form method="POST" action="{{ route('professional-documents.store') }}" enctype="multipart/form-data" class="mt-6 border-t border-slate-100 pt-6">
                         @csrf
                         <input type="hidden" name="redirect_to" value="documents">
 
                         <label for="{{ $document['key'] }}" class="block text-sm font-semibold text-slate-700">
-                            {{ filled($document['path']) ? 'Sostituisci documento' : 'Carica documento' }}
+                            {{ $hasFile ? 'Sostituisci documento' : 'Carica documento' }}
                         </label>
                         <input
                             id="{{ $document['key'] }}"
@@ -59,7 +103,7 @@
 
                         <div class="mt-5 flex justify-end">
                             <x-ui.button type="submit">
-                                {{ filled($document['path']) ? 'Sostituisci file' : 'Carica file' }}
+                                {{ $hasFile ? 'Sostituisci file' : 'Carica file' }}
                             </x-ui.button>
                         </div>
                     </form>
