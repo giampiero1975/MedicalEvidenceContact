@@ -12,6 +12,7 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MoodleAccountLinkController;
 use App\Http\Controllers\ProfessionalDocumentController;
+use App\Http\Controllers\ProfessionalExperienceController;
 use App\Http\Controllers\ProfessionalProfileItemController;
 use App\Http\Controllers\ProfessionalDashboardController;
 use Illuminate\Http\Request;
@@ -79,6 +80,7 @@ Route::middleware([
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
+    Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
     Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
