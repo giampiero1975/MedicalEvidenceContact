@@ -45,7 +45,7 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Documenti</p>
                         <h2 class="mt-2 text-xl font-semibold text-slate-950">Documenti professionali</h2>
                     </div>
-                    <x-ui.button variant="ghost" size="sm" :href="route('profile.show')">Gestisci</x-ui.button>
+                    <x-ui.button variant="ghost" size="sm" :href="route('professional.documents.index')">Gestisci</x-ui.button>
                 </div>
 
                 <div class="mt-6 space-y-3">
@@ -97,14 +97,44 @@
 
             <div class="space-y-6">
                 <x-ui.card>
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Moodle</p>
-                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Formazione collegata</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">
-                        {{ $moodleUserLinks->isNotEmpty() ? 'Il tuo account Moodle è collegato e pronto per la sincronizzazione.' : 'Collega il tuo account Moodle per importare attestati e corsi completati.' }}
-                    </p>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Formazione</p>
+                            <h2 class="mt-2 text-xl font-semibold text-slate-950">Attestati Moodle</h2>
+                        </div>
+                        <x-ui.badge :variant="$certificates->isNotEmpty() ? 'success' : 'warning'">{{ $certificates->count() }}</x-ui.badge>
+                    </div>
+
+                    @if ($latestCertificate)
+                        <div class="mt-5 rounded-xl border border-slate-200 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
+                                {{ $latestCertificate->course_shortname ?: 'Formazione Moodle' }}
+                            </p>
+                            <h3 class="mt-2 font-semibold text-slate-950">
+                                {{ $latestCertificate->certificate_name ?: 'Attestato' }}
+                            </h3>
+                            @if ($latestCertificate->course_fullname)
+                                <p class="mt-1 text-sm text-slate-600">{{ $latestCertificate->course_fullname }}</p>
+                            @endif
+                            <div class="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+                                <span>{{ $latestCertificate->issued_at?->format('d/m/Y') ?: 'Data non disponibile' }}</span>
+                                <span aria-hidden="true">•</span>
+                                <span>{{ $completedCoursesCount }} corsi rilevati</span>
+                                @if ($latestCertificate->pdf_stored_path)
+                                    <span aria-hidden="true">•</span>
+                                    <span class="font-semibold text-teal-700">PDF disponibile</span>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <p class="mt-4 text-sm leading-6 text-slate-600">
+                            {{ $moodleUserLinks->isNotEmpty() ? 'L’account Moodle è collegato. Esegui la sincronizzazione per importare gli attestati.' : 'Collega il tuo account Moodle per importare attestati e corsi completati.' }}
+                        </p>
+                    @endif
+
                     <div class="mt-5">
                         <x-ui.button variant="secondary" :href="route('professional.moodle.index')">
-                            {{ $moodleUserLinks->isNotEmpty() ? 'Gestisci collegamenti' : 'Collega Moodle' }}
+                            {{ $latestCertificate ? 'Vedi tutti gli attestati' : ($moodleUserLinks->isNotEmpty() ? 'Sincronizza formazione' : 'Collega Moodle') }}
                         </x-ui.button>
                     </div>
                 </x-ui.card>
