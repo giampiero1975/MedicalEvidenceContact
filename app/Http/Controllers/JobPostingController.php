@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BusinessDepartment;
 use App\Models\BusinessLocation;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ class JobPostingController extends Controller
             ->with([
                 'businessProfile',
                 'businessLocation',
+                'businessDepartment',
                 'applications' => fn ($query) => $query->where('user_id', $user->id),
             ])
             ->when($user->role === 'professional', fn ($query) => $query->visibleToProfessionals())
@@ -46,16 +48,12 @@ class JobPostingController extends Controller
             })
             ->when($filters['salary_min'] ?? null, function ($query, string $salaryMin) {
                 $query->where(function ($query) use ($salaryMin) {
-                    $query
-                        ->whereNull('salary_max')
-                        ->orWhere('salary_max', '>=', $salaryMin);
+                    $query->whereNull('salary_max')->orWhere('salary_max', '>=', $salaryMin);
                 });
             })
             ->when($filters['salary_max'] ?? null, function ($query, string $salaryMax) {
                 $query->where(function ($query) use ($salaryMax) {
-                    $query
-                        ->whereNull('salary_min')
-                        ->orWhere('salary_min', '<=', $salaryMax);
+                    $query->whereNull('salary_min')->orWhere('salary_min', '<=', $salaryMax);
                 });
             })
             ->when($filters['published_from'] ?? null, fn ($query, string $publishedFrom) => $query->whereDate('created_at', '>=', $publishedFrom))
@@ -69,10 +67,7 @@ class JobPostingController extends Controller
             ->withQueryString();
 
         $acceptedJobApplications = $user->role === 'professional'
-            ? $user->jobApplications()
-                ->with('jobPosting')
-                ->latest()
-                ->get()
+            ? $user->jobApplications()->with('jobPosting')->latest()->get()
             : collect();
 
         return view('job-postings.index', [
@@ -90,6 +85,7 @@ class JobPostingController extends Controller
 
         return view('job-postings.create', [
             'businessLocations' => $this->availableLocations($request),
+            'businessDepartments' => $this->availableDepartments($request),
         ]);
     }
 
@@ -107,9 +103,7 @@ class JobPostingController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()
-            ->route('job-postings.index')
-            ->with('status', 'Annuncio pubblicato.');
+        return redirect()->route('job-postings.index')->with('status', 'Annuncio pubblicato.');
     }
 
     public function show(Request $request, JobPosting $jobPosting): View
@@ -124,6 +118,7 @@ class JobPostingController extends Controller
 
         $jobPosting->load([
             'businessLocation',
+            'businessDepartment',
             'applications' => fn ($query) => $query->where('user_id', $user->id),
         ]);
 
@@ -140,6 +135,7 @@ class JobPostingController extends Controller
         return view('job-postings.edit', [
             'jobPosting' => $jobPosting,
             'businessLocations' => $this->availableLocations($request),
+            'businessDepartments' => $this->availableDepartments($request),
         ]);
     }
 
@@ -152,20 +148,15 @@ class JobPostingController extends Controller
             'status' => $request->input('status', 'active'),
         ]);
 
-        return redirect()
-            ->route('job-postings.show', $jobPosting)
-            ->with('status', 'Annuncio aggiornato.');
+        return redirect()->route('job-postings.show', $jobPosting)->with('status', 'Annuncio aggiornato.');
     }
 
     public function destroy(Request $request, JobPosting $jobPosting): RedirectResponse
     {
         $this->authorizeBusinessOwner($request, $jobPosting);
-
         $jobPosting->delete();
 
-        return redirect()
-            ->route('job-postings.index')
-            ->with('status', 'Annuncio eliminato.');
+        return redirect()->route('job-postings.index')->with('status', 'Annuncio eliminato.');
     }
 
     public function applications(Request $request, JobPosting $jobPosting): View
@@ -185,7 +176,6 @@ class JobPostingController extends Controller
         ]);
     }
 
-    /** @return array<string, mixed> */
     private function validatedJobPostingData(Request $request, ?int $businessProfileId): array
     {
         $request->merge([
@@ -203,6 +193,15 @@ class JobPostingController extends Controller
                         ->where('is_active', true)
                 ),
             ],
+            'business_department_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('business_departments', 'id')->where(
+                    fn ($query) => $query
+                        ->where('business_profile_id', $businessProfileId)
+                        ->where('is_active', true)
+                ),
+            ],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['required', 'string', 'max:5000'],
             'positions' => ['required', 'integer', 'min:1', 'max:1000'],
@@ -215,6 +214,7 @@ class JobPostingController extends Controller
             'status' => ['sometimes', 'in:active,expired'],
         ], [
             'business_location_id.exists' => 'La sede selezionata non è disponibile per questa struttura.',
+            'business_department_id.exists' => 'Il reparto selezionato non è disponibile per questa struttura.',
             'workplace_address.required_without' => 'Seleziona una sede oppure inserisci un indirizzo di lavoro.',
             'salary_min.numeric' => 'La retribuzione minima deve essere un importo valido.',
             'salary_max.numeric' => 'La retribuzione massima deve essere un importo valido.',
@@ -231,10 +231,25 @@ class JobPostingController extends Controller
             $data['workplace_address'] = $location->formattedAddress();
         }
 
+        if (! empty($data['business_department_id'])) {
+            $department = BusinessDepartment::query()
+                ->whereKey($data['business_department_id'])
+                ->where('business_profile_id', $businessProfileId)
+                ->where('is_active', true)
+                ->firstOrFail();
+
+            if (empty($data['business_location_id']) || $department->business_location_id !== (int) $data['business_location_id']) {
+                validator([], [
+                    'business_department_id' => fn () => false,
+                ], [
+                    'business_department_id' => 'Il reparto selezionato non appartiene alla sede indicata.',
+                ])->validate();
+            }
+        }
+
         return $data;
     }
 
-    /** @return array<string, mixed> */
     private function validateJobPostingFilters(Request $request): array
     {
         return $request->validate([
@@ -251,12 +266,20 @@ class JobPostingController extends Controller
         ]);
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, BusinessLocation> */
     private function availableLocations(Request $request)
     {
         return $request->user()->businessProfile?->locations()
             ->where('is_active', true)
             ->orderByDesc('is_primary')
+            ->orderBy('name')
+            ->get() ?? collect();
+    }
+
+    private function availableDepartments(Request $request)
+    {
+        return $request->user()->businessProfile?->departments()
+            ->with('location')
+            ->where('is_active', true)
             ->orderBy('name')
             ->get() ?? collect();
     }
@@ -296,7 +319,6 @@ class JobPostingController extends Controller
         return $normalized;
     }
 
-    /** @return list<string> */
     private function contractTypes(): array
     {
         return ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
