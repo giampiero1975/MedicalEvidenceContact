@@ -16,6 +16,7 @@ class JobPosting extends Model
         'user_id',
         'business_profile_id',
         'business_location_id',
+        'business_department_id',
         'title',
         'description',
         'positions',
@@ -50,6 +51,11 @@ class JobPosting extends Model
     public function businessLocation(): BelongsTo
     {
         return $this->belongsTo(BusinessLocation::class);
+    }
+
+    public function businessDepartment(): BelongsTo
+    {
+        return $this->belongsTo(BusinessDepartment::class);
     }
 
     public function applications(): HasMany
