@@ -2,20 +2,31 @@
     $contractTypes = ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
     $selectedContractType = old('contract_type', $jobPosting->contract_type ?? '');
     $selectedLocationId = old('business_location_id', $jobPosting->business_location_id ?? '');
+    $selectedDepartmentId = old('business_department_id', $jobPosting->business_department_id ?? '');
     $locationAddresses = ($businessLocations ?? collect())
         ->mapWithKeys(fn ($location) => [(string) $location->id => $location->formattedAddress()]);
+    $departmentLocations = ($businessDepartments ?? collect())
+        ->mapWithKeys(fn ($department) => [(string) $department->id => (string) $department->business_location_id]);
 @endphp
 
 <div
     class="space-y-6"
     x-data='{
         selectedLocation: @json((string) $selectedLocationId),
+        selectedDepartment: @json((string) $selectedDepartmentId),
         workplaceAddress: @json(old("workplace_address", $jobPosting->workplace_address ?? "")),
         locationAddresses: @json($locationAddresses),
+        departmentLocations: @json($departmentLocations),
         applyLocation() {
             if (this.selectedLocation && this.locationAddresses[this.selectedLocation]) {
                 this.workplaceAddress = this.locationAddresses[this.selectedLocation];
             }
+            if (this.selectedDepartment && this.departmentLocations[this.selectedDepartment] !== this.selectedLocation) {
+                this.selectedDepartment = "";
+            }
+        },
+        departmentVisible(id) {
+            return this.selectedLocation !== "" && this.departmentLocations[String(id)] === this.selectedLocation;
         }
     }'
     x-init="applyLocation()"
@@ -61,18 +72,37 @@
         </x-ui.select>
     </div>
 
-    <div class="grid gap-5 lg:grid-cols-2">
+    <div class="grid gap-5 lg:grid-cols-3">
         <x-ui.select
             name="business_location_id"
             label="Sede della struttura"
             x-model="selectedLocation"
             @change="applyLocation()"
-            help="Seleziona una sede attiva già censita nel profilo della struttura."
+            help="Seleziona una sede attiva già censita."
         >
             <option value="">Indirizzo manuale / sede non censita</option>
             @foreach (($businessLocations ?? collect()) as $location)
                 <option value="{{ $location->id }}" @selected((string) $selectedLocationId === (string) $location->id)>
                     {{ $location->name }} — {{ $location->formattedAddress() }}
+                </option>
+            @endforeach
+        </x-ui.select>
+
+        <x-ui.select
+            name="business_department_id"
+            label="Reparto / unità operativa"
+            x-model="selectedDepartment"
+            :disabled="selectedLocation === ''"
+            help="Sono disponibili solo i reparti attivi della sede selezionata."
+        >
+            <option value="">Nessun reparto specifico</option>
+            @foreach (($businessDepartments ?? collect()) as $department)
+                <option
+                    value="{{ $department->id }}"
+                    x-show="departmentVisible({{ $department->id }})"
+                    @selected((string) $selectedDepartmentId === (string) $department->id)
+                >
+                    {{ $department->name }}{{ $department->code ? ' · '.$department->code : '' }}
                 </option>
             @endforeach
         </x-ui.select>
@@ -95,6 +125,10 @@
             @enderror
         </div>
     </div>
+
+    @error('business_department_id')
+        <p class="-mt-4 text-sm text-rose-600">{{ $message }}</p>
+    @enderror
 
     @if (($businessLocations ?? collect())->isEmpty())
         <x-ui.alert variant="info">
