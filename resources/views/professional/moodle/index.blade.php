@@ -128,35 +128,39 @@
                     <x-ui.empty-state title="Nessun attestato sincronizzato" description="Esegui la sincronizzazione su un account Moodle attivo. Se l'utente non possiede attestati, questa sezione resterà vuota." />
                 </div>
             @else
-                <div class="mt-6 grid gap-5 lg:grid-cols-2">
+                <div class="mt-6 space-y-3">
                     @foreach ($certificates as $certificate)
-                        <article class="rounded-2xl border border-slate-200 p-5">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">{{ $certificate->course_shortname ?: 'Formazione Moodle' }}</p>
-                                    <h3 class="mt-2 text-lg font-semibold text-slate-950">{{ $certificate->certificate_name ?: $certificate->course_fullname ?: 'Attestato' }}</h3>
-                                    @if ($certificate->course_fullname)
-                                        <p class="mt-1 text-sm text-slate-600">{{ $certificate->course_fullname }}</p>
-                                    @endif
+                        <article class="grid gap-5 rounded-2xl border border-slate-200 p-5 md:grid-cols-[minmax(0,1.5fr)_minmax(240px,0.8fr)_auto] md:items-center">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">
+                                        {{ $certificate->course_shortname ?: 'Formazione Moodle' }}
+                                    </p>
+                                    <x-ui.badge :variant="$certificate->pdf_stored_path ? 'success' : 'warning'">
+                                        {{ $certificate->pdf_stored_path ? 'PDF disponibile' : 'Dati sincronizzati' }}
+                                    </x-ui.badge>
                                 </div>
-                                <x-ui.badge :variant="$certificate->pdf_stored_path ? 'success' : 'warning'">
-                                    {{ $certificate->pdf_stored_path ? 'PDF disponibile' : 'Dati sincronizzati' }}
-                                </x-ui.badge>
+                                <h3 class="mt-2 text-lg font-semibold text-slate-950">
+                                    {{ $certificate->certificate_name ?: $certificate->course_fullname ?: 'Attestato' }}
+                                </h3>
+                                @if ($certificate->course_fullname)
+                                    <p class="mt-1 truncate text-sm text-slate-600">{{ $certificate->course_fullname }}</p>
+                                @endif
                             </div>
 
-                            <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                                <div class="rounded-xl bg-slate-50 p-4">
+                            <dl class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="rounded-xl bg-slate-50 px-4 py-3">
                                     <dt class="font-semibold text-slate-900">Rilasciato il</dt>
-                                    <dd class="mt-1 text-slate-600">{{ $certificate->issued_at?->format('d/m/Y') ?: 'Data non disponibile' }}</dd>
+                                    <dd class="mt-1 whitespace-nowrap text-slate-600">{{ $certificate->issued_at?->format('d/m/Y') ?: 'Non disponibile' }}</dd>
                                 </div>
-                                <div class="rounded-xl bg-slate-50 p-4">
+                                <div class="rounded-xl bg-slate-50 px-4 py-3">
                                     <dt class="font-semibold text-slate-900">Codice</dt>
-                                    <dd class="mt-1 break-all text-slate-600">{{ $certificate->certificate_code ?: 'Non disponibile' }}</dd>
+                                    <dd class="mt-1 truncate text-slate-600" title="{{ $certificate->certificate_code }}">{{ $certificate->certificate_code ?: 'Non disponibile' }}</dd>
                                 </div>
                             </dl>
 
                             @if ($certificate->pdf_stored_path || $certificate->verification_url || $certificate->download_url)
-                                <div class="mt-5 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                                <div class="flex flex-wrap gap-3 md:justify-end">
                                     @if ($certificate->pdf_stored_path)
                                         <x-ui.button variant="secondary" :href="route('professional.moodle.certificates.view', $certificate)" target="_blank" rel="noopener">Visualizza</x-ui.button>
                                         <x-ui.button :href="route('professional.moodle.certificates.download', $certificate)">Scarica PDF</x-ui.button>
