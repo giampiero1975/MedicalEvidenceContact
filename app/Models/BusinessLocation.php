@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BusinessLocation extends Model
 {
@@ -36,5 +37,27 @@ class BusinessLocation extends Model
     public function businessProfile(): BelongsTo
     {
         return $this->belongsTo(BusinessProfile::class);
+    }
+
+    public function jobPostings(): HasMany
+    {
+        return $this->hasMany(JobPosting::class);
+    }
+
+    public function formattedAddress(): string
+    {
+        $cityLine = collect([$this->postal_code, $this->city])
+            ->filter()
+            ->implode(' ');
+
+        if ($this->province) {
+            $cityLine .= ($cityLine !== '' ? ' ' : '').'('.$this->province.')';
+        }
+
+        return collect([
+            $this->street_address,
+            $cityLine,
+            $this->country,
+        ])->filter()->implode(', ');
     }
 }
