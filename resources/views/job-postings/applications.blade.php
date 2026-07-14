@@ -51,7 +51,9 @@
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="truncate text-base font-semibold text-slate-950">
-                                        {{ $professional->first_name && $professional->last_name ? $professional->first_name.' '.$professional->last_name : $professional->name }}
+                                        <a href="{{ route('business.applications.show', $application) }}" class="transition hover:text-teal-700">
+                                            {{ $professional->first_name && $professional->last_name ? $professional->first_name.' '.$professional->last_name : $professional->name }}
+                                        </a>
                                     </h3>
                                     <x-ui.badge variant="info">{{ $application->statusLabel() }}</x-ui.badge>
                                 </div>
@@ -68,18 +70,24 @@
                                 </div>
                             </div>
 
-                            <form method="POST" action="{{ route('job-applications.status.update', $application) }}" class="grid gap-3 sm:grid-cols-[minmax(250px,1fr)_auto] sm:items-end">
-                                @csrf
-                                @method('PATCH')
+                            <div class="grid gap-3 sm:grid-cols-[auto_minmax(250px,1fr)_auto] sm:items-end">
+                                <x-ui.button href="{{ route('business.applications.show', $application) }}" variant="secondary" size="sm">
+                                    Apri scheda
+                                </x-ui.button>
 
-                                <x-ui.select name="status" label="Stato candidatura">
-                                    @foreach (\App\Models\JobApplication::statusOptions() as $value => $label)
-                                        <option value="{{ $value }}" @selected($application->status === $value)>{{ $label }}</option>
-                                    @endforeach
-                                </x-ui.select>
+                                <form method="POST" action="{{ route('job-applications.status.update', $application) }}" class="contents">
+                                    @csrf
+                                    @method('PATCH')
 
-                                <x-ui.button type="submit" size="sm">Aggiorna stato</x-ui.button>
-                            </form>
+                                    <x-ui.select name="status" label="Stato candidatura">
+                                        @foreach (\App\Models\JobApplication::statusOptions() as $value => $label)
+                                            <option value="{{ $value }}" @selected($application->status === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </x-ui.select>
+
+                                    <x-ui.button type="submit" size="sm">Aggiorna stato</x-ui.button>
+                                </form>
+                            </div>
                         </div>
                     </article>
                 @endforeach
