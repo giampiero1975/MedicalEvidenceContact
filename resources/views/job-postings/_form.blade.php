@@ -1,9 +1,25 @@
 @php
     $contractTypes = ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
     $selectedContractType = old('contract_type', $jobPosting->contract_type ?? '');
+    $selectedLocationId = old('business_location_id', $jobPosting->business_location_id ?? '');
+    $locationAddresses = ($businessLocations ?? collect())
+        ->mapWithKeys(fn ($location) => [(string) $location->id => $location->formattedAddress()]);
 @endphp
 
-<div class="space-y-6">
+<div
+    class="space-y-6"
+    x-data='{
+        selectedLocation: @json((string) $selectedLocationId),
+        workplaceAddress: @json(old("workplace_address", $jobPosting->workplace_address ?? "")),
+        locationAddresses: @json($locationAddresses),
+        applyLocation() {
+            if (this.selectedLocation && this.locationAddresses[this.selectedLocation]) {
+                this.workplaceAddress = this.locationAddresses[this.selectedLocation];
+            }
+        }
+    }'
+    x-init="applyLocation()"
+>
     <x-ui.input
         name="title"
         label="Titolo"
@@ -45,13 +61,46 @@
         </x-ui.select>
     </div>
 
-    <x-ui.input
-        name="workplace_address"
-        label="Indirizzo sede di lavoro"
-        :value="$jobPosting->workplace_address ?? ''"
-        placeholder="Via, città e provincia"
-        required
-    />
+    <div class="grid gap-5 lg:grid-cols-2">
+        <x-ui.select
+            name="business_location_id"
+            label="Sede della struttura"
+            x-model="selectedLocation"
+            @change="applyLocation()"
+            help="Seleziona una sede attiva già censita nel profilo della struttura."
+        >
+            <option value="">Indirizzo manuale / sede non censita</option>
+            @foreach (($businessLocations ?? collect()) as $location)
+                <option value="{{ $location->id }}" @selected((string) $selectedLocationId === (string) $location->id)>
+                    {{ $location->name }} — {{ $location->formattedAddress() }}
+                </option>
+            @endforeach
+        </x-ui.select>
+
+        <div>
+            <label for="workplace_address" class="block text-sm font-semibold text-slate-700">Indirizzo sede di lavoro</label>
+            <input
+                id="workplace_address"
+                name="workplace_address"
+                type="text"
+                x-model="workplaceAddress"
+                :readonly="selectedLocation !== ''"
+                placeholder="Via, città e provincia"
+                class="mt-1 block w-full rounded-xl border-slate-300 bg-white text-slate-900 shadow-sm placeholder:text-slate-400 read-only:bg-slate-50 read-only:text-slate-600 focus:border-teal-600 focus:ring-teal-600 @error('workplace_address') border-rose-300 focus:border-rose-500 focus:ring-rose-500 @enderror"
+            >
+            @error('workplace_address')
+                <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
+            @else
+                <p class="mt-1 text-xs text-slate-500" x-text="selectedLocation ? 'L’indirizzo viene aggiornato automaticamente dalla sede selezionata.' : 'Compila manualmente solo se la sede non è ancora censita.'"></p>
+            @enderror
+        </div>
+    </div>
+
+    @if (($businessLocations ?? collect())->isEmpty())
+        <x-ui.alert variant="info">
+            Non hai ancora sedi attive. Puoi inserire l’indirizzo manualmente oppure censire prima una sede dalla sezione Struttura → Sedi.
+        </x-ui.alert>
+    @endif
 
     <div>
         <label for="required_skills" class="block text-sm font-semibold text-slate-700">Abilità richieste</label>
