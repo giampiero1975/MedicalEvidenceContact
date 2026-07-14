@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminJobPostingController;
 use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\BusinessLocationController;
 use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\InterviewController;
@@ -75,6 +76,11 @@ Route::middleware([
     Route::get('/business/profilo', [BusinessProfileController::class, 'edit'])->name('business.profile.edit');
     Route::put('/business/profilo', [BusinessProfileController::class, 'update'])->name('business.profile.update');
     Route::get('/business/profilo/logo', [BusinessProfileController::class, 'logo'])->name('business.profile.logo');
+    Route::get('/business/sedi', [BusinessLocationController::class, 'index'])->name('business.locations.index');
+    Route::post('/business/sedi', [BusinessLocationController::class, 'store'])->name('business.locations.store');
+    Route::get('/business/sedi/{location}/modifica', [BusinessLocationController::class, 'edit'])->name('business.locations.edit');
+    Route::put('/business/sedi/{location}', [BusinessLocationController::class, 'update'])->name('business.locations.update');
+    Route::delete('/business/sedi/{location}', [BusinessLocationController::class, 'destroy'])->name('business.locations.destroy');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
 
