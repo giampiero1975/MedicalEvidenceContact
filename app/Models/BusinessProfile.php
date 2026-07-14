@@ -44,6 +44,16 @@ class BusinessProfile extends Model
         return $this->hasOne(BusinessPointOfContact::class)->oldestOfMany();
     }
 
+    public function locations(): HasMany
+    {
+        return $this->hasMany(BusinessLocation::class);
+    }
+
+    public function primaryLocation(): HasOne
+    {
+        return $this->hasOne(BusinessLocation::class)->where('is_primary', true);
+    }
+
     public function jobPostings(): HasMany
     {
         return $this->hasMany(JobPosting::class);
