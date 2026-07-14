@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JobApplication extends Model
 {
@@ -53,5 +54,15 @@ class JobApplication extends Model
     public function professional(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(JobApplicationNote::class)->latest();
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(JobApplicationEvent::class)->latest();
     }
 }
