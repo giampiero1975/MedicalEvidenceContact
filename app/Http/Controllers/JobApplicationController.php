@@ -33,13 +33,18 @@ class JobApplicationController extends Controller
     public function updateStatus(Request $request, JobApplication $jobApplication): RedirectResponse
     {
         abort_unless($request->user()->role === 'business', 403);
+
+        $jobApplication->loadMissing('jobPosting');
         abort_unless($jobApplication->jobPosting?->user_id === $request->user()->id, 403);
 
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(JobApplication::statusOptions()))],
         ]);
 
-        $jobApplication->update($data);
+        // Assegnazione esplicita: evita che lo stato venga ignorato in caso di
+        // configurazioni di mass-assignment o modifiche future al modello.
+        $jobApplication->status = $data['status'];
+        $jobApplication->saveOrFail();
 
         return back()
             ->with('status', 'Stato della candidatura aggiornato.')
