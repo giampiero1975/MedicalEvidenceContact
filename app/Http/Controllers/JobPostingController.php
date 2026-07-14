@@ -179,11 +179,14 @@ class JobPostingController extends Controller
         ]);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function validateJobPosting(Request $request): array
     {
+        $request->merge([
+            'salary_min' => $this->normalizeMoney($request->input('salary_min')),
+            'salary_max' => $this->normalizeMoney($request->input('salary_max')),
+        ]);
+
         return $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'description' => ['required', 'string', 'max:5000'],
@@ -195,12 +198,14 @@ class JobPostingController extends Controller
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
             'expires_at' => ['required', 'date', 'after_or_equal:today'],
             'status' => ['sometimes', 'in:active,expired'],
+        ], [
+            'salary_min.numeric' => 'La retribuzione minima deve essere un importo valido.',
+            'salary_max.numeric' => 'La retribuzione massima deve essere un importo valido.',
+            'salary_max.gte' => 'La retribuzione massima deve essere uguale o superiore alla retribuzione minima.',
         ]);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function validateJobPostingFilters(Request $request): array
     {
         return $request->validate([
@@ -217,9 +222,42 @@ class JobPostingController extends Controller
         ]);
     }
 
-    /**
-     * @return list<string>
-     */
+    private function normalizeMoney(mixed $value): ?string
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^0-9,.-]/u', '', trim((string) $value));
+
+        if ($normalized === null || $normalized === '') {
+            return (string) $value;
+        }
+
+        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
+            if (strrpos($normalized, ',') > strrpos($normalized, '.')) {
+                return str_replace(',', '.', str_replace('.', '', $normalized));
+            }
+
+            return str_replace(',', '', $normalized);
+        }
+
+        if (str_contains($normalized, ',')) {
+            return str_replace('.', '', str_replace(',', '.', $normalized));
+        }
+
+        if (substr_count($normalized, '.') === 1 && preg_match('/\.\d{3}$/', $normalized) === 1) {
+            return str_replace('.', '', $normalized);
+        }
+
+        if (substr_count($normalized, '.') > 1) {
+            return str_replace('.', '', $normalized);
+        }
+
+        return $normalized;
+    }
+
+    /** @return list<string> */
     private function contractTypes(): array
     {
         return ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
