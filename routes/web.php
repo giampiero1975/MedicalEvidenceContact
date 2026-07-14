@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminJobPostingController;
 use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\BusinessDepartmentController;
 use App\Http\Controllers\BusinessLocationController;
 use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\BusinessProfileController;
@@ -22,38 +23,16 @@ use App\Http\Controllers\ProfessionalProfileItemController;
 use App\Http\Controllers\ProfessionalDashboardController;
 use Illuminate\Http\Request;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/admin/login', function () {
-    return view('auth.staff-login');
-})->middleware('guest')->name('admin.login');
-
-Route::get('/admin/register', [AdminRegistrationController::class, 'create'])
-    ->middleware('guest')
-    ->name('admin.register');
-
-Route::post('/admin/register', [AdminRegistrationController::class, 'store'])
-    ->middleware('guest')
-    ->name('admin.register.store');
-
+Route::get('/', fn () => view('welcome'));
+Route::get('/admin/login', fn () => view('auth.staff-login'))->middleware('guest')->name('admin.login');
+Route::get('/admin/register', [AdminRegistrationController::class, 'create'])->middleware('guest')->name('admin.register');
+Route::post('/admin/register', [AdminRegistrationController::class, 'store'])->middleware('guest')->name('admin.register.store');
 Route::redirect('/staff/login', '/admin/login')->middleware('guest')->name('staff.login');
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/dashboard', function (Request $request) {
-        if ($request->user()->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($request->user()->role === 'professional') {
-            return app(ProfessionalDashboardController::class)($request);
-        }
-
+        if ($request->user()->role === 'admin') return redirect()->route('admin.dashboard');
+        if ($request->user()->role === 'professional') return app(ProfessionalDashboardController::class)($request);
         return app(JobPostingController::class)->index($request);
     })->name('dashboard');
 
@@ -81,30 +60,26 @@ Route::middleware([
     Route::get('/business/sedi/{location}/modifica', [BusinessLocationController::class, 'edit'])->name('business.locations.edit');
     Route::put('/business/sedi/{location}', [BusinessLocationController::class, 'update'])->name('business.locations.update');
     Route::delete('/business/sedi/{location}', [BusinessLocationController::class, 'destroy'])->name('business.locations.destroy');
+    Route::get('/business/reparti', [BusinessDepartmentController::class, 'index'])->name('business.departments.index');
+    Route::post('/business/reparti', [BusinessDepartmentController::class, 'store'])->name('business.departments.store');
+    Route::get('/business/reparti/{department}/modifica', [BusinessDepartmentController::class, 'edit'])->name('business.departments.edit');
+    Route::put('/business/reparti/{department}', [BusinessDepartmentController::class, 'update'])->name('business.departments.update');
+    Route::delete('/business/reparti/{department}', [BusinessDepartmentController::class, 'destroy'])->name('business.departments.destroy');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
 
     Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
     Route::get('/professionista/documenti', ProfessionalDocumentsPageController::class)->name('professional.documents.index');
     Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
-    Route::get('/professionista/documenti/{type}/visualizza', [ProfessionalDocumentController::class, 'view'])
-        ->whereIn('type', ['ata_certificate', 'residence_permit'])
-        ->name('professional-documents.view');
-    Route::get('/professionista/documenti/{type}/scarica', [ProfessionalDocumentController::class, 'download'])
-        ->whereIn('type', ['ata_certificate', 'residence_permit'])
-        ->name('professional-documents.download');
-    Route::delete('/professionista/documenti/{type}', [ProfessionalDocumentController::class, 'destroy'])
-        ->whereIn('type', ['ata_certificate', 'residence_permit'])
-        ->name('professional-documents.destroy');
+    Route::get('/professionista/documenti/{type}/visualizza', [ProfessionalDocumentController::class, 'view'])->whereIn('type', ['ata_certificate', 'residence_permit'])->name('professional-documents.view');
+    Route::get('/professionista/documenti/{type}/scarica', [ProfessionalDocumentController::class, 'download'])->whereIn('type', ['ata_certificate', 'residence_permit'])->name('professional-documents.download');
+    Route::delete('/professionista/documenti/{type}', [ProfessionalDocumentController::class, 'destroy'])->whereIn('type', ['ata_certificate', 'residence_permit'])->name('professional-documents.destroy');
 
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
-    Route::post('/professionista/moodle/collegamenti/{moodleUserLink}/sincronizza-attestati', MoodleCertificateSyncController::class)
-        ->name('professional.moodle.certificates.sync');
-    Route::get('/professionista/moodle/attestati/{certificate}/visualizza', [ProfessionalCertificateController::class, 'view'])
-        ->name('professional.moodle.certificates.view');
-    Route::get('/professionista/moodle/attestati/{certificate}/scarica', [ProfessionalCertificateController::class, 'download'])
-        ->name('professional.moodle.certificates.download');
+    Route::post('/professionista/moodle/collegamenti/{moodleUserLink}/sincronizza-attestati', MoodleCertificateSyncController::class)->name('professional.moodle.certificates.sync');
+    Route::get('/professionista/moodle/attestati/{certificate}/visualizza', [ProfessionalCertificateController::class, 'view'])->name('professional.moodle.certificates.view');
+    Route::get('/professionista/moodle/attestati/{certificate}/scarica', [ProfessionalCertificateController::class, 'download'])->name('professional.moodle.certificates.download');
     Route::get('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'showVerify'])->name('professional.moodle.verify.show');
     Route::post('/professionista/moodle/tentativi/{attempt}/verifica', [MoodleAccountLinkController::class, 'verify'])->name('professional.moodle.verify');
     Route::post('/professionista/moodle/tentativi/{attempt}/annulla', [MoodleAccountLinkController::class, 'cancel'])->name('professional.moodle.cancel');
