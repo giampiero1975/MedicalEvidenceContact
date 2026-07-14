@@ -7,6 +7,7 @@ use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class JobApplicationController extends Controller
 {
@@ -46,9 +47,13 @@ class JobApplicationController extends Controller
             'status' => ['required', Rule::in(array_keys(JobApplication::statusOptions()))],
         ]);
 
-        $jobApplication->forceFill([
-            'status' => $data['status'],
-        ])->saveOrFail();
+        $updatedRows = JobApplication::query()
+            ->whereKey($jobApplication->getKey())
+            ->update(['status' => $data['status']]);
+
+        if ($updatedRows !== 1) {
+            throw new RuntimeException('Impossibile aggiornare lo stato della candidatura.');
+        }
 
         return back()
             ->with('status', 'Stato della candidatura aggiornato.')
