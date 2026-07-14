@@ -16,73 +16,41 @@
 
     <nav class="flex-1 overflow-y-auto p-4" aria-label="Navigazione principale">
         <div class="space-y-1">
-            <x-ui.sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Dashboard
-            </x-ui.sidebar-link>
+            <x-ui.sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">Dashboard</x-ui.sidebar-link>
         </div>
 
         @if ($isProfessional)
             <div class="mt-6">
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Profilo professionale</p>
                 <div class="mt-2 space-y-1">
-                    <x-ui.sidebar-link :href="route('professional.experiences.index')" :active="request()->routeIs('professional.experiences.*')">
-                        Esperienze e studi
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('professional.documents.index')" :active="request()->routeIs('professional.documents.*')">
-                        Documenti
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('professional.moodle.index')" :active="request()->routeIs('professional.moodle.*')">
-                        Moodle e attestati
-                    </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('professional.experiences.index')" :active="request()->routeIs('professional.experiences.*')">Esperienze e studi</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('professional.documents.index')" :active="request()->routeIs('professional.documents.*')">Documenti</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('professional.moodle.index')" :active="request()->routeIs('professional.moodle.*')">Moodle e attestati</x-ui.sidebar-link>
                 </div>
             </div>
-
             <div class="mt-6">
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Opportunità</p>
                 <div class="mt-2 space-y-1">
-                    <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.*')">
-                        Offerte di lavoro
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('interviews.index')" :active="request()->routeIs('interviews.*')">
-                        Colloqui
-                    </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.*')">Offerte di lavoro</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('interviews.index')" :active="request()->routeIs('interviews.*')">Colloqui</x-ui.sidebar-link>
                 </div>
             </div>
         @elseif ($isBusiness)
             <div class="mt-6">
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Recruiting</p>
                 <div class="mt-2 space-y-1">
-                    <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.index', 'job-postings.show', 'job-postings.edit', 'job-postings.applications')">
-                        I miei annunci
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('job-postings.create')" :active="request()->routeIs('job-postings.create')">
-                        Pubblica annuncio
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('interviews.index')" :active="request()->routeIs('interviews.*')">
-                        Colloqui
-                    </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.index', 'job-postings.show', 'job-postings.edit', 'job-postings.applications')">I miei annunci</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('job-postings.create')" :active="request()->routeIs('job-postings.create')">Pubblica annuncio</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('interviews.index')" :active="request()->routeIs('interviews.*')">Colloqui</x-ui.sidebar-link>
                 </div>
             </div>
-
             <div class="mt-6">
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Struttura</p>
                 <div class="mt-2 space-y-1">
-                    <x-ui.sidebar-link :href="route('business.profile.edit')" :active="request()->routeIs('business.profile.*')">
-                        Profilo struttura
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('business.locations.index')" :active="request()->routeIs('business.locations.*')">
-                        Sedi
-                    </x-ui.sidebar-link>
-
-                    <x-ui.sidebar-link :href="route('business-points-of-contact.index')" :active="request()->routeIs('business-points-of-contact.*')">
-                        Referenti aziendali
-                    </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('business.profile.edit')" :active="request()->routeIs('business.profile.*')">Profilo struttura</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('business.locations.index')" :active="request()->routeIs('business.locations.*')">Sedi</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('business.departments.index')" :active="request()->routeIs('business.departments.*')">Reparti e unità operative</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('business-points-of-contact.index')" :active="request()->routeIs('business-points-of-contact.*')">Referenti aziendali</x-ui.sidebar-link>
                 </div>
             </div>
         @endif
@@ -91,9 +59,7 @@
             <div class="mt-6 border-t border-slate-200 pt-4">
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Account</p>
                 <div class="mt-2 space-y-1">
-                    <x-ui.sidebar-link :href="route('profile.show')" :active="request()->routeIs('profile.show')">
-                        Profilo e sicurezza
-                    </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('profile.show')" :active="request()->routeIs('profile.show')">Profilo e sicurezza</x-ui.sidebar-link>
                 </div>
             </div>
         @endif
@@ -104,12 +70,9 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ $user?->name }}</p>
             <p class="truncate text-xs text-slate-500">{{ $user?->email }}</p>
         </div>
-
         <form method="POST" action="{{ route('logout') }}" class="mt-2">
             @csrf
-            <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
-                Esci
-            </button>
+            <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">Esci</button>
         </form>
     </div>
 </div>
