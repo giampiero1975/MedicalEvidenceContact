@@ -15,7 +15,16 @@ class BusinessProfile extends Model
     protected $fillable = [
         'user_id',
         'company_name',
+        'legal_name',
         'company_type',
+        'vat_number',
+        'tax_code',
+        'description',
+        'website',
+        'email',
+        'phone',
+        'pec',
+        'logo_path',
         'location',
         'employee_count',
     ];
