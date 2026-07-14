@@ -35,16 +35,20 @@ class JobApplicationController extends Controller
         abort_unless($request->user()->role === 'business', 403);
 
         $jobApplication->loadMissing('jobPosting');
-        abort_unless($jobApplication->jobPosting?->user_id === $request->user()->id, 403);
+
+        abort_unless(
+            $jobApplication->jobPosting !== null
+            && (int) $jobApplication->jobPosting->user_id === (int) $request->user()->id,
+            403
+        );
 
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(JobApplication::statusOptions()))],
         ]);
 
-        // Assegnazione esplicita: evita che lo stato venga ignorato in caso di
-        // configurazioni di mass-assignment o modifiche future al modello.
-        $jobApplication->status = $data['status'];
-        $jobApplication->saveOrFail();
+        $jobApplication->forceFill([
+            'status' => $data['status'],
+        ])->saveOrFail();
 
         return back()
             ->with('status', 'Stato della candidatura aggiornato.')
