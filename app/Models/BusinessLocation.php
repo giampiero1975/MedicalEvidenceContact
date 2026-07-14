@@ -12,31 +12,23 @@ class BusinessLocation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'business_profile_id',
-        'name',
-        'type',
-        'street_address',
-        'city',
-        'province',
-        'postal_code',
-        'country',
-        'email',
-        'phone',
-        'is_primary',
-        'is_active',
+        'business_profile_id', 'name', 'type', 'street_address', 'city', 'province',
+        'postal_code', 'country', 'email', 'phone', 'is_primary', 'is_active',
     ];
 
     protected function casts(): array
     {
-        return [
-            'is_primary' => 'boolean',
-            'is_active' => 'boolean',
-        ];
+        return ['is_primary' => 'boolean', 'is_active' => 'boolean'];
     }
 
     public function businessProfile(): BelongsTo
     {
         return $this->belongsTo(BusinessProfile::class);
+    }
+
+    public function departments(): HasMany
+    {
+        return $this->hasMany(BusinessDepartment::class);
     }
 
     public function jobPostings(): HasMany
@@ -46,18 +38,11 @@ class BusinessLocation extends Model
 
     public function formattedAddress(): string
     {
-        $cityLine = collect([$this->postal_code, $this->city])
-            ->filter()
-            ->implode(' ');
-
+        $cityLine = collect([$this->postal_code, $this->city])->filter()->implode(' ');
         if ($this->province) {
             $cityLine .= ($cityLine !== '' ? ' ' : '').'('.$this->province.')';
         }
 
-        return collect([
-            $this->street_address,
-            $cityLine,
-            $this->country,
-        ])->filter()->implode(', ');
+        return collect([$this->street_address, $cityLine, $this->country])->filter()->implode(', ');
     }
 }
