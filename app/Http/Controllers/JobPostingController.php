@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BusinessLocation;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class JobPostingController extends Controller
@@ -17,6 +19,7 @@ class JobPostingController extends Controller
         $jobPostings = JobPosting::query()
             ->with([
                 'businessProfile',
+                'businessLocation',
                 'applications' => fn ($query) => $query->where('user_id', $user->id),
             ])
             ->when($user->role === 'professional', fn ($query) => $query->visibleToProfessionals())
@@ -85,16 +88,17 @@ class JobPostingController extends Controller
     {
         abort_unless($request->user()->role === 'business', 403);
 
-        return view('job-postings.create');
+        return view('job-postings.create', [
+            'businessLocations' => $this->availableLocations($request),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()->role === 'business', 403);
 
-        $data = $this->validateJobPosting($request);
-
         $businessProfile = $request->user()->businessProfile;
+        $data = $this->validatedJobPostingData($request, $businessProfile?->id);
 
         JobPosting::create([
             ...$data,
@@ -119,6 +123,7 @@ class JobPostingController extends Controller
         );
 
         $jobPosting->load([
+            'businessLocation',
             'applications' => fn ($query) => $query->where('user_id', $user->id),
         ]);
 
@@ -134,6 +139,7 @@ class JobPostingController extends Controller
 
         return view('job-postings.edit', [
             'jobPosting' => $jobPosting,
+            'businessLocations' => $this->availableLocations($request),
         ]);
     }
 
@@ -142,7 +148,7 @@ class JobPostingController extends Controller
         $this->authorizeBusinessOwner($request, $jobPosting);
 
         $jobPosting->update([
-            ...$this->validateJobPosting($request),
+            ...$this->validatedJobPostingData($request, $jobPosting->business_profile_id),
             'status' => $request->input('status', 'active'),
         ]);
 
@@ -180,18 +186,27 @@ class JobPostingController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function validateJobPosting(Request $request): array
+    private function validatedJobPostingData(Request $request, ?int $businessProfileId): array
     {
         $request->merge([
             'salary_min' => $this->normalizeMoney($request->input('salary_min')),
             'salary_max' => $this->normalizeMoney($request->input('salary_max')),
         ]);
 
-        return $request->validate([
+        $data = $request->validate([
+            'business_location_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('business_locations', 'id')->where(
+                    fn ($query) => $query
+                        ->where('business_profile_id', $businessProfileId)
+                        ->where('is_active', true)
+                ),
+            ],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['required', 'string', 'max:5000'],
             'positions' => ['required', 'integer', 'min:1', 'max:1000'],
-            'workplace_address' => ['required', 'string', 'max:255'],
+            'workplace_address' => ['required_without:business_location_id', 'nullable', 'string', 'max:255'],
             'required_skills' => ['nullable', 'string', 'max:3000'],
             'contract_type' => ['required', 'string', 'max:120'],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
@@ -199,10 +214,24 @@ class JobPostingController extends Controller
             'expires_at' => ['required', 'date', 'after_or_equal:today'],
             'status' => ['sometimes', 'in:active,expired'],
         ], [
+            'business_location_id.exists' => 'La sede selezionata non è disponibile per questa struttura.',
+            'workplace_address.required_without' => 'Seleziona una sede oppure inserisci un indirizzo di lavoro.',
             'salary_min.numeric' => 'La retribuzione minima deve essere un importo valido.',
             'salary_max.numeric' => 'La retribuzione massima deve essere un importo valido.',
             'salary_max.gte' => 'La retribuzione massima deve essere uguale o superiore alla retribuzione minima.',
         ]);
+
+        if (! empty($data['business_location_id'])) {
+            $location = BusinessLocation::query()
+                ->whereKey($data['business_location_id'])
+                ->where('business_profile_id', $businessProfileId)
+                ->where('is_active', true)
+                ->firstOrFail();
+
+            $data['workplace_address'] = $location->formattedAddress();
+        }
+
+        return $data;
     }
 
     /** @return array<string, mixed> */
@@ -220,6 +249,16 @@ class JobPostingController extends Controller
             'published_to' => ['nullable', 'date', 'after_or_equal:published_from'],
             'status' => ['nullable', 'in:active,expired'],
         ]);
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Collection<int, BusinessLocation> */
+    private function availableLocations(Request $request)
+    {
+        return $request->user()->businessProfile?->locations()
+            ->where('is_active', true)
+            ->orderByDesc('is_primary')
+            ->orderBy('name')
+            ->get() ?? collect();
     }
 
     private function normalizeMoney(mixed $value): ?string
