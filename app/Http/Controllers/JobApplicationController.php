@@ -6,6 +6,7 @@ use App\Models\JobApplication;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class JobApplicationController extends Controller
 {
@@ -21,11 +22,27 @@ class JobApplicationController extends Controller
             'job_posting_id' => $jobPosting->id,
             'user_id' => $request->user()->id,
         ], [
-            'status' => 'inviata',
+            'status' => JobApplication::STATUS_RECEIVED,
         ]);
 
         return redirect()
             ->route('dashboard')
             ->with('status', 'Candidatura inviata. Annuncio aggiunto alla tua lista.');
+    }
+
+    public function updateStatus(Request $request, JobApplication $jobApplication): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'business', 403);
+        abort_unless($jobApplication->jobPosting?->user_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'status' => ['required', Rule::in(array_keys(JobApplication::statusOptions()))],
+        ]);
+
+        $jobApplication->update($data);
+
+        return back()
+            ->with('status', 'Stato della candidatura aggiornato.')
+            ->with('status_variant', 'success');
     }
 }
