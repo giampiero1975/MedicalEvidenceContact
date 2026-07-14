@@ -26,6 +26,8 @@ class BusinessCandidateApplicationController extends Controller
             'professional.professionalProfileItems' => fn ($query) => $query->latest(),
             'professional.professionalDocument',
             'professional.certificates' => fn ($query) => $query->latest('issued_at'),
+            'notes.author:id,name,first_name,last_name',
+            'events.actor:id,name,first_name,last_name',
         ]);
 
         return view('business.applications.show', [
