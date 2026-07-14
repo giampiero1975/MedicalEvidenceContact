@@ -15,6 +15,7 @@ class JobPosting extends Model
     protected $fillable = [
         'user_id',
         'business_profile_id',
+        'business_location_id',
         'title',
         'description',
         'positions',
@@ -44,6 +45,11 @@ class JobPosting extends Model
     public function businessProfile(): BelongsTo
     {
         return $this->belongsTo(BusinessProfile::class);
+    }
+
+    public function businessLocation(): BelongsTo
+    {
+        return $this->belongsTo(BusinessLocation::class);
     }
 
     public function applications(): HasMany
