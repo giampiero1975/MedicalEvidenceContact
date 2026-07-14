@@ -1,133 +1,89 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Candidature ricevute
-                </h2>
-                <p class="mt-1 text-sm text-gray-600">
-                    {{ $jobPosting->title }}
-                </p>
-            </div>
-
-            <a href="{{ route('job-postings.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50">
-                Torna agli annunci
-            </a>
-        </div>
+        <x-ui.page-header
+            title="Candidature ricevute"
+            :description="$jobPosting->title"
+        >
+            <x-slot name="actions">
+                <x-ui.button href="{{ route('job-postings.index') }}" variant="secondary" size="sm">
+                    Torna agli annunci
+                </x-ui.button>
+            </x-slot>
+        </x-ui.page-header>
     </x-slot>
 
-    <div class="py-10">
-        <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <section class="mb-6 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                <div class="grid gap-4 text-sm text-gray-700 sm:grid-cols-3">
-                    <div>
-                        <p class="font-semibold text-gray-900">Posizione</p>
-                        <p class="mt-1">{{ $jobPosting->title }}</p>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900">Sede</p>
-                        <p class="mt-1">{{ $jobPosting->workplace_address }}</p>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900">Candidature</p>
-                        <p class="mt-1">{{ $applications->count() }}</p>
-                    </div>
+    <div class="space-y-6">
+        <x-ui.card>
+            <dl class="grid gap-4 text-sm sm:grid-cols-3">
+                <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Posizione</dt>
+                    <dd class="mt-1 font-medium text-slate-900">{{ $jobPosting->title }}</dd>
                 </div>
-            </section>
+                <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sede</dt>
+                    <dd class="mt-1 font-medium text-slate-900">{{ $jobPosting->workplace_address }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Candidature</dt>
+                    <dd class="mt-1 font-medium text-slate-900">{{ $applications->count() }}</dd>
+                </div>
+            </dl>
+        </x-ui.card>
 
-            @if ($applications->isEmpty())
-                <section class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
-                    <h3 class="text-lg font-semibold text-gray-900">Nessuna candidatura ricevuta</h3>
-                    <p class="mt-2 text-sm text-gray-600">Quando un professionista accettera questa posizione, comparira qui.</p>
-                </section>
-            @else
-                <div class="grid gap-4">
-                    @foreach ($applications as $application)
-                        @php
-                            $professional = $application->professional;
-                        @endphp
+        @if ($applications->isEmpty())
+            <x-ui.empty-state
+                title="Nessuna candidatura ricevuta"
+                description="Quando un professionista invierà la candidatura, comparirà qui."
+            />
+        @else
+            <div class="space-y-3">
+                @foreach ($applications as $application)
+                    @php
+                        $professional = $application->professional;
+                        $workExperiences = $professional->professionalProfileItems->where('type', 'work_experience');
+                        $educationItems = $professional->professionalProfileItems->where('type', 'education');
+                        $latestWork = $workExperiences->first();
+                        $latestEducation = $educationItems->first();
+                    @endphp
 
-                        <article class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">
+                    <article class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(520px,1fr)] xl:items-center">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="truncate text-base font-semibold text-slate-950">
                                         {{ $professional->first_name && $professional->last_name ? $professional->first_name.' '.$professional->last_name : $professional->name }}
                                     </h3>
-                                    <dl class="mt-3 grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
-                                        <div>
-                                            <dt class="font-semibold text-gray-900">Profilo</dt>
-                                            <dd class="mt-1">Professionista</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-semibold text-gray-900">Residenza</dt>
-                                            <dd class="mt-1">{{ $professional->residence ?: 'Non indicata' }}</dd>
-                                        </div>
-                                    </dl>
-
-                                    @php
-                                        $workExperiences = $professional->professionalProfileItems->where('type', 'work_experience');
-                                        $educationItems = $professional->professionalProfileItems->where('type', 'education');
-                                    @endphp
-
-                                    <div class="mt-5 grid gap-4 lg:grid-cols-2">
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-900">Esperienze lavorative</h4>
-                                            @if ($workExperiences->isEmpty())
-                                                <p class="mt-2 text-sm text-gray-600">Non indicate.</p>
-                                            @else
-                                                <div class="mt-2 grid gap-3">
-                                                    @foreach ($workExperiences as $item)
-                                                        <div class="rounded-md border border-gray-200 p-3">
-                                                            <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                                                                <p class="font-semibold text-gray-900">{{ $item->title }}</p>
-                                                                <span class="text-sm text-gray-600">{{ $item->duration }}</span>
-                                                            </div>
-                                                            @if ($item->description)
-                                                                <p class="mt-2 text-sm leading-6 text-gray-600">{{ $item->description }}</p>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-900">Percorsi di studio</h4>
-                                            @if ($educationItems->isEmpty())
-                                                <p class="mt-2 text-sm text-gray-600">Non indicati.</p>
-                                            @else
-                                                <div class="mt-2 grid gap-3">
-                                                    @foreach ($educationItems as $item)
-                                                        <div class="rounded-md border border-gray-200 p-3">
-                                                            <div class="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                                                                <p class="font-semibold text-gray-900">{{ $item->title }}</p>
-                                                                <span class="text-sm text-gray-600">{{ $item->duration }}</span>
-                                                            </div>
-                                                            @if ($item->description)
-                                                                <p class="mt-2 text-sm leading-6 text-gray-600">{{ $item->description }}</p>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
+                                    <x-ui.badge variant="info">{{ $application->statusLabel() }}</x-ui.badge>
                                 </div>
 
-                                <div class="flex flex-col items-start gap-2 sm:items-end">
-                                    <span class="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                                        {{ str_replace('_', ' ', $application->status) }}
-                                    </span>
-                                    <span class="text-sm text-gray-500">
-                                        {{ $application->created_at->format('d/m/Y') }}
-                                    </span>
+                                <p class="mt-1 text-sm text-slate-600">
+                                    {{ $professional->residence ?: 'Residenza non indicata' }}
+                                    <span class="mx-1 text-slate-300">·</span>
+                                    Candidatura del {{ $application->created_at->format('d/m/Y') }}
+                                </p>
+
+                                <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+                                    <span><strong class="font-semibold text-slate-700">Esperienza:</strong> {{ $latestWork?->title ?: 'Non indicata' }}</span>
+                                    <span><strong class="font-semibold text-slate-700">Formazione:</strong> {{ $latestEducation?->title ?: 'Non indicata' }}</span>
                                 </div>
                             </div>
 
-                        </article>
-                    @endforeach
-                </div>
-            @endif
-        </div>
+                            <form method="POST" action="{{ route('job-applications.status.update', $application) }}" class="grid gap-3 sm:grid-cols-[minmax(250px,1fr)_auto] sm:items-end">
+                                @csrf
+                                @method('PATCH')
+
+                                <x-ui.select name="status" label="Stato candidatura">
+                                    @foreach (\App\Models\JobApplication::statusOptions() as $value => $label)
+                                        <option value="{{ $value }}" @selected($application->status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </x-ui.select>
+
+                                <x-ui.button type="submit" size="sm">Aggiorna stato</x-ui.button>
+                            </form>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
     </div>
 </x-app-layout>
