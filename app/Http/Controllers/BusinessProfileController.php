@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\BusinessProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BusinessProfileController extends Controller
 {
@@ -30,16 +29,7 @@ class BusinessProfileController extends Controller
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:180'],
             'legal_name' => ['nullable', 'string', 'max:180'],
-            'company_type' => ['required', Rule::in([
-                'RSA',
-                'Casa di cura',
-                'Ospedale',
-                'Cooperativa',
-                'Agenzia per il lavoro',
-                'Assistenza domiciliare',
-                'Poliambulatorio',
-                'Altro',
-            ])],
+            'company_type' => ['required', 'string', 'max:120'],
             'vat_number' => ['nullable', 'string', 'max:32'],
             'tax_code' => ['nullable', 'string', 'max:32'],
             'description' => ['nullable', 'string', 'max:5000'],
@@ -76,7 +66,7 @@ class BusinessProfileController extends Controller
             ->with('status_variant', 'success');
     }
 
-    public function logo(Request $request): Response
+    public function logo(Request $request): StreamedResponse
     {
         $this->authorizeBusiness($request);
 
