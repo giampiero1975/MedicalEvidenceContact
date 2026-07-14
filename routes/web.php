@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminJobPostingController;
 use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\BusinessCandidateApplicationController;
 use App\Http\Controllers\BusinessDepartmentController;
 use App\Http\Controllers\BusinessLocationController;
 use App\Http\Controllers\BusinessPointOfContactController;
@@ -50,6 +51,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::delete('/annunci/{jobPosting}', [JobPostingController::class, 'destroy'])->name('job-postings.destroy');
     Route::get('/annunci/{jobPosting}/candidature', [JobPostingController::class, 'applications'])->name('job-postings.applications');
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
+    Route::get('/business/candidature/{jobApplication}', [BusinessCandidateApplicationController::class, 'show'])->name('business.applications.show');
     Route::patch('/candidature/{jobApplication}/stato', [JobApplicationController::class, 'updateStatus'])->name('job-applications.status.update');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
 
