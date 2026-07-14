@@ -90,143 +90,104 @@
                     @endif
 
                     <div class="flex items-end gap-2 lg:col-span-12">
-                        <x-button>
-                            Filtra
-                        </x-button>
-                        <a href="{{ route('job-postings.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50">
-                            Pulisci
-                        </a>
-                        <span class="ml-auto text-sm font-semibold text-gray-700">
-                            {{ $jobPostings->total() }} risultati
-                        </span>
+                        <x-button>Filtra</x-button>
+                        <a href="{{ route('job-postings.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50">Pulisci</a>
+                        <span class="ml-auto text-sm font-semibold text-gray-700">{{ $jobPostings->total() }} risultati</span>
                     </div>
                 </form>
             </section>
 
             @if ($jobPostings->isEmpty())
                 <section class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        {{ $role === 'business' ? 'Nessun annuncio pubblicato' : 'Nessun annuncio attivo' }}
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-600">
-                        {{ $role === 'business' ? 'Crea il primo annuncio per iniziare a ricevere candidature.' : 'Torna piu tardi: qui compariranno gli annunci attivi delle aziende.' }}
-                    </p>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ $role === 'business' ? 'Nessun annuncio pubblicato' : 'Nessun annuncio attivo' }}</h3>
+                    <p class="mt-2 text-sm text-gray-600">{{ $role === 'business' ? 'Crea il primo annuncio per iniziare a ricevere candidature.' : 'Torna piu tardi: qui compariranno gli annunci attivi delle aziende.' }}</p>
                     @if ($role === 'business')
-                        <a href="{{ route('job-postings.create') }}" class="mt-5 inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">
-                            Pubblica annuncio
-                        </a>
+                        <a href="{{ route('job-postings.create') }}" class="mt-5 inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">Pubblica annuncio</a>
                     @endif
                 </section>
             @else
-                <div class="grid gap-5">
+                <div class="space-y-3">
                     @foreach ($jobPostings as $jobPosting)
-                        <article class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                <div>
+                        <article class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                            <div class="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(520px,1fr)] xl:items-center">
+                                <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="text-lg font-semibold text-gray-900">
-                                            <a href="{{ route('job-postings.show', $jobPosting) }}" class="hover:text-indigo-700">
-                                                {{ $jobPosting->title }}
-                                            </a>
+                                        <h3 class="truncate text-base font-semibold text-slate-950">
+                                            <a href="{{ route('job-postings.show', $jobPosting) }}" class="hover:text-teal-700">{{ $jobPosting->title }}</a>
                                         </h3>
-                                        <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                        <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'warning'">
                                             {{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}
-                                        </span>
+                                        </x-ui.badge>
                                     </div>
-                                    <p class="mt-2 line-clamp-3 text-sm leading-6 text-gray-600">{{ $jobPosting->description }}</p>
+
+                                    <p class="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{{ $jobPosting->description }}</p>
+
+                                    @if ($jobPosting->required_skills)
+                                        <p class="mt-2 line-clamp-1 text-xs text-slate-500">
+                                            <span class="font-semibold text-slate-700">Abilita:</span> {{ $jobPosting->required_skills }}
+                                        </p>
+                                    @endif
                                 </div>
 
-                                <dl class="grid min-w-72 grid-cols-2 gap-3 text-sm">
-                                    <div class="rounded-md bg-gray-50 p-3">
-                                        <dt class="font-semibold text-gray-900">Posizioni</dt>
-                                        <dd class="mt-1 text-gray-600">{{ $jobPosting->positions }}</dd>
+                                <dl class="grid grid-cols-2 gap-x-5 gap-y-3 text-sm sm:grid-cols-3 xl:grid-cols-5">
+                                    <div class="min-w-0">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Posizioni</dt>
+                                        <dd class="mt-1 font-medium text-slate-900">{{ $jobPosting->positions }}</dd>
                                     </div>
-                                    <div class="rounded-md bg-gray-50 p-3">
-                                        <dt class="font-semibold text-gray-900">Contratto</dt>
-                                        <dd class="mt-1 text-gray-600">{{ $jobPosting->contract_type }}</dd>
+                                    <div class="min-w-0">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contratto</dt>
+                                        <dd class="mt-1 truncate font-medium text-slate-900">{{ $jobPosting->contract_type }}</dd>
                                     </div>
-                                    <div class="col-span-2 rounded-md bg-gray-50 p-3">
-                                        <dt class="font-semibold text-gray-900">Sede</dt>
-                                        <dd class="mt-1 text-gray-600">{{ $jobPosting->workplace_address }}</dd>
+                                    <div class="min-w-0">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Retribuzione</dt>
+                                        <dd class="mt-1 whitespace-nowrap font-medium text-slate-900">
+                                            @if ($jobPosting->salary_min || $jobPosting->salary_max)
+                                                {{ $jobPosting->salary_min ? '€ '.number_format((float) $jobPosting->salary_min, 0, ',', '.') : 'Da definire' }}
+                                                –
+                                                {{ $jobPosting->salary_max ? '€ '.number_format((float) $jobPosting->salary_max, 0, ',', '.') : 'Da definire' }}
+                                            @else
+                                                Da definire
+                                            @endif
+                                        </dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Scadenza</dt>
+                                        <dd class="mt-1 whitespace-nowrap font-medium text-slate-900">{{ $jobPosting->expires_at->format('d/m/Y') }}</dd>
+                                    </div>
+                                    <div class="min-w-0 sm:col-span-2 xl:col-span-1">
+                                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sede</dt>
+                                        <dd class="mt-1 truncate font-medium text-slate-900" title="{{ $jobPosting->workplace_address }}">{{ $jobPosting->workplace_address }}</dd>
                                     </div>
                                 </dl>
                             </div>
 
-                            <div class="mt-5 grid gap-4 border-t border-gray-100 pt-5 text-sm text-gray-700 sm:grid-cols-3">
-                                <div>
-                                    <p class="font-semibold text-gray-900">Retribuzione</p>
-                                    <p class="mt-1">
-                                        @if ($jobPosting->salary_min || $jobPosting->salary_max)
-                                            {{ $jobPosting->salary_min ? '€ '.number_format((float) $jobPosting->salary_min, 0, ',', '.') : 'Da definire' }}
-                                            -
-                                            {{ $jobPosting->salary_max ? '€ '.number_format((float) $jobPosting->salary_max, 0, ',', '.') : 'Da definire' }}
-                                        @else
-                                            Da definire
-                                        @endif
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-900">Scadenza</p>
-                                    <p class="mt-1">{{ $jobPosting->expires_at->format('d/m/Y') }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-900">Abilita richieste</p>
-                                    <p class="mt-1">{{ $jobPosting->required_skills ?: 'Non specificate' }}</p>
-                                </div>
-                            </div>
-
-                            @if ($role === 'professional')
-                                <div class="mt-5 flex justify-end border-t border-gray-100 pt-5">
+                            <div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                                @if ($role === 'professional')
+                                    <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Dettaglio</a>
                                     @if ($jobPosting->applications->isNotEmpty())
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                                                Dettaglio
-                                            </a>
-                                            <span class="inline-flex items-center rounded-md bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
-                                                Candidatura {{ str_replace('_', ' ', $jobPosting->applications->first()->status) }}
-                                            </span>
-                                        </div>
+                                        <x-ui.badge variant="info">Candidatura {{ str_replace('_', ' ', $jobPosting->applications->first()->status) }}</x-ui.badge>
                                     @else
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                                                Dettaglio
-                                            </a>
-                                            <form method="POST" action="{{ route('job-applications.store', $jobPosting) }}">
-                                                @csrf
-                                                <x-button>
-                                                    Candidati
-                                                </x-button>
-                                            </form>
-                                        </div>
+                                        <form method="POST" action="{{ route('job-applications.store', $jobPosting) }}">
+                                            @csrf
+                                            <x-ui.button type="submit" size="sm">Candidati</x-ui.button>
+                                        </form>
                                     @endif
-                                </div>
-                            @else
-                                <div class="mt-5 flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-5">
-                                    <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                                        Dettaglio
-                                    </a>
-                                    <a href="{{ route('job-postings.edit', $jobPosting) }}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">
-                                        Modifica
-                                    </a>
-                                    <a href="{{ route('job-postings.applications', $jobPosting) }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                                        Vedi candidature
-                                    </a>
+                                @else
+                                    <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Dettaglio</a>
+                                    <a href="{{ route('job-postings.edit', $jobPosting) }}" class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500">Modifica</a>
+                                    <a href="{{ route('job-postings.applications', $jobPosting) }}" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Vedi candidature</a>
                                     <form method="POST" action="{{ route('job-postings.destroy', $jobPosting) }}" onsubmit="return confirm('Eliminare questo annuncio?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500">
-                                            Elimina
-                                        </button>
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-500">Elimina</button>
                                     </form>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </article>
                     @endforeach
                 </div>
 
-                <div class="mt-6">
-                    {{ $jobPostings->links() }}
-                </div>
+                <div class="mt-6">{{ $jobPostings->links() }}</div>
             @endif
         </div>
     </div>
