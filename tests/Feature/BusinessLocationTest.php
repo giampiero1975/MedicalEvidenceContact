@@ -19,6 +19,7 @@ class BusinessLocationTest extends TestCase
             'user_id' => $business->id,
             'company_name' => 'RSA Aurora',
             'company_type' => 'RSA',
+            'location' => 'Milano',
         ]);
 
         $this->actingAs($business)
@@ -58,6 +59,7 @@ class BusinessLocationTest extends TestCase
             'user_id' => $business->id,
             'company_name' => 'Clinica Delta',
             'company_type' => 'Casa di cura',
+            'location' => 'Milano',
         ]);
 
         $first = BusinessLocation::create([
