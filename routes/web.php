@@ -13,6 +13,7 @@ use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\JobApplicationNoteController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MoodleAccountLinkController;
 use App\Http\Controllers\MoodleCertificateSyncController;
@@ -52,6 +53,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/annunci/{jobPosting}/candidature', [JobPostingController::class, 'applications'])->name('job-postings.applications');
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
     Route::get('/business/candidature/{jobApplication}', [BusinessCandidateApplicationController::class, 'show'])->name('business.applications.show');
+    Route::post('/business/candidature/{jobApplication}/note', [JobApplicationNoteController::class, 'store'])->name('business.applications.notes.store');
     Route::patch('/candidature/{jobApplication}/stato', [JobApplicationController::class, 'updateStatus'])->name('job-applications.status.update');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
 
