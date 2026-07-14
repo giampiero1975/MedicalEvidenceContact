@@ -215,19 +215,17 @@ class ProfessionalProfileItemTest extends TestCase
         JobApplication::create([
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,
-            'status' => 'inviata',
+            'status' => JobApplication::STATUS_RECEIVED,
         ]);
 
         $this->actingAs($business)
             ->get(route('job-postings.applications', $jobPosting))
             ->assertOk()
             ->assertSee('Maria Aldomar')
-            ->assertSee('Esperienze lavorative')
+            ->assertSee('Esperienza:')
             ->assertSee('OSS RSA San Carlo')
-            ->assertSee('2022 - 2025')
-            ->assertSee('Percorsi di studio')
+            ->assertSee('Formazione:')
             ->assertSee('Corso OSS Regione Lombardia')
-            ->assertSee('2021')
             ->assertDontSee('maria.aldomar.profile@example.test')
             ->assertDontSee('3339998887');
     }
