@@ -50,6 +50,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::delete('/annunci/{jobPosting}', [JobPostingController::class, 'destroy'])->name('job-postings.destroy');
     Route::get('/annunci/{jobPosting}/candidature', [JobPostingController::class, 'applications'])->name('job-postings.applications');
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
+    Route::patch('/candidature/{jobApplication}/stato', [JobApplicationController::class, 'updateStatus'])->name('job-applications.status.update');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
 
     Route::get('/business/profilo', [BusinessProfileController::class, 'edit'])->name('business.profile.edit');
