@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessPointOfContactController;
+use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobPostingController;
@@ -70,8 +71,13 @@ Route::middleware([
     Route::get('/annunci/{jobPosting}/candidature', [JobPostingController::class, 'applications'])->name('job-postings.applications');
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
+
+    Route::get('/business/profilo', [BusinessProfileController::class, 'edit'])->name('business.profile.edit');
+    Route::put('/business/profilo', [BusinessProfileController::class, 'update'])->name('business.profile.update');
+    Route::get('/business/profilo/logo', [BusinessProfileController::class, 'logo'])->name('business.profile.logo');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
+
     Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
     Route::get('/professionista/documenti', ProfessionalDocumentsPageController::class)->name('professional.documents.index');
     Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
