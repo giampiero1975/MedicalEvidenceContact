@@ -32,6 +32,18 @@ class ProfessionalDashboardController extends Controller
             ->latest()
             ->get();
 
+        $certificates = $user
+            ->certificates()
+            ->latest('issued_at')
+            ->get();
+
+        $latestCertificate = $certificates->first();
+        $completedCoursesCount = $certificates
+            ->pluck('course_id')
+            ->filter()
+            ->unique()
+            ->count();
+
         $profileItems = $user
             ->professionalProfileItems()
             ->latest()
@@ -86,6 +98,9 @@ class ProfessionalDashboardController extends Controller
             'profileItems' => $profileItems,
             'moodleSites' => $moodleSites,
             'moodleUserLinks' => $moodleUserLinks,
+            'certificates' => $certificates,
+            'latestCertificate' => $latestCertificate,
+            'completedCoursesCount' => $completedCoursesCount,
             'documents' => $documents,
         ]);
     }
