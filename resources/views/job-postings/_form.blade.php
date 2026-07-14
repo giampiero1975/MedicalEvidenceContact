@@ -68,25 +68,49 @@
     </div>
 
     <div class="grid gap-5 sm:grid-cols-3">
-        <x-ui.input
-            name="salary_min"
-            type="number"
-            label="Retribuzione minima"
-            :value="$jobPosting->salary_min ?? ''"
-            min="0"
-            step="0.01"
-            help="Importo lordo indicativo."
-        />
+        <div>
+            <label for="salary_min" class="block text-sm font-semibold text-slate-700">Retribuzione minima</label>
+            <div class="relative mt-1">
+                <input
+                    id="salary_min"
+                    name="salary_min"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    value="{{ old('salary_min', isset($jobPosting) && $jobPosting->salary_min !== null ? number_format((float) $jobPosting->salary_min, 2, ',', '.') : '') }}"
+                    placeholder="Es. 1.200,00"
+                    class="block w-full rounded-xl border-slate-300 bg-white pr-10 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:ring-teal-600 @error('salary_min') border-rose-300 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                >
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm font-semibold text-slate-500">€</span>
+            </div>
+            @error('salary_min')
+                <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
+            @else
+                <p class="mt-1 text-xs text-slate-500">Inserisci liberamente l'importo lordo, ad esempio 1200 oppure 1.200,00.</p>
+            @enderror
+        </div>
 
-        <x-ui.input
-            name="salary_max"
-            type="number"
-            label="Retribuzione massima"
-            :value="$jobPosting->salary_max ?? ''"
-            min="0"
-            step="0.01"
-            help="Importo lordo indicativo."
-        />
+        <div>
+            <label for="salary_max" class="block text-sm font-semibold text-slate-700">Retribuzione massima</label>
+            <div class="relative mt-1">
+                <input
+                    id="salary_max"
+                    name="salary_max"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    value="{{ old('salary_max', isset($jobPosting) && $jobPosting->salary_max !== null ? number_format((float) $jobPosting->salary_max, 2, ',', '.') : '') }}"
+                    placeholder="Es. 1.500,00"
+                    class="block w-full rounded-xl border-slate-300 bg-white pr-10 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:ring-teal-600 @error('salary_max') border-rose-300 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                >
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm font-semibold text-slate-500">€</span>
+            </div>
+            @error('salary_max')
+                <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
+            @else
+                <p class="mt-1 text-xs text-slate-500">Deve essere uguale o superiore alla retribuzione minima.</p>
+            @enderror
+        </div>
 
         <x-ui.input
             name="expires_at"
