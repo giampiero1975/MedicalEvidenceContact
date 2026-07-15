@@ -55,6 +55,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/business/candidature/{jobApplication}', [BusinessCandidateApplicationController::class, 'show'])->name('business.applications.show');
     Route::post('/business/candidature/{jobApplication}/note', [JobApplicationNoteController::class, 'store'])->name('business.applications.notes.store');
     Route::post('/business/candidature/{jobApplication}/colloqui', [InterviewController::class, 'store'])->name('business.applications.interviews.store');
+    Route::patch('/colloqui/{interview}/risposta', [InterviewController::class, 'respond'])->name('professional.interviews.respond');
     Route::patch('/candidature/{jobApplication}/stato', [JobApplicationController::class, 'updateStatus'])->name('job-applications.status.update');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
 
