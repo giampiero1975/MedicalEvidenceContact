@@ -17,9 +17,6 @@ class InterviewController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, ['business', 'professional'], true), 403);
 
-        // Manteniamo i dataset usati dalla schermata colloqui esistente.
-        // L'introduzione dei colloqui persistiti non deve rimuovere le
-        // candidature ancora da pianificare né la vista Professional.
         $businessJobPostings = $user->role === 'business'
             ? $user->jobPostings()
                 ->with([
@@ -106,5 +103,52 @@ class InterviewController extends Controller
         ]);
 
         return back()->with('status', 'Colloquio programmato.')->with('status_variant', 'success');
+    }
+
+    public function respond(Request $request, Interview $interview): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'professional', 403);
+
+        $interview->loadMissing('jobApplication');
+        abort_unless(
+            $interview->jobApplication !== null
+            && (int) $interview->jobApplication->user_id === (int) $request->user()->id,
+            403
+        );
+
+        $data = $request->validate([
+            'response' => ['required', Rule::in(['accepted', 'declined'])],
+            'contact_sharing_consent' => ['nullable', 'boolean'],
+        ]);
+
+        if ($data['response'] === 'accepted' && ! $request->boolean('contact_sharing_consent')) {
+            return back()->withErrors([
+                'contact_sharing_consent' => 'Per accettare il colloquio devi autorizzare la condivisione dei contatti con la struttura.',
+            ]);
+        }
+
+        $interview->update([
+            'status' => $data['response'],
+            'contact_sharing_consent' => $data['response'] === 'accepted' && $request->boolean('contact_sharing_consent'),
+            'responded_at' => now(),
+        ]);
+
+        JobApplicationEvent::create([
+            'job_application_id' => $interview->job_application_id,
+            'actor_user_id' => $request->user()->id,
+            'type' => 'interview_response',
+            'label' => $data['response'] === 'accepted'
+                ? 'Colloquio accettato e condivisione contatti autorizzata'
+                : 'Colloquio rifiutato',
+            'metadata' => [
+                'interview_id' => $interview->id,
+                'response' => $data['response'],
+                'contact_sharing_consent' => $interview->contact_sharing_consent,
+            ],
+        ]);
+
+        return back()
+            ->with('status', $data['response'] === 'accepted' ? 'Colloquio confermato.' : 'Colloquio rifiutato.')
+            ->with('status_variant', 'success');
     }
 }
