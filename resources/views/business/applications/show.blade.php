@@ -81,29 +81,42 @@
             </x-ui.card>
 
             <x-ui.card>
+                <div class="flex items-center justify-between gap-3"><h3 class="text-base font-semibold text-slate-950">Colloqui</h3><span class="text-xs text-slate-500">{{ $application->interviews->count() }}</span></div>
+                <div class="mt-4 divide-y divide-slate-200">
+                    @forelse ($application->interviews as $interview)
+                        <div class="py-3 first:pt-0">
+                            <p class="font-semibold text-slate-900">{{ $interview->scheduled_at->format('d/m/Y H:i') }}</p>
+                            <p class="mt-1 text-sm text-slate-600">{{ $interview->modeLabel() }} · {{ $interview->duration_minutes }} minuti</p>
+                            @if($interview->location)<p class="mt-1 text-xs text-slate-500">{{ $interview->location }}</p>@endif
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-500">Nessun colloquio programmato.</p>
+                    @endforelse
+                </div>
+                <form method="POST" action="{{ route('business.applications.interviews.store', $application) }}" class="mt-4 space-y-3 border-t border-slate-200 pt-4">@csrf
+                    <x-ui.input name="scheduled_at" type="datetime-local" label="Data e ora" required />
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui.select name="duration_minutes" label="Durata"><option value="30">30 minuti</option><option value="45">45 minuti</option><option value="60">60 minuti</option><option value="90">90 minuti</option></x-ui.select>
+                        <x-ui.select name="mode" label="Modalità"><option value="in_person">In presenza</option><option value="video">Videochiamata</option><option value="phone">Telefonico</option></x-ui.select>
+                    </div>
+                    <x-ui.input name="location" label="Sede o link" placeholder="Indirizzo, Teams, Meet..." />
+                    <textarea name="notes" rows="2" maxlength="2000" placeholder="Note per il colloquio" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
+                    <x-ui.button type="submit" size="sm" class="w-full">Programma colloquio</x-ui.button>
+                </form>
+            </x-ui.card>
+
+            <x-ui.card>
                 <h3 class="text-base font-semibold text-slate-950">Note interne HR</h3>
                 <form method="POST" action="{{ route('business.applications.notes.store', $application) }}" class="mt-4 space-y-3">@csrf
                     <textarea name="body" rows="4" required maxlength="5000" placeholder="Aggiungi una nota visibile solo alla struttura..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
                     <x-ui.button type="submit" size="sm" class="w-full">Aggiungi nota</x-ui.button>
                 </form>
-                <div class="mt-4 divide-y divide-slate-200">
-                    @forelse ($application->notes as $note)
-                        <div class="py-3 first:pt-0 last:pb-0"><p class="text-sm leading-6 text-slate-700">{{ $note->body }}</p><p class="mt-1 text-xs text-slate-500">{{ $note->author?->name }} · {{ $note->created_at->format('d/m/Y H:i') }}</p></div>
-                    @empty
-                        <p class="text-sm text-slate-500">Nessuna nota interna.</p>
-                    @endforelse
-                </div>
+                <div class="mt-4 divide-y divide-slate-200">@forelse ($application->notes as $note)<div class="py-3 first:pt-0 last:pb-0"><p class="text-sm leading-6 text-slate-700">{{ $note->body }}</p><p class="mt-1 text-xs text-slate-500">{{ $note->author?->name }} · {{ $note->created_at->format('d/m/Y H:i') }}</p></div>@empty<p class="text-sm text-slate-500">Nessuna nota interna.</p>@endforelse</div>
             </x-ui.card>
 
             <x-ui.card>
                 <h3 class="text-base font-semibold text-slate-950">Timeline</h3>
-                <div class="mt-4 space-y-4">
-                    @forelse ($application->events as $event)
-                        <div class="border-l-2 border-slate-200 pl-3"><p class="text-sm font-semibold text-slate-900">{{ $event->label }}</p><p class="mt-1 text-xs text-slate-500">{{ $event->created_at->format('d/m/Y H:i') }}@if($event->actor) · {{ $event->actor->name }}@endif</p></div>
-                    @empty
-                        <div class="border-l-2 border-slate-200 pl-3"><p class="text-sm font-semibold text-slate-900">Candidatura ricevuta</p><p class="mt-1 text-xs text-slate-500">{{ $application->created_at->format('d/m/Y H:i') }}</p></div>
-                    @endforelse
-                </div>
+                <div class="mt-4 space-y-4">@forelse ($application->events as $event)<div class="border-l-2 border-slate-200 pl-3"><p class="text-sm font-semibold text-slate-900">{{ $event->label }}</p><p class="mt-1 text-xs text-slate-500">{{ $event->created_at->format('d/m/Y H:i') }}@if($event->actor) · {{ $event->actor->name }}@endif</p></div>@empty<div class="border-l-2 border-slate-200 pl-3"><p class="text-sm font-semibold text-slate-900">Candidatura ricevuta</p><p class="mt-1 text-xs text-slate-500">{{ $application->created_at->format('d/m/Y H:i') }}</p></div>@endforelse</div>
             </x-ui.card>
 
             <x-ui.card>
