@@ -19,6 +19,8 @@ class Interview extends Model
         'location',
         'notes',
         'status',
+        'contact_sharing_consent',
+        'responded_at',
     ];
 
     protected function casts(): array
@@ -26,6 +28,8 @@ class Interview extends Model
         return [
             'scheduled_at' => 'datetime',
             'duration_minutes' => 'integer',
+            'contact_sharing_consent' => 'boolean',
+            'responded_at' => 'datetime',
         ];
     }
 
@@ -46,5 +50,21 @@ class Interview extends Model
             'phone' => 'Telefonico',
             default => 'In presenza',
         };
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'accepted' => 'Accettato',
+            'declined' => 'Rifiutato',
+            'completed' => 'Completato',
+            'cancelled' => 'Annullato',
+            default => 'Programmato',
+        };
+    }
+
+    public function unlocksContacts(): bool
+    {
+        return $this->status === 'accepted' && $this->contact_sharing_consent;
     }
 }
