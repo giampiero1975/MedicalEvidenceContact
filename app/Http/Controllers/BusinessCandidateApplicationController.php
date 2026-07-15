@@ -31,10 +31,14 @@ class BusinessCandidateApplicationController extends Controller
             'interviews.businessUser:id,name,first_name,last_name',
         ]);
 
+        $canViewContacts = $jobApplication->interviews
+            ->contains(fn ($interview) => $interview->unlocksContacts());
+
         return view('business.applications.show', [
             'application' => $jobApplication,
             'professional' => $jobApplication->professional,
             'statusOptions' => JobApplication::statusOptions(),
+            'canViewContacts' => $canViewContacts,
         ]);
     }
 }
