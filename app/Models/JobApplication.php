@@ -26,7 +26,6 @@ class JobApplication extends Model
         'status',
     ];
 
-    /** @return array<string, string> */
     public static function statusOptions(): array
     {
         return [
@@ -64,5 +63,10 @@ class JobApplication extends Model
     public function events(): HasMany
     {
         return $this->hasMany(JobApplicationEvent::class)->latest();
+    }
+
+    public function interviews(): HasMany
+    {
+        return $this->hasMany(Interview::class)->orderByDesc('scheduled_at');
     }
 }
