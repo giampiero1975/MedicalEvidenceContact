@@ -17,14 +17,44 @@ class InterviewController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, ['business', 'professional'], true), 403);
 
+        // Manteniamo i dataset usati dalla schermata colloqui esistente.
+        // L'introduzione dei colloqui persistiti non deve rimuovere le
+        // candidature ancora da pianificare né la vista Professional.
+        $businessJobPostings = $user->role === 'business'
+            ? $user->jobPostings()
+                ->with([
+                    'applications' => fn ($query) => $query
+                        ->with('professional:id,name,first_name,last_name,role,residence')
+                        ->latest(),
+                ])
+                ->withCount('applications')
+                ->latest()
+                ->get()
+            : collect();
+
+        $professionalApplications = $user->role === 'professional'
+            ? $user->jobApplications()
+                ->with('jobPosting.owner.businessProfile')
+                ->latest()
+                ->get()
+            : collect();
+
         $interviews = Interview::query()
             ->with(['jobApplication.jobPosting.owner.businessProfile', 'jobApplication.professional'])
             ->when($user->role === 'business', fn ($query) => $query->where('business_user_id', $user->id))
-            ->when($user->role === 'professional', fn ($query) => $query->whereHas('jobApplication', fn ($applications) => $applications->where('user_id', $user->id)))
+            ->when(
+                $user->role === 'professional',
+                fn ($query) => $query->whereHas(
+                    'jobApplication',
+                    fn ($applications) => $applications->where('user_id', $user->id)
+                )
+            )
             ->orderBy('scheduled_at')
             ->get();
 
         return view('interviews.index', [
+            'businessJobPostings' => $businessJobPostings,
+            'professionalApplications' => $professionalApplications,
             'interviews' => $interviews,
             'role' => $user->role,
         ]);
