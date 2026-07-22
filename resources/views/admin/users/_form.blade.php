@@ -92,7 +92,12 @@
         </div>
         <div>
             <x-label for="company_type" value="Tipo azienda" />
-            <x-input id="company_type" class="mt-1 block w-full" name="company_type" :value="old('company_type', $businessProfile?->company_type)" x-bind:required="role === 'business'" />
+            <select id="company_type" name="company_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-bind:required="role === 'business'">
+                <option value="">Seleziona</option>
+                @foreach (config('business-types.values') as $type)
+                    <option value="{{ $type }}" @selected(old('company_type', $businessProfile?->company_type) === $type)>{{ $type }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <x-label for="location" value="Localita" />
