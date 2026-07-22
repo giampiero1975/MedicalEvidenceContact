@@ -24,11 +24,13 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_admin_login_screen_links_to_admin_registration(): void
+    public function test_admin_login_screen_does_not_expose_admin_registration(): void
     {
         $response = $this->get('/admin/login');
 
-        $response->assertSee(route('admin.register', absolute: false));
+        $response->assertOk();
+        $response->assertDontSee('/admin/register', false);
+        $response->assertDontSee('Registra admin');
     }
 
     public function test_staff_login_alias_redirects_to_admin_login(): void
@@ -79,23 +81,23 @@ class AuthenticationTest extends TestCase
         $response = $this->post('/login', [
             'email' => $admin->email,
             'password' => 'password',
-            'staff_login' => true,
+            'staff_login' => '1',
         ]);
 
-        $this->assertAuthenticated();
+        $this->assertAuthenticatedAs($admin);
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_non_admin_users_cannot_use_admin_login(): void
     {
-        $user = User::factory()->create([
-            'role' => 'business',
+        $professional = User::factory()->create([
+            'role' => 'professional',
         ]);
 
         $this->post('/login', [
-            'email' => $user->email,
+            'email' => $professional->email,
             'password' => 'password',
-            'staff_login' => true,
+            'staff_login' => '1',
         ]);
 
         $this->assertGuest();
