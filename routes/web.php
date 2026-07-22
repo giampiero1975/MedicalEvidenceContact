@@ -84,6 +84,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/professionista/moodle', [MoodleAccountLinkController::class, 'index'])->name('professional.moodle.index');
     Route::post('/professionista/moodle/collegamenti', [MoodleAccountLinkController::class, 'start'])->name('professional.moodle.start');
+    Route::delete('/professionista/moodle/collegamenti/{moodleUserLink}', [MoodleAccountLinkController::class, 'disconnect'])->name('professional.moodle.disconnect');
     Route::post('/professionista/moodle/collegamenti/{moodleUserLink}/sincronizza-attestati', MoodleCertificateSyncController::class)->name('professional.moodle.certificates.sync');
     Route::get('/professionista/moodle/attestati/{certificate}/visualizza', [ProfessionalCertificateController::class, 'view'])->name('professional.moodle.certificates.view');
     Route::get('/professionista/moodle/attestati/{certificate}/scarica', [ProfessionalCertificateController::class, 'download'])->name('professional.moodle.certificates.download');
