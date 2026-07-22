@@ -63,17 +63,14 @@ class MoodleAccountLinkController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        if ($request->user()->moodleUserLinks()
-            ->where('moodle_site_id', $moodleSite->id)
-            ->where('status', 'active')
-            ->exists()) {
+        if ($request->user()->moodleUserLinks()->where('status', 'active')->exists()) {
             $flowLogger->warning($traceId, 'account_link.start', 'active_link.already_exists', [
                 'elapsed_ms' => $this->elapsedMilliseconds($startedAt),
             ]);
 
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Hai gia un collegamento attivo per questo sito Moodle.')
+                ->with('status', 'Hai già un collegamento Moodle attivo. Scollegalo prima di associarne un altro.')
                 ->with('status_variant', 'info');
         }
 
@@ -157,7 +154,7 @@ class MoodleAccountLinkController extends Controller
 
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.')
+                ->with('status', 'Non è stato possibile completare il collegamento automaticamente. Contatta l’assistenza.')
                 ->with('status_variant', 'danger');
         }
 
@@ -217,7 +214,7 @@ class MoodleAccountLinkController extends Controller
 
         return redirect()
             ->route('professional.moodle.verify.show', $attempt)
-            ->with('status', 'Se i dati corrispondono a un account Moodle, riceverai un codice all email associata.')
+            ->with('status', 'Se i dati corrispondono a un account Moodle, riceverai un codice all’email associata.')
             ->with('status_variant', 'info');
     }
 
@@ -239,7 +236,7 @@ class MoodleAccountLinkController extends Controller
         ]);
 
         if ($attempt->status !== 'sent' || $attempt->consumed_at) {
-            return back()->withErrors(['code' => 'Codice non valido o gia utilizzato.']);
+            return back()->withErrors(['code' => 'Codice non valido o già utilizzato.']);
         }
 
         if ($attempt->expires_at?->isPast()) {
@@ -267,7 +264,7 @@ class MoodleAccountLinkController extends Controller
         } catch (MoodleApiException $exception) {
             report($exception);
 
-            return back()->withErrors(['code' => 'Non e stato possibile verificare lo snapshot Moodle. Riprova piu tardi.']);
+            return back()->withErrors(['code' => 'Non è stato possibile verificare lo snapshot Moodle. Riprova più tardi.']);
         }
 
         try {
@@ -296,13 +293,26 @@ class MoodleAccountLinkController extends Controller
 
             return redirect()
                 ->route('professional.moodle.index')
-                ->with('status', 'Non e stato possibile completare il collegamento automaticamente. Contatta l assistenza.')
+                ->with('status', 'Non è stato possibile completare il collegamento automaticamente. Contatta l’assistenza.')
                 ->with('status_variant', 'danger');
         }
 
         return redirect()
             ->route('professional.moodle.index')
             ->with('status', 'Account Moodle collegato.')
+            ->with('status_variant', 'success');
+    }
+
+    public function disconnect(Request $request, MoodleUserLink $moodleUserLink): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'professional', 403);
+        abort_unless($moodleUserLink->laravel_user_id === $request->user()->id, 403);
+
+        $moodleUserLink->delete();
+
+        return redirect()
+            ->route('professional.moodle.index')
+            ->with('status', 'Account Moodle scollegato. Gli attestati già sincronizzati restano disponibili nel tuo archivio.')
             ->with('status_variant', 'success');
     }
 
@@ -333,7 +343,7 @@ class MoodleAccountLinkController extends Controller
     {
         return redirect()
             ->route('professional.moodle.index')
-            ->with('status', 'Non e stato possibile completare il collegamento. Verifica i dati inseriti o riprova piu tardi.')
+            ->with('status', 'Non è stato possibile completare il collegamento. Verifica i dati inseriti o riprova più tardi.')
             ->with('status_variant', 'danger');
     }
 
