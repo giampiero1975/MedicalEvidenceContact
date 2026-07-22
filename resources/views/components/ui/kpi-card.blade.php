@@ -16,13 +16,17 @@
         'slate' => ['icon' => 'bg-slate-100 text-slate-700 ring-slate-200', 'accent' => 'text-slate-700'],
     ];
     $palette = $tones[$tone] ?? $tones['teal'];
-    $tag = $href ? 'a' : 'div';
+    $classes = $attributes->class([
+        'group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200',
+        'hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md' => $href,
+    ]);
 @endphp
 
-<{{ $tag }} @if($href) href="{{ $href }}" @endif {{ $attributes->class([
-    'group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200',
-    'hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md' => $href,
-]) }}>
+@if($href)
+    <a href="{{ $href }}" {{ $classes }}>
+@else
+    <div {{ $classes }}>
+@endif
     <div class="flex items-start justify-between gap-4">
         <div class="flex h-11 w-11 items-center justify-center rounded-xl ring-1 {{ $palette['icon'] }}">
             @switch($icon)
@@ -52,4 +56,8 @@
     @if($detail)
         <p class="mt-2 text-xs font-medium {{ $palette['accent'] }}">{{ $detail }}</p>
     @endif
-</{{ $tag }}>
+@if($href)
+    </a>
+@else
+    </div>
+@endif
