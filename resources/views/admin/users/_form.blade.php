@@ -72,7 +72,14 @@
             <div class="sm:col-span-2">
                 <x-ui.input name="company_name" label="Nome azienda" :value="$businessProfile?->company_name" x-bind:required="role === 'business'" />
             </div>
-            <x-ui.input name="company_type" label="Tipo azienda" :value="$businessProfile?->company_type" x-bind:required="role === 'business'" />
+            <x-ui.select name="company_type" label="Tipo azienda" x-bind:required="role === 'business'">
+                <option value="">Seleziona</option>
+                @foreach ($businessTypes as $type)
+                    <option value="{{ $type->name }}" @selected(old('company_type', $businessProfile?->company_type) === $type->name)>
+                        {{ $type->name }}{{ $type->is_active ? '' : ' (disattivato)' }}
+                    </option>
+                @endforeach
+            </x-ui.select>
             <x-ui.input name="location" label="Località" :value="$businessProfile?->location" x-bind:required="role === 'business'" />
             <x-ui.input name="employee_count" label="Numero dipendenti" type="number" min="1" :value="$businessProfile?->employee_count" />
         </div>
