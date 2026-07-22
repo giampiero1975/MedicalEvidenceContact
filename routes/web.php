@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminJobPostingController;
-use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessCandidateApplicationController;
@@ -27,9 +26,16 @@ use App\Http\Controllers\ProfessionalDashboardController;
 use Illuminate\Http\Request;
 
 Route::get('/', fn () => view('welcome'));
+Route::get('/admin', function (Request $request) {
+    if (! $request->user()) {
+        return redirect()->route('admin.login');
+    }
+
+    abort_unless($request->user()->role === 'admin', 403);
+
+    return redirect()->route('admin.dashboard');
+})->name('admin.entry');
 Route::get('/admin/login', fn () => view('auth.staff-login'))->middleware('guest')->name('admin.login');
-Route::get('/admin/register', [AdminRegistrationController::class, 'create'])->middleware('guest')->name('admin.register');
-Route::post('/admin/register', [AdminRegistrationController::class, 'store'])->middleware('guest')->name('admin.register.store');
 Route::redirect('/staff/login', '/admin/login')->middleware('guest')->name('staff.login');
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
