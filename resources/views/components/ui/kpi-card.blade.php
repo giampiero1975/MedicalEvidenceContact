@@ -14,10 +14,14 @@
         'teal' => 'bg-teal-50 text-teal-700 ring-teal-100',
         'gray' => 'bg-gray-50 text-gray-700 ring-gray-200',
     ];
-    $tag = $href ? 'a' : 'article';
+    $classes = 'block rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-0.5 hover:shadow-md';
 @endphp
 
-<{{ $tag }} @if($href) href="{{ $href }}" @endif {{ $attributes->class('block rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-0.5 hover:shadow-md') }}>
+@if ($href)
+    <a href="{{ $href }}" {{ $attributes->class($classes) }}>
+@else
+    <article {{ $attributes->class($classes) }}>
+@endif
     <div class="flex items-start justify-between gap-4">
         <div>
             <p class="text-sm font-medium text-gray-500">{{ $label }}</p>
@@ -33,4 +37,8 @@
             </span>
         @endisset
     </div>
-</{{ $tag }}>
+@if ($href)
+    </a>
+@else
+    </article>
+@endif
