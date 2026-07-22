@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessProfile;
+use App\Models\BusinessType;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class AdminUserController extends Controller
 
         return view('admin.users.create', [
             'user' => new User(['role' => 'professional', 'nationality' => 'Italiana', 'address_country' => 'Italia']),
+            'businessTypes' => BusinessType::active()->ordered()->get(),
         ]);
     }
 
@@ -49,26 +51,27 @@ class AdminUserController extends Controller
             return $user;
         });
 
-        return redirect()
-            ->route('admin.users.edit', $user)
-            ->with('status', 'Utente creato.');
+        return redirect()->route('admin.users.edit', $user)->with('status', 'Utente creato.');
     }
 
     public function edit(Request $request, User $user): View
     {
         $this->authorizeAdmin($request);
-
         $user->load('businessProfile');
 
-        return view('admin.users.edit', [
-            'user' => $user,
-        ]);
+        $businessTypes = BusinessType::active()->ordered()->get();
+        $currentType = $user->businessProfile?->company_type;
+
+        if ($currentType && ! $businessTypes->contains('name', $currentType)) {
+            $businessTypes->prepend(new BusinessType(['name' => $currentType, 'is_active' => false]));
+        }
+
+        return view('admin.users.edit', compact('user', 'businessTypes'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
         $this->authorizeAdmin($request);
-
         $data = $this->validateUser($request, $user);
 
         DB::transaction(function () use ($user, $data) {
@@ -82,9 +85,7 @@ class AdminUserController extends Controller
             $this->syncRoleProfile($user, $data);
         });
 
-        return redirect()
-            ->route('admin.users.edit', $user)
-            ->with('status', 'Utente aggiornato.');
+        return redirect()->route('admin.users.edit', $user)->with('status', 'Utente aggiornato.');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
@@ -94,9 +95,7 @@ class AdminUserController extends Controller
 
         $user->delete();
 
-        return redirect()
-            ->route('admin.users.index')
-            ->with('status', 'Utente eliminato.');
+        return redirect()->route('admin.users.index')->with('status', 'Utente eliminato.');
     }
 
     private function authorizeAdmin(Request $request): void
@@ -104,14 +103,19 @@ class AdminUserController extends Controller
         abort_unless($request->user()->role === 'admin', 403);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function validateUser(Request $request, ?User $user = null): array
     {
         $passwordRules = $user
             ? ['nullable', 'confirmed', Password::default()]
             : ['required', 'confirmed', Password::default()];
+
+        $companyTypeRule = Rule::exists('business_types', 'name')
+            ->where(fn ($query) => $query->where('is_active', true));
+
+        if ($user?->businessProfile?->company_type === $request->input('company_type')) {
+            $companyTypeRule = Rule::exists('business_types', 'name');
+        }
 
         return $request->validate([
             'role' => ['required', Rule::in(['professional', 'business', 'admin'])],
@@ -127,16 +131,13 @@ class AdminUserController extends Controller
             'postal_code' => ['required_if:role,professional', 'nullable', 'string', 'max:20'],
             'street_address' => ['required_if:role,professional', 'nullable', 'string', 'max:255'],
             'company_name' => ['required_if:role,business', 'nullable', 'string', 'max:180'],
-            'company_type' => ['required_if:role,business', 'nullable', 'string', 'max:120'],
+            'company_type' => ['required_if:role,business', 'nullable', $companyTypeRule],
             'location' => ['required_if:role,business', 'nullable', 'string', 'max:150'],
             'employee_count' => ['nullable', 'integer', 'min:1', 'max:1000000'],
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $data @return array<string, mixed> */
     private function userPayload(array $data): array
     {
         return [
@@ -156,9 +157,7 @@ class AdminUserController extends Controller
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
+    /** @param array<string, mixed> $data */
     private function syncRoleProfile(User $user, array $data): void
     {
         if ($data['role'] === 'professional') {
@@ -167,7 +166,6 @@ class AdminUserController extends Controller
                 ['updated_at' => now(), 'created_at' => now()]
             );
             $user->businessProfile()->delete();
-
             return;
         }
 
@@ -183,7 +181,6 @@ class AdminUserController extends Controller
                     'employee_count' => $data['employee_count'] ?? null,
                 ]
             );
-
             return;
         }
 
