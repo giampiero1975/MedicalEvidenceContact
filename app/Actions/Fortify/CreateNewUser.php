@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\BusinessProfile;
+use App\Models\BusinessType;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +37,11 @@ class CreateNewUser implements CreatesNewUsers
             'postal_code' => ['required_if:account_type,professional', 'nullable', 'string', 'max:20'],
             'street_address' => ['required_if:account_type,professional', 'nullable', 'string', 'max:255'],
             'company_name' => ['required_if:account_type,business', 'nullable', 'string', 'max:180'],
-            'company_type' => ['required_if:account_type,business', 'nullable', 'string', 'max:120'],
+            'company_type' => [
+                'required_if:account_type,business',
+                'nullable',
+                Rule::exists('business_types', 'name')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'location' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
             'employee_count' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'password' => $this->passwordRules(),
