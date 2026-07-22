@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminJobPostingController;
-use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessPointOfContactController;
 use App\Http\Controllers\InterviewController;
@@ -33,14 +32,6 @@ Route::get('/', function () {
 Route::get('/admin/login', function () {
     return view('auth.staff-login');
 })->middleware('guest')->name('admin.login');
-
-Route::get('/admin/register', [AdminRegistrationController::class, 'create'])
-    ->middleware('guest')
-    ->name('admin.register');
-
-Route::post('/admin/register', [AdminRegistrationController::class, 'store'])
-    ->middleware('guest')
-    ->name('admin.register.store');
 
 Route::redirect('/staff/login', '/admin/login')->middleware('guest')->name('staff.login');
 
