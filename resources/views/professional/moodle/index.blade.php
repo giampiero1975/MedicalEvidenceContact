@@ -49,6 +49,11 @@
                         <p class="mt-3 text-sm leading-6 text-slate-600">
                             Un professionista può mantenere un solo collegamento Moodle attivo. Per aggiornare corsi e attestati usa la sincronizzazione disponibile accanto.
                         </p>
+                        <form method="POST" action="{{ route('professional.moodle.disconnect', $activeMoodleLink) }}" class="mt-5 border-t border-emerald-200 pt-5" onsubmit="return confirm('Vuoi davvero scollegare questo account Moodle? Gli attestati già sincronizzati resteranno disponibili.');">
+                            @csrf
+                            @method('DELETE')
+                            <x-ui.button type="submit" variant="danger">Scollega account</x-ui.button>
+                        </form>
                     </div>
                 @else
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Nuovo collegamento</p>
