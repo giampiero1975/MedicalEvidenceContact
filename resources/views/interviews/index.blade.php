@@ -85,7 +85,7 @@
                 </x-ui.card>
             </div>
 
-            <aside><x-ui.card><h3 class="text-base font-semibold text-slate-950">Privacy contatti</h3><p class="mt-3 text-sm leading-6 text-slate-600">I contatti restano protetti finché non accetti un colloquio e autorizzi espressamente la condivisione.</p></x-ui.card></aside>
+            <aside><x-ui.card><h3 class="text-base font-semibold text-slate-950">Consenso sblocco contatti</h3><p class="mt-3 text-sm leading-6 text-slate-600">I contatti restano protetti finché non accetti un colloquio e autorizzi espressamente la condivisione.</p></x-ui.card></aside>
         </div>
     @endif
 </x-app-layout>
