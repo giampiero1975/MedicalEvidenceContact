@@ -9,35 +9,25 @@ class AdminRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_registration_screen_can_be_rendered(): void
+    public function test_admin_registration_screen_is_not_publicly_available(): void
     {
-        $response = $this->get('/admin/register');
-
-        $response->assertStatus(200);
+        $this->get('/admin/register')->assertNotFound();
     }
 
-    public function test_admin_users_can_register_from_admin_registration(): void
+    public function test_admin_users_cannot_register_from_public_admin_endpoint(): void
     {
-        $response = $this->post('/admin/register', [
+        $this->post('/admin/register', [
             'first_name' => 'Ada',
             'last_name' => 'Admin',
             'email' => 'ada.admin@example.com',
             'phone' => '333111222',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ]);
+        ])->assertNotFound();
 
-        $response->assertSessionHasNoErrors();
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('admin.dashboard', absolute: false));
-
-        $this->assertDatabaseHas('users', [
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', [
             'email' => 'ada.admin@example.com',
-            'role' => 'admin',
-            'first_name' => 'Ada',
-            'last_name' => 'Admin',
         ]);
-        $this->assertDatabaseCount('professional_profiles', 0);
-        $this->assertDatabaseCount('business_profiles', 0);
     }
 }
