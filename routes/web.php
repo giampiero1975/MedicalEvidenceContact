@@ -29,6 +29,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/admin', function (Request $request) {
+    if (! $request->user()) {
+        return redirect()->route('admin.login');
+    }
+
+    abort_unless($request->user()->role === 'admin', 403);
+
+    return redirect()->route('admin.dashboard');
+})->name('admin.index');
+
 Route::get('/admin/login', function () {
     return view('auth.staff-login');
 })->middleware('guest')->name('admin.login');
