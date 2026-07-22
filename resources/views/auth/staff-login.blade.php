@@ -71,14 +71,9 @@
                     </div>
 
                     <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-                        <div class="flex gap-3 text-sm">
-                            <a class="text-gray-600 underline hover:text-gray-900" href="{{ route('login') }}">
-                                Login utenti
-                            </a>
-                            <a class="font-semibold text-indigo-600 underline hover:text-indigo-800" href="{{ route('admin.register') }}">
-                                Registra admin
-                            </a>
-                        </div>
+                        <a class="text-sm text-gray-600 underline hover:text-gray-900" href="{{ route('login') }}">
+                            Login utenti
+                        </a>
 
                         <x-button>
                             Accedi come admin
