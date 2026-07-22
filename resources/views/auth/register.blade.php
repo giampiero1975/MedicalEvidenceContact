@@ -156,7 +156,7 @@
                                     <x-label for="company_type" value="Tipo azienda" />
                                     <select id="company_type" name="company_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         <option value="">Seleziona</option>
-                                        @foreach (['Cooperativa', 'RSA', 'Casa di comunita', 'Clinica privata', 'Farmacia'] as $type)
+                                        @foreach (config('business-types.values') as $type)
                                             <option value="{{ $type }}" @selected(old('company_type') === $type)>{{ $type }}</option>
                                         @endforeach
                                     </select>
