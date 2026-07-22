@@ -36,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
             'postal_code' => ['required_if:account_type,professional', 'nullable', 'string', 'max:20'],
             'street_address' => ['required_if:account_type,professional', 'nullable', 'string', 'max:255'],
             'company_name' => ['required_if:account_type,business', 'nullable', 'string', 'max:180'],
-            'company_type' => ['required_if:account_type,business', 'nullable', 'string', 'max:120'],
+            'company_type' => ['required_if:account_type,business', 'nullable', Rule::in(config('business-types.values'))],
             'location' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
             'employee_count' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'password' => $this->passwordRules(),
