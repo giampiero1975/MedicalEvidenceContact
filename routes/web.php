@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminRegistrationController;
 use App\Http\Controllers\AdminUiPlaygroundController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\BusinessCandidateApplicationController;
+use App\Http\Controllers\BusinessDashboardController;
 use App\Http\Controllers\BusinessDepartmentController;
 use App\Http\Controllers\BusinessLocationController;
 use App\Http\Controllers\BusinessPointOfContactController;
@@ -35,7 +36,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/dashboard', function (Request $request) {
         if ($request->user()->role === 'admin') return redirect()->route('admin.dashboard');
         if ($request->user()->role === 'professional') return app(ProfessionalDashboardController::class)($request);
-        return app(JobPostingController::class)->index($request);
+        return app(BusinessDashboardController::class)($request);
     })->name('dashboard');
 
     Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');
