@@ -58,7 +58,7 @@ class BusinessCandidateApplicationTest extends TestCase
         $this->actingAs($business)
             ->get(route('business.applications.show', $application))
             ->assertOk()
-            ->assertSee('Scheda candidatura')
+            ->assertSee('Candidate Workspace')
             ->assertSee('Maria Rossi')
             ->assertSee('OSS presso RSA Aurora')
             ->assertSee('Workflow HR');
