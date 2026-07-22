@@ -2,11 +2,12 @@
     <x-slot name="header">
         <x-ui.page-header
             title="Moodle e attestati"
-            subtitle="Collega i tuoi account Moodle e sincronizza corsi, certificazioni e attestati."
+            subtitle="Collega il tuo account Moodle e sincronizza corsi, certificazioni e attestati."
         />
     </x-slot>
 
     @php
+        $activeMoodleLink = $moodleUserLinks->firstWhere('status', 'active');
         $certificates = $moodleUserLinks
             ->flatMap(fn ($link) => $link->certificates()->latest('issued_at')->get())
             ->sortByDesc(fn ($certificate) => $certificate->issued_at ?? $certificate->created_at)
@@ -34,33 +35,50 @@
 
         <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
             <x-ui.card>
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Nuovo collegamento</p>
-                <h2 class="mt-2 text-xl font-semibold text-slate-950">Collega un account Moodle</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">
-                    Cerca il tuo account tramite email o username. Riceverai un codice all'indirizzo email registrato su Moodle.
-                </p>
-
-                @if ($moodleSites->isEmpty())
-                    <div class="mt-6">
-                        <x-ui.empty-state title="Nessun sito Moodle disponibile" description="Al momento non ci sono piattaforme abilitate al collegamento." />
+                @if ($activeMoodleLink)
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Collegamento completato</p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Account Moodle già collegato</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Il tuo account per <strong>{{ $activeMoodleLink->moodleSite->name }}</strong> è stato verificato ed è attivo.
+                    </p>
+                    <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <x-ui.badge variant="success">Attivo</x-ui.badge>
+                            <p class="font-semibold text-slate-950">{{ $activeMoodleLink->moodle_username ?: 'Account verificato' }}</p>
+                        </div>
+                        <p class="mt-3 text-sm leading-6 text-slate-600">
+                            Un professionista può mantenere un solo collegamento Moodle attivo. Per aggiornare corsi e attestati usa la sincronizzazione disponibile accanto.
+                        </p>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('professional.moodle.start') }}" class="mt-6 space-y-5">
-                        @csrf
-                        <x-ui.select name="moodle_site_id" label="Sito Moodle" required>
-                            @foreach ($moodleSites as $moodleSite)
-                                <option value="{{ $moodleSite->id }}" @selected(old('moodle_site_id') == $moodleSite->id)>{{ $moodleSite->name }}</option>
-                            @endforeach
-                        </x-ui.select>
-                        <x-ui.select name="lookup_type" label="Come vuoi cercare l'account?" required>
-                            <option value="email" @selected(old('lookup_type', 'email') === 'email')>Email Moodle</option>
-                            <option value="username" @selected(old('lookup_type') === 'username')>Username Moodle</option>
-                        </x-ui.select>
-                        <x-ui.input name="lookup_value" label="Email o username Moodle" :value="old('lookup_value')" placeholder="Inserisci il dato usato su Moodle" help="Il dato viene usato solo per individuare l'account e avviare la verifica." required />
-                        <div class="flex justify-end border-t border-slate-100 pt-5">
-                            <x-ui.button type="submit">Collega account</x-ui.button>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Nuovo collegamento</p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-950">Collega un account Moodle</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Cerca il tuo account tramite email o username. Riceverai un codice all'indirizzo email registrato su Moodle.
+                    </p>
+
+                    @if ($moodleSites->isEmpty())
+                        <div class="mt-6">
+                            <x-ui.empty-state title="Nessun sito Moodle disponibile" description="Al momento non ci sono piattaforme abilitate al collegamento." />
                         </div>
-                    </form>
+                    @else
+                        <form method="POST" action="{{ route('professional.moodle.start') }}" class="mt-6 space-y-5">
+                            @csrf
+                            <x-ui.select name="moodle_site_id" label="Sito Moodle" required>
+                                @foreach ($moodleSites as $moodleSite)
+                                    <option value="{{ $moodleSite->id }}" @selected(old('moodle_site_id') == $moodleSite->id)>{{ $moodleSite->name }}</option>
+                                @endforeach
+                            </x-ui.select>
+                            <x-ui.select name="lookup_type" label="Come vuoi cercare l'account?" required>
+                                <option value="email" @selected(old('lookup_type', 'email') === 'email')>Email Moodle</option>
+                                <option value="username" @selected(old('lookup_type') === 'username')>Username Moodle</option>
+                            </x-ui.select>
+                            <x-ui.input name="lookup_value" label="Email o username Moodle" :value="old('lookup_value')" placeholder="Inserisci il dato usato su Moodle" help="Il dato viene usato solo per individuare l'account e avviare la verifica." required />
+                            <div class="flex justify-end border-t border-slate-100 pt-5">
+                                <x-ui.button type="submit">Collega account</x-ui.button>
+                            </div>
+                        </form>
+                    @endif
                 @endif
             </x-ui.card>
 
@@ -68,15 +86,15 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Formazione collegata</p>
-                        <h2 class="mt-2 text-xl font-semibold text-slate-950">I tuoi account Moodle</h2>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Sincronizza manualmente gli attestati dei collegamenti attivi.</p>
+                        <h2 class="mt-2 text-xl font-semibold text-slate-950">Il tuo account Moodle</h2>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Sincronizza manualmente gli attestati del collegamento attivo.</p>
                     </div>
-                    <x-ui.badge>{{ $moodleUserLinks->count() }} collegamenti</x-ui.badge>
+                    <x-ui.badge>{{ $moodleUserLinks->where('status', 'active')->count() }} collegamenti</x-ui.badge>
                 </div>
 
                 @if ($moodleUserLinks->isEmpty())
                     <div class="mt-6">
-                        <x-ui.empty-state title="Nessun account Moodle collegato" description="Usa il modulo accanto per collegare il tuo primo account." />
+                        <x-ui.empty-state title="Nessun account Moodle collegato" description="Usa il modulo accanto per collegare il tuo account." />
                     </div>
                 @else
                     <div class="mt-6 space-y-4">
@@ -125,7 +143,7 @@
 
             @if ($certificates->isEmpty())
                 <div class="mt-6">
-                    <x-ui.empty-state title="Nessun attestato sincronizzato" description="Esegui la sincronizzazione su un account Moodle attivo. Se l'utente non possiede attestati, questa sezione resterà vuota." />
+                    <x-ui.empty-state title="Nessun attestato sincronizzato" description="Esegui la sincronizzazione sull'account Moodle attivo. Se l'utente non possiede attestati, questa sezione resterà vuota." />
                 </div>
             @else
                 <div class="mt-6 space-y-3">
@@ -133,16 +151,10 @@
                         <article class="grid gap-5 rounded-2xl border border-slate-200 p-5 md:grid-cols-[minmax(0,1.5fr)_minmax(240px,0.8fr)_auto] md:items-center">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">
-                                        {{ $certificate->course_shortname ?: 'Formazione Moodle' }}
-                                    </p>
-                                    <x-ui.badge :variant="$certificate->pdf_stored_path ? 'success' : 'warning'">
-                                        {{ $certificate->pdf_stored_path ? 'PDF disponibile' : 'Dati sincronizzati' }}
-                                    </x-ui.badge>
+                                    <p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">{{ $certificate->course_shortname ?: 'Formazione Moodle' }}</p>
+                                    <x-ui.badge :variant="$certificate->pdf_stored_path ? 'success' : 'warning'">{{ $certificate->pdf_stored_path ? 'PDF disponibile' : 'Dati sincronizzati' }}</x-ui.badge>
                                 </div>
-                                <h3 class="mt-2 text-lg font-semibold text-slate-950">
-                                    {{ $certificate->certificate_name ?: $certificate->course_fullname ?: 'Attestato' }}
-                                </h3>
+                                <h3 class="mt-2 text-lg font-semibold text-slate-950">{{ $certificate->certificate_name ?: $certificate->course_fullname ?: 'Attestato' }}</h3>
                                 @if ($certificate->course_fullname)
                                     <p class="mt-1 truncate text-sm text-slate-600">{{ $certificate->course_fullname }}</p>
                                 @endif
