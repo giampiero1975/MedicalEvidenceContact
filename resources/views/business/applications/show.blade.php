@@ -24,7 +24,7 @@
             default => 'warning',
         };
         $nextInterview = $application->interviews
-            ->where('status', 'scheduled')
+            ->whereIn('status', ['scheduled', 'proposed', 'requested', 'accepted'])
             ->sortBy('scheduled_at')
             ->first();
     @endphp
@@ -48,7 +48,7 @@
                         @else
                             <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-amber-800">Contatti protetti</p>
-                                <p class="mt-1 text-sm text-amber-900">Saranno visibili dopo l’accettazione del colloquio e il consenso del professionista.</p>
+                                <p class="mt-1 text-sm text-amber-900">Saranno visibili dopo la conferma del colloquio e il consenso del professionista.</p>
                             </div>
                         @endif
                     </div>
@@ -94,6 +94,22 @@
 
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
             <main class="space-y-6">
+                <x-ui.card>
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-slate-950">Messaggio di presentazione</h3>
+                            <p class="mt-1 text-sm text-slate-500">Messaggio inviato dal professionista insieme alla candidatura.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 rounded-xl bg-slate-50 p-4">
+                        @if (filled($application->presentation_message))
+                            <p class="whitespace-pre-line text-sm leading-6 text-slate-700">{{ $application->presentation_message }}</p>
+                        @else
+                            <p class="text-sm text-slate-500">Nessun messaggio di presentazione inserito.</p>
+                        @endif
+                    </div>
+                </x-ui.card>
+
                 @foreach ([['Esperienze lavorative', $workExperiences, 'Nessuna esperienza indicata.'], ['Formazione', $educationItems, 'Nessun percorso di studio indicato.']] as [$sectionTitle, $items, $emptyText])
                     <x-ui.card>
                         <div class="flex items-center justify-between gap-4">
@@ -215,7 +231,7 @@
                         </div>
                         <x-ui.input name="location" label="Sede o link" placeholder="Indirizzo, Teams, Meet..." />
                         <textarea name="notes" rows="2" maxlength="2000" placeholder="Note per il colloquio" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
-                        <x-ui.button type="submit" size="sm" class="w-full">Programma colloquio</x-ui.button>
+                        <x-ui.button type="submit" size="sm" class="w-full">Proponi slot</x-ui.button>
                     </form>
                 </x-ui.card>
 
