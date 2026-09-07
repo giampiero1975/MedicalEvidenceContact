@@ -8,6 +8,7 @@ use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -19,17 +20,24 @@ class InterviewController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, ['business', 'professional'], true), 403);
 
+        $activeInterviewStatuses = [
+            Interview::STATUS_PROPOSED,
+            Interview::STATUS_LEGACY_SCHEDULED,
+            Interview::STATUS_REQUESTED,
+            Interview::STATUS_ACCEPTED,
+        ];
+
         $businessJobPostings = $user->role === 'business'
             ? $user->jobPostings()
                 ->with([
                     'applications' => fn ($query) => $query
-                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', ['scheduled', 'accepted']))
+                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', $activeInterviewStatuses))
                         ->with('professional:id,name,first_name,last_name,role,residence')
                         ->latest(),
                 ])
                 ->withCount([
                     'applications as applications_to_schedule_count' => fn ($query) => $query
-                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', ['scheduled', 'accepted'])),
+                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', $activeInterviewStatuses)),
                 ])
                 ->latest()
                 ->get()
@@ -75,9 +83,9 @@ class InterviewController extends Controller
             403
         );
 
-        if ($jobApplication->interviews()->whereIn('status', ['scheduled', 'accepted'])->exists()) {
+        if ($jobApplication->interviews()->whereIn('status', [Interview::STATUS_REQUESTED, Interview::STATUS_ACCEPTED])->exists()) {
             return back()
-                ->withErrors(['interview' => 'Esiste già un colloquio attivo per questa candidatura.'])
+                ->withErrors(['interview' => 'Esiste già uno slot selezionato o un colloquio confermato per questa candidatura.'])
                 ->withInput();
         }
 
@@ -93,35 +101,41 @@ class InterviewController extends Controller
             return back()->withErrors(['location' => 'Indica la sede oppure il link del colloquio.'])->withInput();
         }
 
-        $interview = $jobApplication->interviews()->create([
-            ...$data,
-            'business_user_id' => $request->user()->id,
-            'status' => 'scheduled',
-        ]);
+        $interview = DB::transaction(function () use ($jobApplication, $request, $data): Interview {
+            $interview = $jobApplication->interviews()->create([
+                ...$data,
+                'business_user_id' => $request->user()->id,
+                'status' => Interview::STATUS_PROPOSED,
+            ]);
 
-        $previousStatus = $jobApplication->status;
-        $jobApplication->update(['status' => JobApplication::STATUS_INTERVIEW_SCHEDULED]);
+            $previousStatus = $jobApplication->status;
+            if ($jobApplication->status !== JobApplication::STATUS_INTERVIEW_SCHEDULED) {
+                $jobApplication->update(['status' => JobApplication::STATUS_INTERVIEW_SCHEDULED]);
+            }
 
-        JobApplicationEvent::create([
-            'job_application_id' => $jobApplication->id,
-            'actor_user_id' => $request->user()->id,
-            'type' => 'interview_scheduled',
-            'label' => 'Colloquio programmato per '.$interview->scheduled_at->format('d/m/Y H:i'),
-            'from_status' => $previousStatus,
-            'to_status' => JobApplication::STATUS_INTERVIEW_SCHEDULED,
-            'metadata' => [
-                'interview_id' => $interview->id,
-                'mode' => $interview->mode,
-                'duration_minutes' => $interview->duration_minutes,
-            ],
-        ]);
+            JobApplicationEvent::create([
+                'job_application_id' => $jobApplication->id,
+                'actor_user_id' => $request->user()->id,
+                'type' => 'interview_slot_proposed',
+                'label' => 'Slot colloquio proposto per '.$interview->scheduled_at->format('d/m/Y H:i'),
+                'from_status' => $previousStatus,
+                'to_status' => JobApplication::STATUS_INTERVIEW_SCHEDULED,
+                'metadata' => [
+                    'interview_id' => $interview->id,
+                    'mode' => $interview->mode,
+                    'duration_minutes' => $interview->duration_minutes,
+                ],
+            ]);
+
+            return $interview;
+        });
 
         if ($jobApplication->professional?->email) {
             Mail::to($jobApplication->professional->email)->send(new TransactionalActionMail(
-                mailSubject: 'Invito a colloquio: '.$jobApplication->jobPosting->title,
-                heading: 'Hai ricevuto un invito a colloquio',
-                intro: 'La struttura ha programmato un colloquio per la tua candidatura.',
-                actionLabel: 'Apri i colloqui',
+                mailSubject: 'Nuovo slot colloquio: '.$jobApplication->jobPosting->title,
+                heading: 'La struttura ha proposto uno slot di colloquio',
+                intro: 'Apri la sezione colloqui per vedere gli slot disponibili e scegliere quello adatto a te.',
+                actionLabel: 'Visualizza gli slot',
                 actionUrl: route('interviews.index'),
                 details: [
                     'Annuncio: '.$jobApplication->jobPosting->title,
@@ -131,7 +145,7 @@ class InterviewController extends Controller
             ));
         }
 
-        return back()->with('status', 'Colloquio programmato.')->with('status_variant', 'success');
+        return back()->with('status', 'Slot colloquio proposto. Puoi aggiungerne altri finché il professionista non ne seleziona uno.')->with('status_variant', 'success');
     }
 
     public function respond(Request $request, Interview $interview): RedirectResponse
@@ -145,51 +159,50 @@ class InterviewController extends Controller
             403
         );
 
-        if ($interview->status !== 'scheduled') {
+        if (! $interview->isAvailableProposal()) {
             return back()->withErrors([
-                'response' => 'Hai già risposto a questo invito a colloquio.',
+                'response' => 'Questo slot non è più disponibile.',
             ]);
         }
 
-        $data = $request->validate([
-            'response' => ['required', Rule::in(['accepted', 'declined'])],
-            'contact_sharing_consent' => ['nullable', 'boolean'],
+        if ($interview->jobApplication->interviews()
+            ->whereKeyNot($interview->getKey())
+            ->whereIn('status', [Interview::STATUS_REQUESTED, Interview::STATUS_ACCEPTED])
+            ->exists()) {
+            return back()->withErrors([
+                'response' => 'Hai già selezionato uno slot per questa candidatura.',
+            ]);
+        }
+
+        $request->validate([
+            'contact_sharing_consent' => ['accepted'],
+        ], [
+            'contact_sharing_consent.accepted' => 'Per richiedere il colloquio devi autorizzare la condivisione dei contatti in caso di conferma finale.',
         ]);
 
-        if ($data['response'] === 'accepted' && ! $request->boolean('contact_sharing_consent')) {
-            return back()->withErrors([
-                'contact_sharing_consent' => 'Per accettare il colloquio devi autorizzare la condivisione dei contatti con la struttura.',
-            ]);
-        }
-
         $interview->update([
-            'status' => $data['response'],
-            'contact_sharing_consent' => $data['response'] === 'accepted' && $request->boolean('contact_sharing_consent'),
+            'status' => Interview::STATUS_REQUESTED,
+            'contact_sharing_consent' => true,
             'responded_at' => now(),
         ]);
 
         JobApplicationEvent::create([
             'job_application_id' => $interview->job_application_id,
             'actor_user_id' => $request->user()->id,
-            'type' => 'interview_response',
-            'label' => $data['response'] === 'accepted'
-                ? 'Colloquio accettato e condivisione contatti autorizzata'
-                : 'Colloquio rifiutato',
+            'type' => 'interview_slot_requested',
+            'label' => 'Slot selezionato dal professionista: '.$interview->scheduled_at->format('d/m/Y H:i'),
             'metadata' => [
                 'interview_id' => $interview->id,
-                'response' => $data['response'],
-                'contact_sharing_consent' => $interview->contact_sharing_consent,
+                'contact_sharing_consent' => true,
             ],
         ]);
 
         $business = $interview->jobApplication->jobPosting?->owner;
         if ($business?->email) {
             Mail::to($business->email)->send(new TransactionalActionMail(
-                mailSubject: ($data['response'] === 'accepted' ? 'Colloquio confermato: ' : 'Colloquio rifiutato: ').$interview->jobApplication->jobPosting->title,
-                heading: $data['response'] === 'accepted' ? 'Il professionista ha confermato il colloquio' : 'Il professionista ha rifiutato il colloquio',
-                intro: $data['response'] === 'accepted'
-                    ? 'Il colloquio programmato è stato accettato dal professionista.'
-                    : 'Il professionista non ha accettato il colloquio programmato.',
+                mailSubject: 'Richiesta colloquio: '.$interview->jobApplication->jobPosting->title,
+                heading: 'Il professionista ha selezionato uno slot',
+                intro: 'Conferma o rifiuta lo slot richiesto dalla scheda candidatura.',
                 actionLabel: 'Apri la candidatura',
                 actionUrl: route('business.applications.show', $interview->jobApplication),
                 details: [
@@ -201,7 +214,103 @@ class InterviewController extends Controller
         }
 
         return back()
-            ->with('status', $data['response'] === 'accepted' ? 'Colloquio confermato.' : 'Colloquio rifiutato.')
+            ->with('status', 'Slot selezionato. La struttura deve ora confermare il colloquio.')
+            ->with('status_variant', 'success');
+    }
+
+    public function confirm(Request $request, Interview $interview): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'business', 403);
+
+        $interview->loadMissing('jobApplication.jobPosting', 'jobApplication.professional');
+        abort_unless(
+            $interview->jobApplication?->jobPosting !== null
+            && (int) $interview->jobApplication->jobPosting->user_id === (int) $request->user()->id,
+            403
+        );
+
+        if ($interview->status !== Interview::STATUS_REQUESTED) {
+            return back()->withErrors(['interview' => 'Questo slot non è in attesa di conferma.']);
+        }
+
+        $data = $request->validate([
+            'decision' => ['required', Rule::in(['accepted', 'declined'])],
+        ]);
+
+        DB::transaction(function () use ($interview, $data): void {
+            $interview->update(['status' => $data['decision']]);
+
+            if ($data['decision'] === Interview::STATUS_ACCEPTED) {
+                $interview->jobApplication->interviews()
+                    ->whereKeyNot($interview->getKey())
+                    ->whereIn('status', [Interview::STATUS_PROPOSED, Interview::STATUS_LEGACY_SCHEDULED])
+                    ->update(['status' => Interview::STATUS_CANCELLED]);
+            }
+
+            JobApplicationEvent::create([
+                'job_application_id' => $interview->job_application_id,
+                'actor_user_id' => request()->user()->id,
+                'type' => 'interview_business_decision',
+                'label' => $data['decision'] === Interview::STATUS_ACCEPTED
+                    ? 'Colloquio confermato dalla struttura'
+                    : 'Slot rifiutato dalla struttura',
+                'metadata' => [
+                    'interview_id' => $interview->id,
+                    'decision' => $data['decision'],
+                ],
+            ]);
+        });
+
+        $professional = $interview->jobApplication->professional;
+        $posting = $interview->jobApplication->jobPosting;
+
+        if ($data['decision'] === Interview::STATUS_ACCEPTED) {
+            if ($professional?->email) {
+                Mail::to($professional->email)->send(new TransactionalActionMail(
+                    mailSubject: 'Colloquio confermato: '.$posting->title,
+                    heading: 'La struttura ha confermato il colloquio',
+                    intro: 'Il colloquio è ora confermato da entrambe le parti.',
+                    actionLabel: 'Apri i colloqui',
+                    actionUrl: route('interviews.index'),
+                    details: array_values(array_filter([
+                        'Data: '.$interview->scheduled_at->format('d/m/Y H:i'),
+                        'Modalità: '.$interview->modeLabel(),
+                        $request->user()->email ? 'Email struttura: '.$request->user()->email : null,
+                        $request->user()->phone ? 'Telefono struttura: '.$request->user()->phone : null,
+                    ])),
+                ));
+            }
+
+            if ($request->user()->email) {
+                Mail::to($request->user()->email)->send(new TransactionalActionMail(
+                    mailSubject: 'Colloquio confermato: '.$posting->title,
+                    heading: 'Colloquio confermato',
+                    intro: 'Il colloquio è stato confermato e, con il consenso del professionista, i contatti sono ora disponibili.',
+                    actionLabel: 'Apri la candidatura',
+                    actionUrl: route('business.applications.show', $interview->jobApplication),
+                    details: array_values(array_filter([
+                        'Professionista: '.$professional?->name,
+                        'Data: '.$interview->scheduled_at->format('d/m/Y H:i'),
+                        $professional?->email ? 'Email professionista: '.$professional->email : null,
+                        $professional?->phone ? 'Telefono professionista: '.$professional->phone : null,
+                    ])),
+                ));
+            }
+        } elseif ($professional?->email) {
+            Mail::to($professional->email)->send(new TransactionalActionMail(
+                mailSubject: 'Slot colloquio non confermato: '.$posting->title,
+                heading: 'La struttura non ha confermato lo slot scelto',
+                intro: 'Puoi tornare nella sezione colloqui e scegliere un altro slot disponibile.',
+                actionLabel: 'Scegli un altro slot',
+                actionUrl: route('interviews.index'),
+                details: [
+                    'Data rifiutata: '.$interview->scheduled_at->format('d/m/Y H:i'),
+                ],
+            ));
+        }
+
+        return back()
+            ->with('status', $data['decision'] === Interview::STATUS_ACCEPTED ? 'Colloquio confermato.' : 'Slot rifiutato. Il professionista può sceglierne un altro.')
             ->with('status_variant', 'success');
     }
 }
