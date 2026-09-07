@@ -81,6 +81,55 @@ class InterviewPrivacyWorkflowTest extends TestCase
         $this->assertSame('scheduled', $interview->refresh()->status);
     }
 
+    public function test_professional_cannot_change_response_after_answering_interview(): void
+    {
+        [$business, $professional, $application] = $this->scenario();
+
+        $interview = Interview::create([
+            'job_application_id' => $application->id,
+            'business_user_id' => $business->id,
+            'scheduled_at' => now()->addDay(),
+            'duration_minutes' => 30,
+            'mode' => 'phone',
+            'status' => 'accepted',
+            'contact_sharing_consent' => true,
+            'responded_at' => now(),
+        ]);
+
+        $this->actingAs($professional)
+            ->patch(route('professional.interviews.respond', $interview), [
+                'response' => 'declined',
+            ])
+            ->assertSessionHasErrors('response');
+
+        $interview->refresh();
+        $this->assertSame('accepted', $interview->status);
+        $this->assertTrue($interview->contact_sharing_consent);
+    }
+
+    public function test_other_professional_cannot_respond_to_interview(): void
+    {
+        [$business, $professional, $application] = $this->scenario();
+        $otherProfessional = User::factory()->create(['role' => 'professional']);
+
+        $interview = Interview::create([
+            'job_application_id' => $application->id,
+            'business_user_id' => $business->id,
+            'scheduled_at' => now()->addDay(),
+            'duration_minutes' => 30,
+            'mode' => 'phone',
+            'status' => 'scheduled',
+        ]);
+
+        $this->actingAs($otherProfessional)
+            ->patch(route('professional.interviews.respond', $interview), [
+                'response' => 'declined',
+            ])
+            ->assertForbidden();
+
+        $this->assertSame('scheduled', $interview->refresh()->status);
+    }
+
     private function scenario(): array
     {
         $business = User::factory()->create(['role' => 'business']);
