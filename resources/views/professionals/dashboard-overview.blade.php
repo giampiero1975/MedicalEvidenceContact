@@ -12,7 +12,7 @@
 
     <div class="space-y-8">
         <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.stat-card label="Profilo completato" :value="$profileCompletion.'%'" hint="Dati, curriculum e documenti richiesti" />
+            <x-ui.stat-card label="Profilo completato" :value="$profileCompletion.'%'" hint="Dati anagrafici e professionali" />
             <x-ui.stat-card label="Candidature attive" :value="$activeApplicationsCount" hint="In valutazione o colloquio" />
             <x-ui.stat-card label="Esiti positivi" :value="$acceptedApplicationsCount" hint="Idoneità o assunzioni" />
             <x-ui.stat-card label="Opportunità disponibili" :value="$availableJobsCount" hint="Annunci attivi" />
@@ -24,7 +24,7 @@
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Profilo</p>
                         <h2 class="mt-2 text-xl font-semibold text-slate-950">Completa la tua presenza professionale</h2>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">Il completamento considera dati personali, almeno un'esperienza o percorso di studio e i documenti richiesti per il tuo profilo.</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">Un profilo completo rende più semplice alle strutture valutare candidatura, esperienza e disponibilità.</p>
                     </div>
                     <x-ui.badge :variant="$profileCompletion === 100 ? 'success' : 'warning'">{{ $profileCompletion }}%</x-ui.badge>
                 </div>
@@ -35,8 +35,7 @@
 
                 <div class="mt-6 flex flex-wrap gap-3">
                     <x-ui.button :href="route('profile.show')">Aggiorna profilo</x-ui.button>
-                    <x-ui.button variant="secondary" :href="route('professional.experiences.index')">Gestisci curriculum</x-ui.button>
-                    <x-ui.button variant="secondary" :href="route('professional.documents.index')">Gestisci documenti</x-ui.button>
+                    <x-ui.button variant="secondary" :href="route('professional.moodle.index')">Gestisci formazione</x-ui.button>
                 </div>
             </x-ui.card>
 
