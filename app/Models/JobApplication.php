@@ -24,6 +24,7 @@ class JobApplication extends Model
         'job_posting_id',
         'user_id',
         'status',
+        'presentation_message',
     ];
 
     public static function statusOptions(): array
