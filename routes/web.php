@@ -18,6 +18,7 @@ use App\Http\Controllers\JobApplicationNoteController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MoodleAccountLinkController;
 use App\Http\Controllers\MoodleCertificateSyncController;
+use App\Http\Controllers\ProfessionalApplicationsController;
 use App\Http\Controllers\ProfessionalCertificateController;
 use App\Http\Controllers\ProfessionalDocumentController;
 use App\Http\Controllers\ProfessionalDocumentsPageController;
@@ -88,6 +89,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
 
+    Route::get('/professionista/candidature', ProfessionalApplicationsController::class)->name('professional.applications.index');
     Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
     Route::get('/professionista/documenti', ProfessionalDocumentsPageController::class)->name('professional.documents.index');
     Route::post('/professionista/documenti', [ProfessionalDocumentController::class, 'store'])->name('professional-documents.store');
