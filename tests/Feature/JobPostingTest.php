@@ -186,7 +186,9 @@ class JobPostingTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->actingAs($professional)->post(route('job-applications.store', $jobPosting));
+        $response = $this->actingAs($professional)->post(route('job-applications.store', $jobPosting), [
+            'application_confirmation' => '1',
+        ]);
         $response->assertRedirect(route('dashboard', absolute: false));
         $this->assertDatabaseHas('job_applications', [
             'job_posting_id' => $jobPosting->id,
