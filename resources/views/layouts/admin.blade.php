@@ -34,6 +34,9 @@
                     <x-ui.sidebar-link :href="route('admin.job-postings.index')" :active="request()->routeIs('admin.job-postings.*')">
                         Annunci
                     </x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('admin.business-types.index')" :active="request()->routeIs('admin.business-types.*')">
+                        Tipologie aziendali
+                    </x-ui.sidebar-link>
                     <div class="my-3 border-t border-slate-200"></div>
                     <x-ui.sidebar-link :href="route('admin.ui.index')" :active="request()->routeIs('admin.ui.*')">
                         UI Playground
