@@ -30,7 +30,7 @@ class TransactionalMailWorkflowTest extends TestCase
         $jobPosting = $this->postingFor($business, 'OSS reparto assistenziale');
 
         $this->actingAs($professional)
-            ->post(route('job-applications.store', $jobPosting))
+            ->post(route('job-applications.store', $jobPosting), ['application_confirmation' => '1'])
             ->assertRedirect(route('dashboard', absolute: false));
 
         Mail::assertSent(TransactionalActionMail::class, 2);
