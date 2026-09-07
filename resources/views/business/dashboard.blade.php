@@ -101,6 +101,32 @@
                 <x-ui.card>
                     <div class="flex items-center justify-between gap-4">
                         <div>
+                            <h2 class="text-lg font-semibold text-slate-950">Candidature per annuncio</h2>
+                            <p class="mt-1 text-sm text-slate-500">Totale candidature ricevute per ogni annuncio pubblicato.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 divide-y divide-slate-200">
+                        @forelse($postingApplicationCounts as $posting)
+                            <div class="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="min-w-0">
+                                    <p class="truncate font-semibold text-slate-900">{{ $posting->title }}</p>
+                                    <p class="mt-1 text-sm text-slate-500">{{ $posting->status === 'active' ? 'Attivo' : 'Scaduto' }} · scadenza {{ $posting->expires_at->format('d/m/Y') }}</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <x-ui.badge variant="secondary">{{ $posting->applications_count }} candidature</x-ui.badge>
+                                    <x-ui.button variant="secondary" size="sm" :href="route('job-postings.applications', $posting)">Vedi candidature</x-ui.button>
+                                </div>
+                            </div>
+                        @empty
+                            <x-ui.empty-state title="Nessun annuncio pubblicato" description="Pubblica un annuncio per iniziare a ricevere candidature." />
+                        @endforelse
+                    </div>
+                </x-ui.card>
+
+                <x-ui.card>
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
                             <h2 class="text-lg font-semibold text-slate-950">Candidature recenti</h2>
                             <p class="mt-1 text-sm text-slate-500">Gli ultimi profili entrati nel processo di selezione.</p>
                         </div>
