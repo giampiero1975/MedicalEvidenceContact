@@ -13,33 +13,20 @@ class InterviewSchedulingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_business_can_schedule_interview_for_its_application(): void
+    public function test_business_can_propose_interview_slot_for_its_application(): void
     {
         $business = User::factory()->create(['role' => 'business']);
         $professional = User::factory()->create(['role' => 'professional']);
-
-        $posting = JobPosting::create([
-            'user_id' => $business->id,
-            'title' => 'OSS RSA',
-            'description' => 'Ricerca OSS.',
-            'positions' => 1,
-            'workplace_address' => 'Milano',
-            'contract_type' => 'Tempo determinato',
-            'expires_at' => now()->addMonth()->toDateString(),
-            'status' => 'active',
-        ]);
-
+        $posting = $this->postingFor($business);
         $application = JobApplication::create([
             'job_posting_id' => $posting->id,
             'user_id' => $professional->id,
             'status' => JobApplication::STATUS_REVIEW,
         ]);
 
-        $scheduledAt = now()->addDays(2)->setTime(10, 30)->format('Y-m-d H:i:s');
-
         $this->actingAs($business)
             ->post(route('business.applications.interviews.store', $application), [
-                'scheduled_at' => $scheduledAt,
+                'scheduled_at' => now()->addDays(2)->setTime(10, 30)->format('Y-m-d H:i:s'),
                 'duration_minutes' => 45,
                 'mode' => 'video',
                 'location' => 'https://meet.example.test/colloquio',
@@ -53,21 +40,43 @@ class InterviewSchedulingTest extends TestCase
             'business_user_id' => $business->id,
             'duration_minutes' => 45,
             'mode' => 'video',
-            'status' => 'scheduled',
+            'status' => Interview::STATUS_PROPOSED,
         ]);
-
         $this->assertDatabaseHas('job_applications', [
             'id' => $application->id,
             'status' => JobApplication::STATUS_INTERVIEW_SCHEDULED,
         ]);
-
         $this->assertDatabaseHas('job_application_events', [
             'job_application_id' => $application->id,
-            'type' => 'interview_scheduled',
+            'type' => 'interview_slot_proposed',
         ]);
     }
 
-    public function test_business_cannot_schedule_second_active_interview_for_same_application(): void
+    public function test_business_can_propose_multiple_slots_until_professional_selects_one(): void
+    {
+        $business = User::factory()->create(['role' => 'business']);
+        $professional = User::factory()->create(['role' => 'professional']);
+        $posting = $this->postingFor($business);
+        $application = JobApplication::create([
+            'job_posting_id' => $posting->id,
+            'user_id' => $professional->id,
+            'status' => JobApplication::STATUS_REVIEW,
+        ]);
+
+        foreach ([2, 3] as $days) {
+            $this->actingAs($business)
+                ->post(route('business.applications.interviews.store', $application), [
+                    'scheduled_at' => now()->addDays($days)->setTime(10, 0)->format('Y-m-d H:i:s'),
+                    'duration_minutes' => 30,
+                    'mode' => 'phone',
+                ])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(2, $application->interviews()->where('status', Interview::STATUS_PROPOSED)->count());
+    }
+
+    public function test_business_cannot_add_slots_after_professional_has_requested_one(): void
     {
         $business = User::factory()->create(['role' => 'business']);
         $professional = User::factory()->create(['role' => 'professional']);
@@ -84,7 +93,8 @@ class InterviewSchedulingTest extends TestCase
             'scheduled_at' => now()->addDay(),
             'duration_minutes' => 30,
             'mode' => 'phone',
-            'status' => 'scheduled',
+            'status' => Interview::STATUS_REQUESTED,
+            'contact_sharing_consent' => true,
         ]);
 
         $this->actingAs($business)
@@ -100,19 +110,11 @@ class InterviewSchedulingTest extends TestCase
         $this->assertDatabaseCount('interviews', 1);
     }
 
-    public function test_business_interview_page_only_lists_applications_without_active_interview(): void
+    public function test_business_interview_page_only_lists_applications_without_active_interview_workflow(): void
     {
         $business = User::factory()->create(['role' => 'business']);
-        $availableProfessional = User::factory()->create([
-            'role' => 'professional',
-            'first_name' => 'Disponibile',
-            'last_name' => 'Test',
-        ]);
-        $scheduledProfessional = User::factory()->create([
-            'role' => 'professional',
-            'first_name' => 'Gia Pianificato',
-            'last_name' => 'Test',
-        ]);
+        $availableProfessional = User::factory()->create(['role' => 'professional', 'first_name' => 'Disponibile', 'last_name' => 'Test']);
+        $scheduledProfessional = User::factory()->create(['role' => 'professional', 'first_name' => 'Gia Pianificato', 'last_name' => 'Test']);
         $posting = $this->postingFor($business);
 
         $availableApplication = JobApplication::create([
@@ -120,7 +122,6 @@ class InterviewSchedulingTest extends TestCase
             'user_id' => $availableProfessional->id,
             'status' => JobApplication::STATUS_REVIEW,
         ]);
-
         $scheduledApplication = JobApplication::create([
             'job_posting_id' => $posting->id,
             'user_id' => $scheduledProfessional->id,
@@ -133,7 +134,7 @@ class InterviewSchedulingTest extends TestCase
             'scheduled_at' => now()->addDay(),
             'duration_minutes' => 30,
             'mode' => 'phone',
-            'status' => 'scheduled',
+            'status' => Interview::STATUS_PROPOSED,
         ]);
 
         $response = $this->actingAs($business)
@@ -142,32 +143,19 @@ class InterviewSchedulingTest extends TestCase
             ->assertSee('Disponibile Test');
 
         $response->assertViewHas('businessJobPostings', function ($postings) use ($availableApplication, $scheduledApplication): bool {
-            $applicationIds = $postings
-                ->flatMap(fn ($jobPosting) => $jobPosting->applications)
-                ->pluck('id');
+            $applicationIds = $postings->flatMap(fn ($jobPosting) => $jobPosting->applications)->pluck('id');
 
             return $applicationIds->contains($availableApplication->id)
                 && ! $applicationIds->contains($scheduledApplication->id);
         });
     }
 
-    public function test_other_business_cannot_schedule_interview(): void
+    public function test_other_business_cannot_propose_interview_slot(): void
     {
         $owner = User::factory()->create(['role' => 'business']);
         $otherBusiness = User::factory()->create(['role' => 'business']);
         $professional = User::factory()->create(['role' => 'professional']);
-
-        $posting = JobPosting::create([
-            'user_id' => $owner->id,
-            'title' => 'Infermiere',
-            'description' => 'Ricerca infermiere.',
-            'positions' => 1,
-            'workplace_address' => 'Roma',
-            'contract_type' => 'Tempo indeterminato',
-            'expires_at' => now()->addMonth()->toDateString(),
-            'status' => 'active',
-        ]);
-
+        $posting = $this->postingFor($owner);
         $application = JobApplication::create([
             'job_posting_id' => $posting->id,
             'user_id' => $professional->id,
