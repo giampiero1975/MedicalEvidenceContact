@@ -322,7 +322,7 @@ class MoodleAccountLinkController extends Controller
         abort_unless($request->user()->role === 'professional', 403);
         abort_unless($moodleUserLink->laravel_user_id === $request->user()->id, 403);
 
-        $moodleUserLink->delete();
+        $moodleUserLink->update(['status' => 'disconnected']);
 
         return redirect()
             ->route('professional.moodle.index')
