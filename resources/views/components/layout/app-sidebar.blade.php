@@ -2,6 +2,7 @@
     $user = auth()->user();
     $isProfessional = $user?->role === 'professional';
     $isBusiness = $user?->role === 'business';
+    $isAdmin = $user?->role === 'admin';
 @endphp
 
 <div class="flex h-full flex-col bg-white">
@@ -9,7 +10,7 @@
         <a href="{{ route('dashboard') }}" class="text-base font-semibold tracking-tight text-slate-950">
             Medical Evidence Contact
             <span class="mt-0.5 block text-xs font-medium uppercase tracking-[0.18em] text-teal-700">
-                {{ $isProfessional ? 'Professionista' : ($isBusiness ? 'Business' : 'Area riservata') }}
+                {{ $isProfessional ? 'Professionista' : ($isBusiness ? 'Business' : ($isAdmin ? 'Amministrazione' : 'Area riservata')) }}
             </span>
         </a>
     </div>
@@ -52,6 +53,16 @@
                     <x-ui.sidebar-link :href="route('business.locations.index')" :active="request()->routeIs('business.locations.*')">Sedi</x-ui.sidebar-link>
                     <x-ui.sidebar-link :href="route('business.departments.index')" :active="request()->routeIs('business.departments.*')">Reparti e unità operative</x-ui.sidebar-link>
                     <x-ui.sidebar-link :href="route('business-points-of-contact.index')" :active="request()->routeIs('business-points-of-contact.*')">Referenti aziendali</x-ui.sidebar-link>
+                </div>
+            </div>
+        @elseif ($isAdmin)
+            <div class="mt-6">
+                <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Amministrazione</p>
+                <div class="mt-2 space-y-1">
+                    <x-ui.sidebar-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">Utenti</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('admin.job-postings.index')" :active="request()->routeIs('admin.job-postings.*')">Annunci</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('admin.business-types.index')" :active="request()->routeIs('admin.business-types.*')">Tipologie aziendali</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('admin.ui.index')" :active="request()->routeIs('admin.ui.*')">UI Playground</x-ui.sidebar-link>
                 </div>
             </div>
         @endif
