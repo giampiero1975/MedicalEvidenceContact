@@ -103,8 +103,16 @@ class InterviewSchedulingTest extends TestCase
     public function test_business_interview_page_only_lists_applications_without_active_interview(): void
     {
         $business = User::factory()->create(['role' => 'business']);
-        $availableProfessional = User::factory()->create(['role' => 'professional', 'name' => 'Disponibile Test']);
-        $scheduledProfessional = User::factory()->create(['role' => 'professional', 'name' => 'Gia Pianificato Test']);
+        $availableProfessional = User::factory()->create([
+            'role' => 'professional',
+            'first_name' => 'Disponibile',
+            'last_name' => 'Test',
+        ]);
+        $scheduledProfessional = User::factory()->create([
+            'role' => 'professional',
+            'first_name' => 'Gia Pianificato',
+            'last_name' => 'Test',
+        ]);
         $posting = $this->postingFor($business);
 
         $availableApplication = JobApplication::create([
@@ -128,12 +136,19 @@ class InterviewSchedulingTest extends TestCase
             'status' => 'scheduled',
         ]);
 
-        $this->actingAs($business)
+        $response = $this->actingAs($business)
             ->get(route('interviews.index'))
             ->assertOk()
-            ->assertSee('Disponibile Test')
-            ->assertSee(route('business.applications.show', $availableApplication, absolute: false))
-            ->assertDontSee(route('business.applications.show', $scheduledApplication, absolute: false));
+            ->assertSee('Disponibile Test');
+
+        $response->assertViewHas('businessJobPostings', function ($postings) use ($availableApplication, $scheduledApplication): bool {
+            $applicationIds = $postings
+                ->flatMap(fn ($jobPosting) => $jobPosting->applications)
+                ->pluck('id');
+
+            return $applicationIds->contains($availableApplication->id)
+                && ! $applicationIds->contains($scheduledApplication->id);
+        });
     }
 
     public function test_other_business_cannot_schedule_interview(): void
