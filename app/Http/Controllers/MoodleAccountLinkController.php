@@ -24,16 +24,30 @@ class MoodleAccountLinkController extends Controller
     {
         abort_unless($request->user()->role === 'professional', 403);
 
+        $moodleUserLinks = $request->user()
+            ->moodleUserLinks()
+            ->with('moodleSite')
+            ->latest()
+            ->get();
+
+        $certificates = $request->user()
+            ->certificates()
+            ->latest('issued_at')
+            ->get();
+
         return view('professional.moodle.index', [
             'moodleSites' => MoodleSite::query()
                 ->where('enabled', true)
                 ->orderBy('name')
                 ->get(),
-            'moodleUserLinks' => $request->user()
-                ->moodleUserLinks()
-                ->with('moodleSite')
-                ->latest()
-                ->get(),
+            'moodleUserLinks' => $moodleUserLinks,
+            'activeMoodleLink' => $moodleUserLinks->firstWhere('status', 'active'),
+            'certificates' => $certificates,
+            'coursesCount' => $certificates
+                ->pluck('course_id')
+                ->filter()
+                ->unique()
+                ->count(),
         ]);
     }
 
