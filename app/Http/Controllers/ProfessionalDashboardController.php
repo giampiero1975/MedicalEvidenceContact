@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\MoodleSite;
 use Illuminate\Http\Request;
@@ -20,6 +21,19 @@ class ProfessionalDashboardController extends Controller
             ->with('jobPosting')
             ->latest()
             ->get();
+
+        $activeApplicationStatuses = [
+            JobApplication::STATUS_RECEIVED,
+            JobApplication::STATUS_REVIEW,
+            JobApplication::STATUS_INTERVIEW_SCHEDULED,
+            JobApplication::STATUS_INTERVIEW_COMPLETED,
+            JobApplication::STATUS_SUITABLE,
+        ];
+
+        $positiveApplicationStatuses = [
+            JobApplication::STATUS_SUITABLE,
+            JobApplication::STATUS_HIRED,
+        ];
 
         $moodleSites = MoodleSite::query()
             ->where('enabled', true)
@@ -91,8 +105,8 @@ class ProfessionalDashboardController extends Controller
 
         return view('professionals.dashboard-overview', [
             'jobApplications' => $jobApplications,
-            'activeApplicationsCount' => $jobApplications->whereNotIn('status', ['rifiutata', 'ritirata'])->count(),
-            'acceptedApplicationsCount' => $jobApplications->where('status', 'accettata')->count(),
+            'activeApplicationsCount' => $jobApplications->whereIn('status', $activeApplicationStatuses)->count(),
+            'acceptedApplicationsCount' => $jobApplications->whereIn('status', $positiveApplicationStatuses)->count(),
             'availableJobsCount' => JobPosting::query()->visibleToProfessionals()->count(),
             'profileCompletion' => $profileCompletion,
             'profileItems' => $profileItems,
