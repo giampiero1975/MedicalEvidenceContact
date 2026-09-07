@@ -31,6 +31,12 @@ class BusinessDashboardController extends Controller
                 ],
             ]);
 
+        $postingApplicationCounts = JobPosting::query()
+            ->where('user_id', $user->id)
+            ->withCount('applications')
+            ->latest()
+            ->get(['id', 'title', 'status', 'expires_at']);
+
         $recentApplications = (clone $applicationsQuery)
             ->with([
                 'professional:id,name,first_name,last_name,profile_photo_path',
@@ -93,6 +99,7 @@ class BusinessDashboardController extends Controller
                 'hired' => $hiredCandidates,
             ],
             'pipeline' => $pipeline,
+            'postingApplicationCounts' => $postingApplicationCounts,
             'recentApplications' => $recentApplications,
             'upcomingInterviews' => $upcomingInterviews,
             'alerts' => $alerts,
