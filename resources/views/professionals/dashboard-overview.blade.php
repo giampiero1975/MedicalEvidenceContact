@@ -14,7 +14,7 @@
         <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <x-ui.stat-card label="Profilo completato" :value="$profileCompletion.'%'" hint="Dati anagrafici e professionali" />
             <x-ui.stat-card label="Candidature attive" :value="$activeApplicationsCount" hint="In valutazione o colloquio" />
-            <x-ui.stat-card label="Candidature accettate" :value="$acceptedApplicationsCount" hint="Esiti positivi" />
+            <x-ui.stat-card label="Esiti positivi" :value="$acceptedApplicationsCount" hint="Idoneità o assunzioni" />
             <x-ui.stat-card label="Opportunità disponibili" :value="$availableJobsCount" hint="Annunci attivi" />
         </section>
 
@@ -71,7 +71,10 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Candidature</p>
                         <h2 class="mt-2 text-xl font-semibold text-slate-950">Le tue candidature</h2>
                     </div>
-                    <x-ui.button variant="secondary" size="sm" :href="route('job-postings.index')">Vedi annunci</x-ui.button>
+                    <div class="flex flex-wrap gap-2">
+                        <x-ui.button variant="ghost" size="sm" :href="route('professional.applications.index')">Vedi tutte</x-ui.button>
+                        <x-ui.button variant="secondary" size="sm" :href="route('job-postings.index')">Vedi annunci</x-ui.button>
+                    </div>
                 </div>
 
                 @if ($jobApplications->isEmpty())
@@ -81,14 +84,23 @@
                 @else
                     <div class="mt-6 divide-y divide-slate-100">
                         @foreach ($jobApplications->take(5) as $application)
+                            @php
+                                $statusVariant = match ($application->status) {
+                                    \App\Models\JobApplication::STATUS_HIRED,
+                                    \App\Models\JobApplication::STATUS_SUITABLE => 'success',
+                                    \App\Models\JobApplication::STATUS_REJECTED => 'danger',
+                                    \App\Models\JobApplication::STATUS_WITHDRAWN => 'neutral',
+                                    \App\Models\JobApplication::STATUS_INTERVIEW_SCHEDULED,
+                                    \App\Models\JobApplication::STATUS_INTERVIEW_COMPLETED => 'primary',
+                                    default => 'warning',
+                                };
+                            @endphp
                             <div class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p class="font-semibold text-slate-900">{{ $application->jobPosting?->title ?? 'Annuncio non disponibile' }}</p>
                                     <p class="mt-1 text-sm text-slate-500">Inviata il {{ $application->created_at?->format('d/m/Y') }}</p>
                                 </div>
-                                <x-ui.badge :variant="in_array($application->status, ['accettata', 'colloquio'], true) ? 'success' : ($application->status === 'rifiutata' ? 'danger' : 'warning')">
-                                    {{ $application->status === 'inviata' ? 'Candidatura inviata' : ucfirst(str_replace('_', ' ', $application->status)) }}
-                                </x-ui.badge>
+                                <x-ui.badge :variant="$statusVariant">{{ $application->statusLabel() }}</x-ui.badge>
                             </div>
                         @endforeach
                     </div>
