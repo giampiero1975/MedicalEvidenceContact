@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransactionalActionMail;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
@@ -39,6 +41,36 @@ class JobApplicationController extends Controller
                 ]);
             }
         });
+
+        if ($created && $application !== null) {
+            $jobPosting->loadMissing('owner');
+
+            Mail::to($request->user()->email)->send(new TransactionalActionMail(
+                mailSubject: 'Candidatura inviata: '.$jobPosting->title,
+                heading: 'Candidatura inviata',
+                intro: 'La tua candidatura è stata registrata correttamente.',
+                actionLabel: 'Vedi le mie candidature',
+                actionUrl: route('professional.applications.index'),
+                details: [
+                    'Annuncio: '.$jobPosting->title,
+                    'Data invio: '.now()->format('d/m/Y H:i'),
+                ],
+            ));
+
+            if ($jobPosting->owner?->email) {
+                Mail::to($jobPosting->owner->email)->send(new TransactionalActionMail(
+                    mailSubject: 'Nuova candidatura: '.$jobPosting->title,
+                    heading: 'Hai ricevuto una nuova candidatura',
+                    intro: 'Un professionista si è candidato al tuo annuncio.',
+                    actionLabel: 'Apri la candidatura',
+                    actionUrl: route('business.applications.show', $application),
+                    details: [
+                        'Annuncio: '.$jobPosting->title,
+                        'Candidato: '.$request->user()->name,
+                    ],
+                ));
+            }
+        }
 
         return redirect()->route('dashboard')->with('status', 'Candidatura inviata. Annuncio aggiunto alla tua lista.');
     }
