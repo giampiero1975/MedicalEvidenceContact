@@ -87,7 +87,7 @@ class JobApplicationController extends Controller
     public function updateStatus(Request $request, JobApplication $jobApplication): RedirectResponse
     {
         abort_unless($request->user()->role === 'business', 403);
-        $jobApplication->loadMissing('jobPosting');
+        $jobApplication->loadMissing('jobPosting', 'professional');
         abort_unless($jobApplication->jobPosting !== null && (int) $jobApplication->jobPosting->user_id === (int) $request->user()->id, 403);
 
         $data = $request->validate([
@@ -112,6 +112,22 @@ class JobApplicationController extends Controller
                 ]);
             }
         });
+
+        if ($oldStatus !== JobApplication::STATUS_REJECTED
+            && $data['status'] === JobApplication::STATUS_REJECTED
+            && $jobApplication->professional?->email) {
+            Mail::to($jobApplication->professional->email)->send(new TransactionalActionMail(
+                mailSubject: 'Aggiornamento candidatura: '.$jobApplication->jobPosting->title,
+                heading: 'Aggiornamento sulla tua candidatura',
+                intro: 'La struttura ha concluso negativamente la valutazione della tua candidatura.',
+                actionLabel: 'Vedi le mie candidature',
+                actionUrl: route('professional.applications.index'),
+                details: [
+                    'Annuncio: '.$jobApplication->jobPosting->title,
+                    'Stato: '.JobApplication::statusOptions()[JobApplication::STATUS_REJECTED],
+                ],
+            ));
+        }
 
         return back()->with('status', 'Stato della candidatura aggiornato.')->with('status_variant', 'success');
     }
