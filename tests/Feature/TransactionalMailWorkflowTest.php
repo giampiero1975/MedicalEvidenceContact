@@ -25,25 +25,9 @@ class TransactionalMailWorkflowTest extends TestCase
     {
         Mail::fake();
 
-        $professional = User::factory()->create([
-            'role' => 'professional',
-            'email' => 'professional@example.test',
-        ]);
-        $business = User::factory()->create([
-            'role' => 'business',
-            'email' => 'business@example.test',
-        ]);
-
-        $jobPosting = JobPosting::create([
-            'user_id' => $business->id,
-            'title' => 'OSS reparto assistenziale',
-            'description' => 'Ricerca OSS.',
-            'positions' => 1,
-            'workplace_address' => 'Milano',
-            'contract_type' => 'Tempo determinato',
-            'expires_at' => now()->addWeek(),
-            'status' => 'active',
-        ]);
+        $professional = User::factory()->create(['role' => 'professional', 'email' => 'professional@example.test']);
+        $business = User::factory()->create(['role' => 'business', 'email' => 'business@example.test']);
+        $jobPosting = $this->postingFor($business, 'OSS reparto assistenziale');
 
         $this->actingAs($professional)
             ->post(route('job-applications.store', $jobPosting))
@@ -60,30 +44,13 @@ class TransactionalMailWorkflowTest extends TestCase
         );
     }
 
-    public function test_interview_invitation_and_response_generate_transactional_notifications(): void
+    public function test_interview_slot_selection_and_final_confirmation_generate_transactional_notifications(): void
     {
         Mail::fake();
 
-        $professional = User::factory()->create([
-            'role' => 'professional',
-            'email' => 'professional@example.test',
-        ]);
-        $business = User::factory()->create([
-            'role' => 'business',
-            'email' => 'business@example.test',
-        ]);
-
-        $jobPosting = JobPosting::create([
-            'user_id' => $business->id,
-            'title' => 'Infermiere ambulatoriale',
-            'description' => 'Ricerca infermiere.',
-            'positions' => 1,
-            'workplace_address' => 'Torino',
-            'contract_type' => 'Tempo indeterminato',
-            'expires_at' => now()->addWeek(),
-            'status' => 'active',
-        ]);
-
+        $professional = User::factory()->create(['role' => 'professional', 'email' => 'professional@example.test']);
+        $business = User::factory()->create(['role' => 'business', 'email' => 'business@example.test']);
+        $jobPosting = $this->postingFor($business, 'Infermiere ambulatoriale');
         $application = JobApplication::create([
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,
@@ -100,21 +67,49 @@ class TransactionalMailWorkflowTest extends TestCase
 
         Mail::assertSent(TransactionalActionMail::class, fn (TransactionalActionMail $mail) =>
             $mail->hasTo('professional@example.test')
-            && str_starts_with($mail->mailSubject, 'Invito a colloquio:')
+            && str_starts_with($mail->mailSubject, 'Nuovo slot colloquio:')
         );
 
         $interview = Interview::query()->firstOrFail();
 
         $this->actingAs($professional)
             ->patch(route('professional.interviews.respond', $interview), [
-                'response' => 'accepted',
                 'contact_sharing_consent' => true,
             ])
             ->assertSessionHasNoErrors();
 
         Mail::assertSent(TransactionalActionMail::class, fn (TransactionalActionMail $mail) =>
             $mail->hasTo('business@example.test')
+            && str_starts_with($mail->mailSubject, 'Richiesta colloquio:')
+        );
+
+        $this->actingAs($business)
+            ->patch(route('business.interviews.confirm', $interview->fresh()), [
+                'decision' => 'accepted',
+            ])
+            ->assertSessionHasNoErrors();
+
+        Mail::assertSent(TransactionalActionMail::class, fn (TransactionalActionMail $mail) =>
+            $mail->hasTo('professional@example.test')
             && str_starts_with($mail->mailSubject, 'Colloquio confermato:')
         );
+        Mail::assertSent(TransactionalActionMail::class, fn (TransactionalActionMail $mail) =>
+            $mail->hasTo('business@example.test')
+            && str_starts_with($mail->mailSubject, 'Colloquio confermato:')
+        );
+    }
+
+    private function postingFor(User $business, string $title): JobPosting
+    {
+        return JobPosting::create([
+            'user_id' => $business->id,
+            'title' => $title,
+            'description' => 'Ricerca professionista.',
+            'positions' => 1,
+            'workplace_address' => 'Milano',
+            'contract_type' => 'Tempo determinato',
+            'expires_at' => now()->addWeek(),
+            'status' => 'active',
+        ]);
     }
 }
