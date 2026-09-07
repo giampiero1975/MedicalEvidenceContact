@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransactionalActionMail;
 use App\Models\BusinessDepartment;
 use App\Models\BusinessLocation;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -96,12 +98,26 @@ class JobPostingController extends Controller
         $businessProfile = $request->user()->businessProfile;
         $data = $this->validatedJobPostingData($request, $businessProfile?->id);
 
-        JobPosting::create([
+        $jobPosting = JobPosting::create([
             ...$data,
             'user_id' => $request->user()->id,
             'business_profile_id' => $businessProfile?->id,
             'status' => 'active',
         ]);
+
+        if ($request->user()->email) {
+            Mail::to($request->user()->email)->send(new TransactionalActionMail(
+                mailSubject: 'Annuncio pubblicato: '.$jobPosting->title,
+                heading: 'Annuncio pubblicato',
+                intro: 'Il tuo annuncio è stato pubblicato correttamente ed è ora disponibile ai professionisti.',
+                actionLabel: 'Apri annuncio',
+                actionUrl: route('job-postings.show', $jobPosting),
+                details: [
+                    'Annuncio: '.$jobPosting->title,
+                    'Scadenza: '.$jobPosting->expires_at->format('d/m/Y'),
+                ],
+            ));
+        }
 
         return redirect()->route('job-postings.index')->with('status', 'Annuncio pubblicato.');
     }
