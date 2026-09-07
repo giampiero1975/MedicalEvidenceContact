@@ -1,45 +1,51 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+        <x-ui.page-header
+            title="Profilo e sicurezza"
+            subtitle="Aggiorna i dati del tuo account, la password e le impostazioni di sicurezza."
+        >
+            <x-slot name="actions">
+                <x-ui.button href="{{ route('dashboard') }}" variant="secondary" size="sm">Torna alla dashboard</x-ui.button>
+            </x-slot>
+        </x-ui.page-header>
     </x-slot>
 
-    <div>
-        <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-            @if (Laravel\Fortify\Features::canUpdateProfileInformation())
-                @livewire('profile.update-profile-information-form')
+    <div class="space-y-8">
+        <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <x-ui.stat-card label="Account" :value="ucfirst(auth()->user()->role)" hint="Ruolo corrente" />
+            <x-ui.stat-card label="Email" :value="auth()->user()->email" hint="Indirizzo di accesso" />
+            <x-ui.stat-card
+                label="Autenticazione a due fattori"
+                :value="auth()->user()->two_factor_secret ? 'Attiva' : 'Non attiva'"
+                hint="Protezione aggiuntiva dell'account"
+            />
+            <x-ui.stat-card label="Password" value="Configurata" hint="Puoi aggiornarla in qualsiasi momento" />
+        </section>
 
-                <x-section-border />
-            @endif
+        @if (Laravel\Fortify\Features::canUpdateProfileInformation())
+            @livewire('profile.update-profile-information-form')
+        @endif
 
-            @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::updatePasswords()))
-                <div class="mt-10 sm:mt-0">
-                    @livewire('profile.update-password-form')
-                </div>
-
-                <x-section-border />
-            @endif
-
-            @if (Laravel\Fortify\Features::canManageTwoFactorAuthentication())
-                <div class="mt-10 sm:mt-0">
-                    @livewire('profile.two-factor-authentication-form')
-                </div>
-
-                <x-section-border />
-            @endif
-
-            <div class="mt-10 sm:mt-0">
-                @livewire('profile.logout-other-browser-sessions-form')
+        @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::updatePasswords()))
+            <div>
+                @livewire('profile.update-password-form')
             </div>
+        @endif
 
-            @if (Laravel\Jetstream\Jetstream::hasAccountDeletionFeatures())
-                <x-section-border />
+        @if (Laravel\Fortify\Features::canManageTwoFactorAuthentication())
+            <div>
+                @livewire('profile.two-factor-authentication-form')
+            </div>
+        @endif
 
-                <div class="mt-10 sm:mt-0">
-                    @livewire('profile.delete-user-form')
-                </div>
-            @endif
+        <div>
+            @livewire('profile.logout-other-browser-sessions-form')
         </div>
+
+        @if (Laravel\Jetstream\Jetstream::hasAccountDeletionFeatures() && auth()->user()->role !== 'admin')
+            <div>
+                @livewire('profile.delete-user-form')
+            </div>
+        @endif
     </div>
 </x-app-layout>
