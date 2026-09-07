@@ -15,7 +15,7 @@ class JobApplicationPipelineTest extends TestCase
 
     public function test_business_can_update_status_of_application_for_its_job_posting(): void
     {
-        $business = User::factory()->create(['role' => 'business']);
+		$business = User::factory()->create(['role' => 'business']);
         $profile = BusinessProfile::create([
             'user_id' => $business->id,
             'company_name' => 'RSA Aurora',
@@ -48,7 +48,7 @@ class JobApplicationPipelineTest extends TestCase
                 'status' => JobApplication::STATUS_REVIEW,
             ])
             ->assertSessionHasNoErrors();
-
+		
         $this->assertDatabaseHas('job_applications', [
             'id' => $application->id,
             'status' => JobApplication::STATUS_REVIEW,
