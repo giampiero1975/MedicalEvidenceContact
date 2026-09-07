@@ -13,7 +13,7 @@ class InterviewPrivacyWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_business_cannot_see_contacts_before_professional_accepts_with_consent(): void
+    public function test_business_cannot_see_contacts_before_final_confirmation(): void
     {
         [$business, $professional, $application] = $this->scenario();
 
@@ -25,32 +25,43 @@ class InterviewPrivacyWorkflowTest extends TestCase
             ->assertSee('Contatti protetti');
     }
 
-    public function test_professional_acceptance_with_consent_unlocks_contacts_for_owner_business(): void
+    public function test_professional_slot_selection_with_consent_does_not_unlock_contacts_yet(): void
     {
         [$business, $professional, $application] = $this->scenario();
-
-        $interview = Interview::create([
-            'job_application_id' => $application->id,
-            'business_user_id' => $business->id,
-            'scheduled_at' => now()->addDay(),
-            'duration_minutes' => 30,
-            'mode' => 'video',
-            'location' => 'https://meet.example.test/interview',
-            'status' => 'scheduled',
-        ]);
+        $interview = $this->proposal($business, $application);
 
         $this->actingAs($professional)
             ->patch(route('professional.interviews.respond', $interview), [
-                'response' => 'accepted',
                 'contact_sharing_consent' => 1,
             ])
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('interviews', [
             'id' => $interview->id,
-            'status' => 'accepted',
+            'status' => Interview::STATUS_REQUESTED,
             'contact_sharing_consent' => 1,
         ]);
+
+        $this->actingAs($business)
+            ->get(route('business.applications.show', $application))
+            ->assertOk()
+            ->assertDontSee($professional->email)
+            ->assertDontSee($professional->phone);
+    }
+
+    public function test_business_final_confirmation_unlocks_contacts_after_professional_consent(): void
+    {
+        [$business, $professional, $application] = $this->scenario();
+        $interview = $this->proposal($business, $application, Interview::STATUS_REQUESTED, true);
+
+        $this->actingAs($business)
+            ->patch(route('business.interviews.confirm', $interview), [
+                'decision' => 'accepted',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(Interview::STATUS_ACCEPTED, $interview->refresh()->status);
+        $this->assertTrue($interview->unlocksContacts());
 
         $this->actingAs($business)
             ->get(route('business.applications.show', $application))
@@ -59,75 +70,81 @@ class InterviewPrivacyWorkflowTest extends TestCase
             ->assertSee($professional->phone);
     }
 
-    public function test_professional_cannot_accept_without_contact_consent(): void
+    public function test_professional_cannot_select_slot_without_contact_consent(): void
     {
         [$business, $professional, $application] = $this->scenario();
-
-        $interview = Interview::create([
-            'job_application_id' => $application->id,
-            'business_user_id' => $business->id,
-            'scheduled_at' => now()->addDay(),
-            'duration_minutes' => 30,
-            'mode' => 'phone',
-            'status' => 'scheduled',
-        ]);
+        $interview = $this->proposal($business, $application);
 
         $this->actingAs($professional)
-            ->patch(route('professional.interviews.respond', $interview), [
-                'response' => 'accepted',
-            ])
+            ->patch(route('professional.interviews.respond', $interview))
             ->assertSessionHasErrors('contact_sharing_consent');
 
-        $this->assertSame('scheduled', $interview->refresh()->status);
+        $this->assertSame(Interview::STATUS_PROPOSED, $interview->refresh()->status);
     }
 
-    public function test_professional_cannot_change_response_after_answering_interview(): void
+    public function test_professional_cannot_select_second_slot_after_requesting_one(): void
     {
         [$business, $professional, $application] = $this->scenario();
-
-        $interview = Interview::create([
+        $first = $this->proposal($business, $application);
+        $second = Interview::create([
             'job_application_id' => $application->id,
             'business_user_id' => $business->id,
-            'scheduled_at' => now()->addDay(),
+            'scheduled_at' => now()->addDays(2),
             'duration_minutes' => 30,
             'mode' => 'phone',
-            'status' => 'accepted',
-            'contact_sharing_consent' => true,
-            'responded_at' => now(),
+            'status' => Interview::STATUS_PROPOSED,
         ]);
 
         $this->actingAs($professional)
-            ->patch(route('professional.interviews.respond', $interview), [
-                'response' => 'declined',
-            ])
+            ->patch(route('professional.interviews.respond', $first), ['contact_sharing_consent' => 1])
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($professional)
+            ->patch(route('professional.interviews.respond', $second), ['contact_sharing_consent' => 1])
             ->assertSessionHasErrors('response');
 
-        $interview->refresh();
-        $this->assertSame('accepted', $interview->status);
-        $this->assertTrue($interview->contact_sharing_consent);
+        $this->assertSame(Interview::STATUS_PROPOSED, $second->refresh()->status);
     }
 
-    public function test_other_professional_cannot_respond_to_interview(): void
+    public function test_other_professional_cannot_select_interview_slot(): void
     {
         [$business, $professional, $application] = $this->scenario();
         $otherProfessional = User::factory()->create(['role' => 'professional']);
+        $interview = $this->proposal($business, $application);
 
-        $interview = Interview::create([
+        $this->actingAs($otherProfessional)
+            ->patch(route('professional.interviews.respond', $interview), ['contact_sharing_consent' => 1])
+            ->assertForbidden();
+
+        $this->assertSame(Interview::STATUS_PROPOSED, $interview->refresh()->status);
+    }
+
+    public function test_other_business_cannot_confirm_requested_slot(): void
+    {
+        [$business, $professional, $application] = $this->scenario();
+        $otherBusiness = User::factory()->create(['role' => 'business']);
+        $interview = $this->proposal($business, $application, Interview::STATUS_REQUESTED, true);
+
+        $this->actingAs($otherBusiness)
+            ->patch(route('business.interviews.confirm', $interview), ['decision' => 'accepted'])
+            ->assertForbidden();
+
+        $this->assertSame(Interview::STATUS_REQUESTED, $interview->refresh()->status);
+    }
+
+    private function proposal(User $business, JobApplication $application, string $status = Interview::STATUS_PROPOSED, bool $consent = false): Interview
+    {
+        return Interview::create([
             'job_application_id' => $application->id,
             'business_user_id' => $business->id,
             'scheduled_at' => now()->addDay(),
             'duration_minutes' => 30,
-            'mode' => 'phone',
-            'status' => 'scheduled',
+            'mode' => 'video',
+            'location' => 'https://meet.example.test/interview',
+            'status' => $status,
+            'contact_sharing_consent' => $consent,
+            'responded_at' => $status === Interview::STATUS_REQUESTED ? now() : null,
         ]);
-
-        $this->actingAs($otherProfessional)
-            ->patch(route('professional.interviews.respond', $interview), [
-                'response' => 'declined',
-            ])
-            ->assertForbidden();
-
-        $this->assertSame('scheduled', $interview->refresh()->status);
     }
 
     private function scenario(): array
