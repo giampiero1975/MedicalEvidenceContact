@@ -46,16 +46,22 @@
                     <h3 class="text-base font-semibold text-slate-950">Slot e colloqui</h3>
                     <div class="mt-4 divide-y divide-slate-200">
                         @forelse ($interviews as $interview)
-                            <a href="{{ route('business.applications.show', $interview->jobApplication) }}" class="block py-3 first:pt-0 last:pb-0">
-                                <div class="flex items-center justify-between gap-3">
-                                    <p class="font-semibold text-slate-900">{{ $interview->jobApplication->professional->name }}</p>
-                                    <x-ui.badge variant="secondary">{{ $interview->statusLabel() }}</x-ui.badge>
-                                </div>
-                                <p class="mt-1 text-sm text-slate-600">{{ $interview->scheduled_at->format('d/m/Y H:i') }} · {{ $interview->modeLabel() }}</p>
+                            <div class="py-3 first:pt-0 last:pb-0">
+                                <a href="{{ route('business.applications.show', $interview->jobApplication) }}" class="block">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <p class="font-semibold text-slate-900">{{ $interview->jobApplication->professional->name }}</p>
+                                        <x-ui.badge variant="secondary">{{ $interview->statusLabel() }}</x-ui.badge>
+                                    </div>
+                                    <p class="mt-1 text-sm text-slate-600">{{ $interview->scheduled_at->format('d/m/Y H:i') }} · {{ $interview->modeLabel() }}</p>
+                                </a>
                                 @if ($interview->status === \App\Models\Interview::STATUS_REQUESTED)
-                                    <p class="mt-1 text-xs font-semibold text-amber-700">Richiesta da confermare</p>
+                                    <p class="mt-2 text-xs font-semibold text-amber-700">Richiesta da confermare</p>
+                                    <div class="mt-3 grid grid-cols-2 gap-2">
+                                        <form method="POST" action="{{ route('business.interviews.confirm', $interview) }}">@csrf @method('PATCH')<input type="hidden" name="decision" value="accepted"><x-ui.button type="submit" size="sm" class="w-full">Conferma</x-ui.button></form>
+                                        <form method="POST" action="{{ route('business.interviews.confirm', $interview) }}">@csrf @method('PATCH')<input type="hidden" name="decision" value="declined"><x-ui.button type="submit" size="sm" variant="danger" class="w-full">Rifiuta</x-ui.button></form>
+                                    </div>
                                 @endif
-                            </a>
+                            </div>
                         @empty
                             <p class="text-sm text-slate-500">Nessuno slot proposto.</p>
                         @endforelse
@@ -95,10 +101,7 @@
                                     <form method="POST" action="{{ route('professional.interviews.respond', $interview) }}" class="mt-4 space-y-3">@csrf @method('PATCH')
                                         <label class="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
                                             <input type="checkbox" name="contact_sharing_consent" value="1" class="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-600">
-                                            <span>
-                                                <span class="block text-sm font-semibold text-slate-900">Consenso sblocco contatti</span>
-                                                <span class="mt-1 block text-xs leading-5 text-slate-600">Autorizzi la condivisione di email e telefono solo se la struttura confermerà definitivamente questo colloquio.</span>
-                                            </span>
+                                            <span><span class="block text-sm font-semibold text-slate-900">Consenso sblocco contatti</span><span class="mt-1 block text-xs leading-5 text-slate-600">Autorizzi la condivisione di email e telefono solo se la struttura confermerà definitivamente questo colloquio.</span></span>
                                         </label>
                                         <x-ui.button type="submit" class="w-full">Seleziona slot</x-ui.button>
                                     </form>
@@ -125,12 +128,7 @@
                 </x-ui.card>
             </div>
 
-            <aside>
-                <x-ui.card>
-                    <h3 class="text-base font-semibold text-slate-950">Come funziona la conferma</h3>
-                    <p class="mt-3 text-sm leading-6 text-slate-600">Scegli uno degli slot proposti. La struttura dovrà confermarlo. I contatti restano protetti fino alla conferma finale e vengono sbloccati solo con il tuo consenso.</p>
-                </x-ui.card>
-            </aside>
+            <aside><x-ui.card><h3 class="text-base font-semibold text-slate-950">Come funziona la conferma</h3><p class="mt-3 text-sm leading-6 text-slate-600">Scegli uno degli slot proposti. La struttura dovrà confermarlo. I contatti restano protetti fino alla conferma finale e vengono sbloccati solo con il tuo consenso.</p></x-ui.card></aside>
         </div>
     @endif
 </x-app-layout>
