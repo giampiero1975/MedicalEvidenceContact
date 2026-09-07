@@ -17,6 +17,14 @@
     <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
         <x-banner />
 
+        @php
+            $areaLabel = match (auth()->user()->role) {
+                'professional' => 'Area professionista',
+                'admin' => 'Area amministrazione',
+                default => 'Area business',
+            };
+        @endphp
+
         <div x-data="{ sidebarOpen: false }" class="min-h-screen lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
             <aside class="hidden border-r border-slate-200 lg:block">
                 <x-layout.app-sidebar />
@@ -51,9 +59,7 @@
                         </button>
 
                         <div>
-                            <p class="text-sm font-medium text-slate-500">
-                                {{ auth()->user()->role === 'professional' ? 'Area professionista' : 'Area business' }}
-                            </p>
+                            <p class="text-sm font-medium text-slate-500">{{ $areaLabel }}</p>
                         </div>
                     </div>
 
