@@ -32,6 +32,7 @@
                 <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Opportunità</p>
                 <div class="mt-2 space-y-1">
                     <x-ui.sidebar-link :href="route('job-postings.index')" :active="request()->routeIs('job-postings.*')">Offerte di lavoro</x-ui.sidebar-link>
+                    <x-ui.sidebar-link :href="route('professional.applications.index')" :active="request()->routeIs('professional.applications.*')">Le mie candidature</x-ui.sidebar-link>
                     <x-ui.sidebar-link :href="route('interviews.index')" :active="request()->routeIs('interviews.*')">Colloqui</x-ui.sidebar-link>
                 </div>
             </div>
