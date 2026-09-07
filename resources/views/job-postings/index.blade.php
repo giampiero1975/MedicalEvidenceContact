@@ -12,6 +12,12 @@
         </x-ui.page-header>
     </x-slot>
 
+    @php
+        $favoriteJobPostingIds = $role === 'professional'
+            ? auth()->user()->favoriteJobPostings()->pluck('job_postings.id')
+            : collect();
+    @endphp
+
     <div class="space-y-6">
         <x-ui.card>
             <form method="GET" action="{{ route('job-postings.index') }}" class="grid gap-4 lg:grid-cols-12">
@@ -129,6 +135,19 @@
                         <div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3">
                             <x-ui.button variant="secondary" size="sm" :href="route('job-postings.show', $jobPosting)">Dettaglio</x-ui.button>
                             @if ($role === 'professional')
+                                @if ($favoriteJobPostingIds->contains($jobPosting->id))
+                                    <form method="POST" action="{{ route('job-postings.favorites.destroy', $jobPosting) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-ui.button type="submit" variant="secondary" size="sm">Rimuovi preferito</x-ui.button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('job-postings.favorites.store', $jobPosting) }}">
+                                        @csrf
+                                        <x-ui.button type="submit" variant="secondary" size="sm">Salva preferito</x-ui.button>
+                                    </form>
+                                @endif
+
                                 @if ($jobPosting->applications->isNotEmpty())
                                     <x-ui.badge>Candidatura {{ str_replace('_', ' ', $jobPosting->applications->first()->status) }}</x-ui.badge>
                                 @else
