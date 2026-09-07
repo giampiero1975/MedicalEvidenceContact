@@ -17,6 +17,10 @@
             <x-ui.alert variant="success">{{ session('status') }}</x-ui.alert>
         @endif
 
+        @error('business_type')
+            <x-ui.alert variant="danger">{{ $message }}</x-ui.alert>
+        @enderror
+
         <x-ui.card :padding="false">
             @if ($businessTypes->count())
                 <div class="overflow-x-auto">
@@ -43,7 +47,7 @@
                                         </x-ui.badge>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center justify-end gap-2">
+                                        <div class="flex flex-wrap items-center justify-end gap-2">
                                             <a href="{{ route('admin.business-types.edit', $businessType) }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-900">
                                                 Modifica
                                             </a>
@@ -52,6 +56,13 @@
                                                 @method('PATCH')
                                                 <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold {{ $businessType->is_active ? 'text-amber-700 hover:bg-amber-50 hover:text-amber-900' : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900' }} transition">
                                                     {{ $businessType->is_active ? 'Disattiva' : 'Attiva' }}
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.business-types.destroy', $businessType) }}" onsubmit="return confirm('Eliminare definitivamente questa tipologia? Se è già utilizzata da un profilo Business l’operazione verrà bloccata.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 hover:text-rose-800">
+                                                    Elimina
                                                 </button>
                                             </form>
                                         </div>
