@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TransactionalActionMail;
 use App\Models\Interview;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -66,7 +68,7 @@ class InterviewController extends Controller
     public function store(Request $request, JobApplication $jobApplication): RedirectResponse
     {
         abort_unless($request->user()->role === 'business', 403);
-        $jobApplication->loadMissing('jobPosting');
+        $jobApplication->loadMissing('jobPosting', 'professional');
         abort_unless(
             $jobApplication->jobPosting !== null
             && (int) $jobApplication->jobPosting->user_id === (int) $request->user()->id,
@@ -114,6 +116,21 @@ class InterviewController extends Controller
             ],
         ]);
 
+        if ($jobApplication->professional?->email) {
+            Mail::to($jobApplication->professional->email)->send(new TransactionalActionMail(
+                mailSubject: 'Invito a colloquio: '.$jobApplication->jobPosting->title,
+                heading: 'Hai ricevuto un invito a colloquio',
+                intro: 'La struttura ha programmato un colloquio per la tua candidatura.',
+                actionLabel: 'Apri i colloqui',
+                actionUrl: route('interviews.index'),
+                details: [
+                    'Annuncio: '.$jobApplication->jobPosting->title,
+                    'Data: '.$interview->scheduled_at->format('d/m/Y H:i'),
+                    'Modalità: '.$interview->modeLabel(),
+                ],
+            ));
+        }
+
         return back()->with('status', 'Colloquio programmato.')->with('status_variant', 'success');
     }
 
@@ -121,7 +138,7 @@ class InterviewController extends Controller
     {
         abort_unless($request->user()->role === 'professional', 403);
 
-        $interview->loadMissing('jobApplication');
+        $interview->loadMissing('jobApplication.jobPosting.owner');
         abort_unless(
             $interview->jobApplication !== null
             && (int) $interview->jobApplication->user_id === (int) $request->user()->id,
@@ -164,6 +181,24 @@ class InterviewController extends Controller
                 'contact_sharing_consent' => $interview->contact_sharing_consent,
             ],
         ]);
+
+        $business = $interview->jobApplication->jobPosting?->owner;
+        if ($business?->email) {
+            Mail::to($business->email)->send(new TransactionalActionMail(
+                mailSubject: ($data['response'] === 'accepted' ? 'Colloquio confermato: ' : 'Colloquio rifiutato: ').$interview->jobApplication->jobPosting->title,
+                heading: $data['response'] === 'accepted' ? 'Il professionista ha confermato il colloquio' : 'Il professionista ha rifiutato il colloquio',
+                intro: $data['response'] === 'accepted'
+                    ? 'Il colloquio programmato è stato accettato dal professionista.'
+                    : 'Il professionista non ha accettato il colloquio programmato.',
+                actionLabel: 'Apri la candidatura',
+                actionUrl: route('business.applications.show', $interview->jobApplication),
+                details: [
+                    'Annuncio: '.$interview->jobApplication->jobPosting->title,
+                    'Professionista: '.$request->user()->name,
+                    'Data: '.$interview->scheduled_at->format('d/m/Y H:i'),
+                ],
+            ));
+        }
 
         return back()
             ->with('status', $data['response'] === 'accepted' ? 'Colloquio confermato.' : 'Colloquio rifiutato.')
