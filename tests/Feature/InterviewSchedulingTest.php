@@ -107,7 +107,7 @@ class InterviewSchedulingTest extends TestCase
         $scheduledProfessional = User::factory()->create(['role' => 'professional', 'name' => 'Gia Pianificato Test']);
         $posting = $this->postingFor($business);
 
-        JobApplication::create([
+        $availableApplication = JobApplication::create([
             'job_posting_id' => $posting->id,
             'user_id' => $availableProfessional->id,
             'status' => JobApplication::STATUS_REVIEW,
@@ -132,7 +132,8 @@ class InterviewSchedulingTest extends TestCase
             ->get(route('interviews.index'))
             ->assertOk()
             ->assertSee('Disponibile Test')
-            ->assertDontSee('Gia Pianificato Test');
+            ->assertSee(route('business.applications.show', $availableApplication, absolute: false))
+            ->assertDontSee(route('business.applications.show', $scheduledApplication, absolute: false));
     }
 
     public function test_other_business_cannot_schedule_interview(): void
