@@ -44,7 +44,7 @@ class JobPostingApplicationCtaTest extends TestCase
         $this->actingAs($professional)
             ->get(route('job-postings.index'))
             ->assertOk()
-            ->assertSee('Candidatura ricevuta')
+            ->assertSee('Candidatura '.str_replace('_', ' ', JobApplication::STATUS_RECEIVED))
             ->assertDontSee('>Candidati<', false);
     }
 
