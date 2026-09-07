@@ -12,6 +12,8 @@ class DeleteUser implements DeletesUsers
      */
     public function delete(User $user): void
     {
+        abort_if($user->role === 'admin', 403, 'Gli account amministratore non possono essere eliminati da questa procedura.');
+
         $user->deleteProfilePhoto();
         $user->tokens->each->delete();
         $user->delete();
