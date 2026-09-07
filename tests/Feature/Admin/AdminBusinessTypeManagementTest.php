@@ -38,7 +38,7 @@ class AdminBusinessTypeManagementTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->post(route('admin.business-types.store'), [
-                'name' => 'Poliambulatorio',
+                'name' => '  Poliambulatorio  ',
                 'sort_order' => 25,
                 'is_active' => 1,
             ]);
@@ -103,5 +103,48 @@ class AdminBusinessTypeManagementTest extends TestCase
             ->assertRedirect(route('admin.business-types.index'));
 
         $this->assertFalse($businessType->refresh()->is_active);
+    }
+
+    public function test_admin_can_delete_unused_business_type(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $businessType = BusinessType::create([
+            'name' => 'Laboratorio privato',
+            'sort_order' => 50,
+            'is_active' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.business-types.destroy', $businessType))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.business-types.index'));
+
+        $this->assertDatabaseMissing('business_types', [
+            'id' => $businessType->id,
+        ]);
+    }
+
+    public function test_admin_cannot_delete_business_type_used_by_profile(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $business = User::factory()->create(['role' => 'business']);
+        $businessType = BusinessType::where('name', 'RSA')->firstOrFail();
+
+        BusinessProfile::create([
+            'user_id' => $business->id,
+            'company_name' => 'RSA Aurora',
+            'company_type' => $businessType->name,
+            'location' => 'Milano',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.business-types.destroy', $businessType))
+            ->assertSessionHasErrors('business_type')
+            ->assertRedirect(route('admin.business-types.index'));
+
+        $this->assertDatabaseHas('business_types', [
+            'id' => $businessType->id,
+            'name' => 'RSA',
+        ]);
     }
 }
