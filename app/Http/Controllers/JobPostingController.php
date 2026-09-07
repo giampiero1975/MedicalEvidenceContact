@@ -65,7 +65,7 @@ class JobPostingController extends Controller
                 fn ($query) => $query->where('status', $filters['status'])
             )
             ->latest()
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString();
 
         $acceptedJobApplications = $user->role === 'professional'
