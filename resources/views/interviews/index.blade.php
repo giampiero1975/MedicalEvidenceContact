@@ -9,7 +9,7 @@
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div class="space-y-4">
                 <x-ui.card>
-                    <div class="flex items-center justify-between gap-4"><div><h3 class="text-base font-semibold text-slate-950">Candidature da pianificare</h3><p class="mt-1 text-sm text-slate-600">Apri la scheda candidatura per programmare un colloquio.</p></div><span class="text-sm font-semibold text-slate-700">{{ $businessJobPostings->sum('applications_count') }} candidature</span></div>
+                    <div class="flex items-center justify-between gap-4"><div><h3 class="text-base font-semibold text-slate-950">Candidature da pianificare</h3><p class="mt-1 text-sm text-slate-600">Sono mostrate solo le candidature senza un colloquio attivo. Apri la scheda candidatura per programmare il prossimo colloquio.</p></div><span class="text-sm font-semibold text-slate-700">{{ $businessJobPostings->sum('applications_to_schedule_count') }} candidature</span></div>
                     <div class="mt-4 divide-y divide-slate-200">
                         @forelse ($businessJobPostings as $jobPosting)
                             <div class="py-4 first:pt-0 last:pb-0">
@@ -23,7 +23,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-sm text-slate-500">Nessuna candidatura disponibile.</p>
+                            <p class="text-sm text-slate-500">Nessuna candidatura in attesa di pianificazione.</p>
                         @endforelse
                     </div>
                 </x-ui.card>
@@ -32,9 +32,8 @@
             <aside class="space-y-4">
                 <x-ui.card>
                     <h3 class="text-base font-semibold text-slate-950">Nuovo invito a colloquio</h3>
-                    <p class="mt-2 text-sm text-slate-600">La programmazione avviene dalla scheda del candidato.</p>
-                    <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Slot proposti</p>
-                    <x-ui.button href="{{ route('job-postings.index') }}" class="mt-3 w-full">Invia invito</x-ui.button>
+                    <p class="mt-2 text-sm text-slate-600">La programmazione avviene dalla scheda del candidato. Seleziona una candidatura dall'elenco per definire data, durata e modalità.</p>
+                    <x-ui.button href="{{ route('job-postings.index') }}" variant="secondary" class="mt-4 w-full">Vai agli annunci</x-ui.button>
                 </x-ui.card>
                 <x-ui.card>
                     <h3 class="text-base font-semibold text-slate-950">Colloqui programmati</h3>
@@ -76,6 +75,8 @@
                                         <label class="flex items-start gap-3 rounded-xl bg-slate-50 p-3"><input type="checkbox" name="contact_sharing_consent" value="1" class="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-600"><span><span class="block text-sm font-semibold text-slate-900">Consenso sblocco contatti</span><span class="mt-1 block text-xs leading-5 text-slate-600">Email e telefono saranno condivisi con questa struttura soltanto dopo la conferma.</span></span></label>
                                         <div class="grid grid-cols-2 gap-3"><x-ui.button type="submit" name="response" value="accepted">Conferma slot</x-ui.button><x-ui.button type="submit" name="response" value="declined" variant="danger">Rifiuta</x-ui.button></div>
                                     </form>
+                                @else
+                                    <p class="mt-4 text-sm text-slate-600">Hai già risposto a questo invito.</p>
                                 @endif
                             </article>
                         @empty
