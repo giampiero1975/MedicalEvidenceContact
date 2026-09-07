@@ -89,21 +89,25 @@
             <div class="space-y-3">
                 @foreach ($jobPostings as $jobPosting)
                     <article class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-                        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(520px,1fr)] xl:items-center">
+                        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(620px,1fr)] xl:items-center">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="truncate text-base font-semibold text-slate-950">
                                         <a href="{{ route('job-postings.show', $jobPosting) }}" class="hover:text-teal-700">{{ $jobPosting->title }}</a>
                                     </h3>
                                     <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'warning'">{{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}</x-ui.badge>
+                                    @if ($role === 'professional' && $jobPosting->created_at->gte(now()->subDays(3)))
+                                        <x-ui.badge variant="info">Nuova</x-ui.badge>
+                                    @endif
                                 </div>
+                                <p class="mt-1 text-sm font-medium text-slate-700">{{ $jobPosting->businessProfile?->company_name ?: 'Struttura non specificata' }}</p>
                                 <p class="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{{ $jobPosting->description }}</p>
                                 @if ($jobPosting->required_skills)
                                     <p class="mt-2 line-clamp-1 text-xs text-slate-500"><span class="font-semibold text-slate-700">Abilità:</span> {{ $jobPosting->required_skills }}</p>
                                 @endif
                             </div>
 
-                            <dl class="grid grid-cols-2 gap-x-5 gap-y-3 text-sm sm:grid-cols-3 xl:grid-cols-5">
+                            <dl class="grid grid-cols-2 gap-x-5 gap-y-3 text-sm sm:grid-cols-3 xl:grid-cols-4">
                                 <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Posizioni</dt><dd class="mt-1 font-medium text-slate-900">{{ $jobPosting->positions }}</dd></div>
                                 <div class="min-w-0"><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contratto</dt><dd class="mt-1 truncate font-medium text-slate-900">{{ $jobPosting->contract_type }}</dd></div>
                                 <div class="min-w-0">
@@ -116,8 +120,9 @@
                                         @endif
                                     </dd>
                                 </div>
+                                <div class="min-w-0"><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sede</dt><dd class="mt-1 truncate font-medium text-slate-900" title="{{ $jobPosting->workplace_address }}">{{ $jobPosting->workplace_address }}</dd></div>
+                                <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pubblicato</dt><dd class="mt-1 whitespace-nowrap font-medium text-slate-900">{{ $jobPosting->created_at->format('d/m/Y') }}</dd></div>
                                 <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Scadenza</dt><dd class="mt-1 whitespace-nowrap font-medium text-slate-900">{{ $jobPosting->expires_at->format('d/m/Y') }}</dd></div>
-                                <div class="min-w-0 sm:col-span-2 xl:col-span-1"><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sede</dt><dd class="mt-1 truncate font-medium text-slate-900" title="{{ $jobPosting->workplace_address }}">{{ $jobPosting->workplace_address }}</dd></div>
                             </dl>
                         </div>
 
