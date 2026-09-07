@@ -21,12 +21,18 @@ class InterviewController extends Controller
             ? $user->jobPostings()
                 ->with([
                     'applications' => fn ($query) => $query
+                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', ['scheduled', 'accepted']))
                         ->with('professional:id,name,first_name,last_name,role,residence')
                         ->latest(),
                 ])
-                ->withCount('applications')
+                ->withCount([
+                    'applications as applications_to_schedule_count' => fn ($query) => $query
+                        ->whereDoesntHave('interviews', fn ($interviews) => $interviews->whereIn('status', ['scheduled', 'accepted'])),
+                ])
                 ->latest()
                 ->get()
+                ->filter(fn ($jobPosting) => $jobPosting->applications_to_schedule_count > 0)
+                ->values()
             : collect();
 
         $professionalApplications = $user->role === 'professional'
@@ -66,6 +72,12 @@ class InterviewController extends Controller
             && (int) $jobApplication->jobPosting->user_id === (int) $request->user()->id,
             403
         );
+
+        if ($jobApplication->interviews()->whereIn('status', ['scheduled', 'accepted'])->exists()) {
+            return back()
+                ->withErrors(['interview' => 'Esiste già un colloquio attivo per questa candidatura.'])
+                ->withInput();
+        }
 
         $data = $request->validate([
             'scheduled_at' => ['required', 'date', 'after:now'],
@@ -115,6 +127,12 @@ class InterviewController extends Controller
             && (int) $interview->jobApplication->user_id === (int) $request->user()->id,
             403
         );
+
+        if ($interview->status !== 'scheduled') {
+            return back()->withErrors([
+                'response' => 'Hai già risposto a questo invito a colloquio.',
+            ]);
+        }
 
         $data = $request->validate([
             'response' => ['required', Rule::in(['accepted', 'declined'])],
