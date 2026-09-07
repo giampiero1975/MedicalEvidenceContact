@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Interview;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\User;
@@ -66,6 +67,74 @@ class InterviewSchedulingTest extends TestCase
         ]);
     }
 
+    public function test_business_cannot_schedule_second_active_interview_for_same_application(): void
+    {
+        $business = User::factory()->create(['role' => 'business']);
+        $professional = User::factory()->create(['role' => 'professional']);
+        $posting = $this->postingFor($business);
+        $application = JobApplication::create([
+            'job_posting_id' => $posting->id,
+            'user_id' => $professional->id,
+            'status' => JobApplication::STATUS_INTERVIEW_SCHEDULED,
+        ]);
+
+        Interview::create([
+            'job_application_id' => $application->id,
+            'business_user_id' => $business->id,
+            'scheduled_at' => now()->addDay(),
+            'duration_minutes' => 30,
+            'mode' => 'phone',
+            'status' => 'scheduled',
+        ]);
+
+        $this->actingAs($business)
+            ->from(route('business.applications.show', $application))
+            ->post(route('business.applications.interviews.store', $application), [
+                'scheduled_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
+                'duration_minutes' => 30,
+                'mode' => 'phone',
+            ])
+            ->assertRedirect(route('business.applications.show', $application))
+            ->assertSessionHasErrors('interview');
+
+        $this->assertDatabaseCount('interviews', 1);
+    }
+
+    public function test_business_interview_page_only_lists_applications_without_active_interview(): void
+    {
+        $business = User::factory()->create(['role' => 'business']);
+        $availableProfessional = User::factory()->create(['role' => 'professional', 'name' => 'Disponibile Test']);
+        $scheduledProfessional = User::factory()->create(['role' => 'professional', 'name' => 'Gia Pianificato Test']);
+        $posting = $this->postingFor($business);
+
+        JobApplication::create([
+            'job_posting_id' => $posting->id,
+            'user_id' => $availableProfessional->id,
+            'status' => JobApplication::STATUS_REVIEW,
+        ]);
+
+        $scheduledApplication = JobApplication::create([
+            'job_posting_id' => $posting->id,
+            'user_id' => $scheduledProfessional->id,
+            'status' => JobApplication::STATUS_INTERVIEW_SCHEDULED,
+        ]);
+
+        Interview::create([
+            'job_application_id' => $scheduledApplication->id,
+            'business_user_id' => $business->id,
+            'scheduled_at' => now()->addDay(),
+            'duration_minutes' => 30,
+            'mode' => 'phone',
+            'status' => 'scheduled',
+        ]);
+
+        $this->actingAs($business)
+            ->get(route('interviews.index'))
+            ->assertOk()
+            ->assertSee('Disponibile Test')
+            ->assertDontSee('Gia Pianificato Test');
+    }
+
     public function test_other_business_cannot_schedule_interview(): void
     {
         $owner = User::factory()->create(['role' => 'business']);
@@ -98,5 +167,19 @@ class InterviewSchedulingTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseCount('interviews', 0);
+    }
+
+    private function postingFor(User $business): JobPosting
+    {
+        return JobPosting::create([
+            'user_id' => $business->id,
+            'title' => 'OSS RSA',
+            'description' => 'Ricerca OSS.',
+            'positions' => 1,
+            'workplace_address' => 'Milano',
+            'contract_type' => 'Tempo determinato',
+            'expires_at' => now()->addMonth()->toDateString(),
+            'status' => 'active',
+        ]);
     }
 }
