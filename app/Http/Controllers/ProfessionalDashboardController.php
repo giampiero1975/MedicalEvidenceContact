@@ -75,6 +75,12 @@ class ProfessionalDashboardController extends Controller
             $user->street_address,
         ];
 
+        $completedFields = collect($profileFields)
+            ->filter(fn ($value) => filled($value))
+            ->count();
+
+        $profileCompletion = (int) round(($completedFields / count($profileFields)) * 100);
+
         $isItalian = in_array(
             strtolower(trim((string) $user->nationality)),
             ['italiana', 'italiano', 'italia', 'italian'],
@@ -96,19 +102,6 @@ class ProfessionalDashboardController extends Controller
                 'required' => true,
             ];
         }
-
-        $completionChecks = [
-            ...collect($profileFields)->map(fn ($value) => filled($value))->all(),
-            $profileItems->isNotEmpty(),
-            ...collect($documents)
-                ->filter(fn ($document) => $document['required'])
-                ->map(fn ($document) => $document['uploaded'])
-                ->all(),
-        ];
-
-        $profileCompletion = (int) round(
-            (collect($completionChecks)->filter()->count() / count($completionChecks)) * 100
-        );
 
         return view('professionals.dashboard-overview', [
             'jobApplications' => $jobApplications,
