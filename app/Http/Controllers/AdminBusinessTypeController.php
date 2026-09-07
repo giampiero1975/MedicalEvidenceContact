@@ -88,6 +88,27 @@ class AdminBusinessTypeController extends Controller
                 : 'Tipologia aziendale disattivata.');
     }
 
+    public function destroy(Request $request, BusinessType $businessType): RedirectResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $inUse = BusinessProfile::query()
+            ->where('company_type', $businessType->name)
+            ->exists();
+
+        if ($inUse) {
+            return redirect()
+                ->route('admin.business-types.index')
+                ->withErrors(['business_type' => 'La tipologia è utilizzata da almeno un profilo Business. Disattivala invece di eliminarla.']);
+        }
+
+        $businessType->delete();
+
+        return redirect()
+            ->route('admin.business-types.index')
+            ->with('status', 'Tipologia aziendale eliminata.');
+    }
+
     private function authorizeAdmin(Request $request): void
     {
         abort_unless($request->user()->role === 'admin', 403);
@@ -96,6 +117,10 @@ class AdminBusinessTypeController extends Controller
     /** @return array{name:string,is_active:bool,sort_order:int} */
     private function validatedData(Request $request, ?BusinessType $businessType = null): array
     {
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+        ]);
+
         $validated = $request->validate([
             'name' => [
                 'required',
@@ -108,7 +133,7 @@ class AdminBusinessTypeController extends Controller
         ]);
 
         return [
-            'name' => trim($validated['name']),
+            'name' => $validated['name'],
             'is_active' => (bool) $validated['is_active'],
             'sort_order' => (int) $validated['sort_order'],
         ];
