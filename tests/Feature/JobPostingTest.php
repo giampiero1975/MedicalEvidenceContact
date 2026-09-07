@@ -52,13 +52,8 @@ class JobPostingTest extends TestCase
 
     public function test_professional_user_can_view_active_job_postings_on_main_page(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
-
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
+        $professional = User::factory()->create(['role' => 'professional']);
+        $business = User::factory()->create(['role' => 'business']);
 
         JobPosting::create([
             'user_id' => $business->id,
@@ -83,7 +78,6 @@ class JobPostingTest extends TestCase
         ]);
 
         $response = $this->actingAs($professional)->get('/annunci');
-
         $response->assertStatus(200);
         $response->assertSee('OSS struttura residenziale');
         $response->assertDontSee('Annuncio scaduto');
@@ -91,14 +85,8 @@ class JobPostingTest extends TestCase
 
     public function test_professional_user_can_filter_active_job_postings(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
-
-        $matchingBusiness = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $professional = User::factory()->create(['role' => 'professional']);
+        $matchingBusiness = User::factory()->create(['role' => 'business']);
         $matchingProfile = $matchingBusiness->businessProfile()->create([
             'user_id' => $matchingBusiness->id,
             'company_name' => 'RSA Milano Nord',
@@ -122,10 +110,7 @@ class JobPostingTest extends TestCase
             'status' => 'active',
         ]);
 
-        $otherBusiness = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $otherBusiness = User::factory()->create(['role' => 'business']);
         $otherProfile = $otherBusiness->businessProfile()->create([
             'user_id' => $otherBusiness->id,
             'company_name' => 'Clinica Bologna',
@@ -167,12 +152,9 @@ class JobPostingTest extends TestCase
             ->assertDontSee('Infermiere sala operatoria');
     }
 
-
     public function test_professional_announcements_page_does_not_show_dashboard_sections(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
+        $professional = User::factory()->create(['role' => 'professional']);
 
         $this->actingAs($professional)
             ->get(route('job-postings.index'))
@@ -185,25 +167,14 @@ class JobPostingTest extends TestCase
 
     public function test_professional_user_cannot_create_job_postings(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
-
-        $this->actingAs($professional)
-            ->get('/annunci/crea')
-            ->assertForbidden();
+        $professional = User::factory()->create(['role' => 'professional']);
+        $this->actingAs($professional)->get('/annunci/crea')->assertForbidden();
     }
 
     public function test_professional_user_can_apply_to_a_job_posting_and_see_it_in_dashboard_list(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
-
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $professional = User::factory()->create(['role' => 'professional']);
+        $business = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Fisioterapista ambulatoriale',
@@ -215,9 +186,7 @@ class JobPostingTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->actingAs($professional)
-            ->post(route('job-applications.store', $jobPosting));
-
+        $response = $this->actingAs($professional)->post(route('job-applications.store', $jobPosting));
         $response->assertRedirect(route('dashboard', absolute: false));
         $this->assertDatabaseHas('job_applications', [
             'job_posting_id' => $jobPosting->id,
@@ -236,10 +205,7 @@ class JobPostingTest extends TestCase
 
     public function test_business_user_cannot_apply_to_a_job_posting(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $business = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Annuncio business',
@@ -250,18 +216,12 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
-        $this->actingAs($business)
-            ->post(route('job-applications.store', $jobPosting))
-            ->assertForbidden();
+        $this->actingAs($business)->post(route('job-applications.store', $jobPosting))->assertForbidden();
     }
 
     public function test_business_user_can_view_profiles_that_applied_without_contact_details(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $business = User::factory()->create(['role' => 'business']);
         $professional = User::factory()->create([
             'role' => 'professional',
             'name' => 'Giulia Rossi',
@@ -271,7 +231,6 @@ class JobPostingTest extends TestCase
             'phone' => '3331234567',
             'residence' => 'Bologna',
         ]);
-
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Tecnico radiologo',
@@ -282,7 +241,6 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
         JobApplication::create([
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,
@@ -304,10 +262,7 @@ class JobPostingTest extends TestCase
 
     public function test_business_user_can_view_interviews_frontend_section(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $business = User::factory()->create(['role' => 'business']);
         $professional = User::factory()->create([
             'role' => 'professional',
             'name' => 'Giulia Rossi',
@@ -315,7 +270,6 @@ class JobPostingTest extends TestCase
             'last_name' => 'Rossi',
             'residence' => 'Bologna',
         ]);
-
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Tecnico radiologo',
@@ -326,7 +280,6 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
         JobApplication::create([
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,
@@ -339,21 +292,16 @@ class JobPostingTest extends TestCase
             ->assertSee('Colloqui')
             ->assertSee('Candidature da pianificare')
             ->assertSee('Nuovo invito a colloquio')
-            ->assertSee('Slot proposti')
             ->assertSee('Giulia Rossi')
-            ->assertSee('Invia invito');
+            ->assertSee('Vai agli annunci')
+            ->assertDontSee('Slot proposti')
+            ->assertDontSee('Invia invito');
     }
 
     public function test_professional_user_can_view_interviews_frontend_section(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
-
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $professional = User::factory()->create(['role' => 'professional']);
+        $business = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Fisioterapista ambulatoriale',
@@ -364,7 +312,6 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
         JobApplication::create([
             'job_posting_id' => $jobPosting->id,
             'user_id' => $professional->id,
@@ -383,10 +330,7 @@ class JobPostingTest extends TestCase
 
     public function test_business_owner_can_update_a_job_posting(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $business = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Titolo iniziale',
@@ -398,19 +342,18 @@ class JobPostingTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->actingAs($business)
-            ->put(route('job-postings.update', $jobPosting), [
-                'title' => 'Titolo aggiornato',
-                'description' => 'Descrizione aggiornata.',
-                'positions' => 3,
-                'workplace_address' => 'Via Milano 20, Milano',
-                'required_skills' => 'Esperienza reparto',
-                'contract_type' => 'Tempo indeterminato',
-                'salary_min' => 30000,
-                'salary_max' => 36000,
-                'expires_at' => now()->addMonth()->toDateString(),
-                'status' => 'active',
-            ]);
+        $response = $this->actingAs($business)->put(route('job-postings.update', $jobPosting), [
+            'title' => 'Titolo aggiornato',
+            'description' => 'Descrizione aggiornata.',
+            'positions' => 3,
+            'workplace_address' => 'Via Milano 20, Milano',
+            'required_skills' => 'Esperienza reparto',
+            'contract_type' => 'Tempo indeterminato',
+            'salary_min' => 30000,
+            'salary_max' => 36000,
+            'expires_at' => now()->addMonth()->toDateString(),
+            'status' => 'active',
+        ]);
 
         $response->assertRedirect(route('job-postings.show', $jobPosting, absolute: false));
         $this->assertDatabaseHas('job_postings', [
@@ -423,10 +366,7 @@ class JobPostingTest extends TestCase
 
     public function test_business_owner_can_delete_a_job_posting(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $business = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Annuncio da eliminare',
@@ -437,26 +377,16 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
         $this->actingAs($business)
             ->delete(route('job-postings.destroy', $jobPosting))
             ->assertRedirect(route('job-postings.index', absolute: false));
-
-        $this->assertDatabaseMissing('job_postings', [
-            'id' => $jobPosting->id,
-        ]);
+        $this->assertDatabaseMissing('job_postings', ['id' => $jobPosting->id]);
     }
 
     public function test_business_user_cannot_update_or_delete_another_business_job_posting(): void
     {
-        $owner = User::factory()->create([
-            'role' => 'business',
-        ]);
-
-        $otherBusiness = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $owner = User::factory()->create(['role' => 'business']);
+        $otherBusiness = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $owner->id,
             'title' => 'Annuncio protetto',
@@ -467,37 +397,22 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
-        $this->actingAs($otherBusiness)
-            ->get(route('job-postings.edit', $jobPosting))
-            ->assertForbidden();
-
-        $this->actingAs($otherBusiness)
-            ->put(route('job-postings.update', $jobPosting), [
-                'title' => 'Tentativo modifica',
-                'description' => 'Non autorizzato.',
-                'positions' => 2,
-                'workplace_address' => 'Via Test 1',
-                'contract_type' => 'Tempo determinato',
-                'expires_at' => now()->addWeek()->toDateString(),
-            ])
-            ->assertForbidden();
-
-        $this->actingAs($otherBusiness)
-            ->delete(route('job-postings.destroy', $jobPosting))
-            ->assertForbidden();
+        $this->actingAs($otherBusiness)->get(route('job-postings.edit', $jobPosting))->assertForbidden();
+        $this->actingAs($otherBusiness)->put(route('job-postings.update', $jobPosting), [
+            'title' => 'Tentativo modifica',
+            'description' => 'Non autorizzato.',
+            'positions' => 2,
+            'workplace_address' => 'Via Test 1',
+            'contract_type' => 'Tempo determinato',
+            'expires_at' => now()->addWeek()->toDateString(),
+        ])->assertForbidden();
+        $this->actingAs($otherBusiness)->delete(route('job-postings.destroy', $jobPosting))->assertForbidden();
     }
 
     public function test_business_user_cannot_view_applications_for_another_business_job_posting(): void
     {
-        $owner = User::factory()->create([
-            'role' => 'business',
-        ]);
-
-        $otherBusiness = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $owner = User::factory()->create(['role' => 'business']);
+        $otherBusiness = User::factory()->create(['role' => 'business']);
         $jobPosting = JobPosting::create([
             'user_id' => $owner->id,
             'title' => 'Infermiera sala operatoria',
@@ -508,9 +423,6 @@ class JobPostingTest extends TestCase
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-
-        $this->actingAs($otherBusiness)
-            ->get(route('job-postings.applications', $jobPosting))
-            ->assertForbidden();
+        $this->actingAs($otherBusiness)->get(route('job-postings.applications', $jobPosting))->assertForbidden();
     }
 }
