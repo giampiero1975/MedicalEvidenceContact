@@ -23,13 +23,17 @@ class ProfileSecurityTest extends TestCase
             ->assertSee($user->email);
     }
 
-    public function test_admin_profile_does_not_expose_account_deletion_section(): void
+    public function test_admin_profile_keeps_admin_navigation_and_hides_account_deletion_section(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)
             ->get(route('profile.show'))
             ->assertOk()
+            ->assertSee('Amministrazione')
+            ->assertSee('Utenti')
+            ->assertSee('Annunci')
+            ->assertSee('Tipologie aziendali')
             ->assertDontSee('Delete Account');
     }
 
