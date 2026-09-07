@@ -22,13 +22,22 @@ class JobApplicationController extends Controller
             403
         );
 
+        $data = $request->validate([
+            'presentation_message' => ['nullable', 'string', 'max:500'],
+            'application_confirmation' => ['accepted'],
+        ], [
+            'application_confirmation.accepted' => 'Devi confermare l’invio della candidatura.',
+            'presentation_message.max' => 'Il messaggio di presentazione non può superare 500 caratteri.',
+        ]);
+
         [$application, $created] = [null, false];
-        DB::transaction(function () use ($request, $jobPosting, &$application, &$created): void {
+        DB::transaction(function () use ($request, $jobPosting, $data, &$application, &$created): void {
             $application = JobApplication::firstOrCreate([
                 'job_posting_id' => $jobPosting->id,
                 'user_id' => $request->user()->id,
             ], [
                 'status' => JobApplication::STATUS_RECEIVED,
+                'presentation_message' => $data['presentation_message'] ?? null,
             ]);
             $created = $application->wasRecentlyCreated;
 
