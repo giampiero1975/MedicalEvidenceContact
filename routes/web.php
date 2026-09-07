@@ -54,7 +54,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::resource('/admin/business-types', AdminBusinessTypeController::class)
         ->names('admin.business-types')
         ->parameters(['business-types' => 'businessType'])
-        ->except(['show', 'destroy']);
+        ->except('show');
 
     Route::get('/annunci', [JobPostingController::class, 'index'])->name('job-postings.index');
     Route::get('/annunci/crea', [JobPostingController::class, 'create'])->name('job-postings.create');
