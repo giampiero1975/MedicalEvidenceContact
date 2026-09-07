@@ -132,10 +132,7 @@
                                 @if ($jobPosting->applications->isNotEmpty())
                                     <x-ui.badge>Candidatura {{ str_replace('_', ' ', $jobPosting->applications->first()->status) }}</x-ui.badge>
                                 @else
-                                    <form method="POST" action="{{ route('job-applications.store', $jobPosting) }}">
-                                        @csrf
-                                        <x-ui.button type="submit" size="sm">Candidati</x-ui.button>
-                                    </form>
+                                    <x-ui.button size="sm" :href="route('job-postings.show', $jobPosting)">Candidati</x-ui.button>
                                 @endif
                             @else
                                 <x-ui.button size="sm" :href="route('job-postings.edit', $jobPosting)">Modifica</x-ui.button>
