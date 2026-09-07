@@ -6,15 +6,6 @@
         />
     </x-slot>
 
-    @php
-        $activeMoodleLink = $moodleUserLinks->firstWhere('status', 'active');
-        $certificates = $moodleUserLinks
-            ->flatMap(fn ($link) => $link->certificates()->latest('issued_at')->get())
-            ->sortByDesc(fn ($certificate) => $certificate->issued_at ?? $certificate->created_at)
-            ->values();
-        $coursesCount = $certificates->pluck('course_id')->filter()->unique()->count();
-    @endphp
-
     <div class="space-y-8">
         @if ($errors->any())
             <x-ui.alert variant="danger" title="Controlla i dati inseriti">
@@ -109,7 +100,9 @@
                                     <div class="min-w-0">
                                         <div class="flex flex-wrap items-center gap-3">
                                             <h3 class="font-semibold text-slate-950">{{ $link->moodleSite->name }}</h3>
-                                            <x-ui.badge :variant="$link->status === 'active' ? 'success' : 'warning'">{{ $link->status === 'active' ? 'Attivo' : ucfirst($link->status) }}</x-ui.badge>
+                                            <x-ui.badge :variant="$link->status === 'active' ? 'success' : 'neutral'">
+                                                {{ $link->status === 'active' ? 'Attivo' : ($link->status === 'revoked' ? 'Scollegato' : ucfirst($link->status)) }}
+                                            </x-ui.badge>
                                         </div>
                                         <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                                             <div class="rounded-xl bg-slate-50 p-4">
