@@ -69,10 +69,12 @@ class JobApplicationSubmissionTest extends TestCase
         $this->actingAs($professional)
             ->get(route('job-postings.show', $jobPosting))
             ->assertOk()
-            ->assertSeeText('Conferma candidatura')
-            ->assertSeeText('Messaggio di presentazione')
-            ->assertSeeText("Confermo l'invio della candidatura")
-            ->assertSeeText('Invia candidatura');
+            ->assertSee('application-modal-title', false)
+            ->assertSee('name="presentation_message"', false)
+            ->assertSee('maxlength="500"', false)
+            ->assertSee('name="application_confirmation"', false)
+            ->assertSee('value="1"', false)
+            ->assertSee('Invia candidatura', false);
     }
 
     private function scenario(): array
