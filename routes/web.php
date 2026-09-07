@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminBusinessTypeController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminJobPostingController;
 use App\Http\Controllers\AdminUiPlaygroundController;
@@ -49,6 +50,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/admin/ui', AdminUiPlaygroundController::class)->name('admin.ui.index');
     Route::resource('/admin/users', AdminUserController::class)->names('admin.users')->except('show');
     Route::resource('/admin/annunci', AdminJobPostingController::class)->names('admin.job-postings')->parameters(['annunci' => 'jobPosting'])->except('show');
+    Route::patch('/admin/business-types/{businessType}/toggle', [AdminBusinessTypeController::class, 'toggle'])->name('admin.business-types.toggle');
+    Route::resource('/admin/business-types', AdminBusinessTypeController::class)
+        ->names('admin.business-types')
+        ->parameters(['business-types' => 'businessType'])
+        ->except(['show', 'destroy']);
 
     Route::get('/annunci', [JobPostingController::class, 'index'])->name('job-postings.index');
     Route::get('/annunci/crea', [JobPostingController::class, 'create'])->name('job-postings.create');
