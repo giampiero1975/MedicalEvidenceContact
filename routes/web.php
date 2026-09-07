@@ -16,6 +16,7 @@ use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobApplicationNoteController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\JobPostingFavoriteController;
 use App\Http\Controllers\MoodleAccountLinkController;
 use App\Http\Controllers\MoodleCertificateSyncController;
 use App\Http\Controllers\ProfessionalApplicationsController;
@@ -66,6 +67,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::delete('/annunci/{jobPosting}', [JobPostingController::class, 'destroy'])->name('job-postings.destroy');
     Route::get('/annunci/{jobPosting}/candidature', [JobPostingController::class, 'applications'])->name('job-postings.applications');
     Route::post('/annunci/{jobPosting}/candidati', [JobApplicationController::class, 'store'])->name('job-applications.store');
+    Route::post('/annunci/{jobPosting}/preferito', [JobPostingFavoriteController::class, 'store'])->name('job-postings.favorites.store');
+    Route::delete('/annunci/{jobPosting}/preferito', [JobPostingFavoriteController::class, 'destroy'])->name('job-postings.favorites.destroy');
     Route::get('/business/candidature/{jobApplication}', [BusinessCandidateApplicationController::class, 'show'])->name('business.applications.show');
     Route::post('/business/candidature/{jobApplication}/note', [JobApplicationNoteController::class, 'store'])->name('business.applications.notes.store');
     Route::post('/business/candidature/{jobApplication}/colloqui', [InterviewController::class, 'store'])->name('business.applications.interviews.store');
