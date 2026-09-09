@@ -313,4 +313,83 @@ class InterviewController extends Controller
             ->with('status', $data['decision'] === Interview::STATUS_ACCEPTED ? 'Colloquio confermato.' : 'Slot rifiutato. Il professionista può sceglierne un altro.')
             ->with('status_variant', 'success');
     }
+
+    public function cancel(Request $request, Interview $interview): RedirectResponse
+    {
+        abort_unless(in_array($request->user()->role, ['business', 'professional'], true), 403);
+
+        $interview->loadMissing('jobApplication.jobPosting.owner', 'jobApplication.professional');
+
+        $application = $interview->jobApplication;
+        $posting = $application?->jobPosting;
+        abort_unless($application !== null && $posting !== null, 404);
+
+        $isBusinessOwner = $request->user()->role === 'business'
+            && (int) $posting->user_id === (int) $request->user()->id;
+        $isProfessionalOwner = $request->user()->role === 'professional'
+            && (int) $application->user_id === (int) $request->user()->id;
+
+        abort_unless($isBusinessOwner || $isProfessionalOwner, 403);
+
+        if ($interview->status !== Interview::STATUS_ACCEPTED) {
+            return back()->withErrors(['interview' => 'Puoi annullare solo un colloquio già confermato.']);
+        }
+
+        $data = $request->validate([
+            'cancellation_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $reason = trim((string) ($data['cancellation_reason'] ?? ''));
+
+        DB::transaction(function () use ($interview, $request, $reason): void {
+            $interview->update(['status' => Interview::STATUS_CANCELLED]);
+
+            JobApplicationEvent::create([
+                'job_application_id' => $interview->job_application_id,
+                'actor_user_id' => $request->user()->id,
+                'type' => 'interview_cancelled',
+                'label' => 'Colloquio annullato da '.($request->user()->role === 'business' ? 'struttura' : 'professionista'),
+                'metadata' => [
+                    'interview_id' => $interview->id,
+                    'cancelled_by_role' => $request->user()->role,
+                    'reason' => $reason !== '' ? $reason : null,
+                ],
+            ]);
+        });
+
+        $details = array_values(array_filter([
+            'Annuncio: '.$posting->title,
+            'Data: '.$interview->scheduled_at->format('d/m/Y H:i'),
+            $reason !== '' ? 'Motivo: '.$reason : null,
+        ]));
+
+        $professional = $application->professional;
+        $business = $posting->owner;
+
+        if ($professional?->email) {
+            Mail::to($professional->email)->send(new TransactionalActionMail(
+                mailSubject: 'Colloquio annullato: '.$posting->title,
+                heading: 'Il colloquio è stato annullato',
+                intro: 'Puoi tornare nella sezione colloqui per verificare lo stato e riprogrammare un nuovo appuntamento.',
+                actionLabel: 'Gestisci colloqui',
+                actionUrl: route('interviews.index'),
+                details: $details,
+            ));
+        }
+
+        if ($business?->email) {
+            Mail::to($business->email)->send(new TransactionalActionMail(
+                mailSubject: 'Colloquio annullato: '.$posting->title,
+                heading: 'Il colloquio è stato annullato',
+                intro: 'Puoi tornare nella sezione colloqui per verificare lo stato e riprogrammare un nuovo appuntamento.',
+                actionLabel: 'Gestisci colloqui',
+                actionUrl: route('interviews.index'),
+                details: $details,
+            ));
+        }
+
+        return back()
+            ->with('status', 'Colloquio annullato. Entrambe le parti sono state notificate.')
+            ->with('status_variant', 'success');
+    }
 }
