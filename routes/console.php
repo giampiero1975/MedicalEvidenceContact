@@ -20,3 +20,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('interviews:send-reminders')->everyMinute()->withoutOverlapping();
+Schedule::command('job-postings:send-expiry-reminders')->dailyAt('08:00')->withoutOverlapping();
