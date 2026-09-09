@@ -11,13 +11,32 @@
             </a>
         </x-ui.page-header>
 
+        <x-ui.card>
+            <form method="GET" action="{{ route('admin.job-postings.index') }}" class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <x-ui.select name="status" label="Stato">
+                    <option value="">Tutti</option>
+                    <option value="active" @selected(($filters['status'] ?? '') === 'active')>Attivo</option>
+                    <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Scaduto</option>
+                </x-ui.select>
+                <x-ui.input type="date" name="published_from" label="Pubblicati dal" :value="$filters['published_from'] ?? ''" />
+                <x-ui.input type="date" name="published_to" label="Pubblicati al" :value="$filters['published_to'] ?? ''" />
+                <x-ui.input type="date" name="expires_from" label="Scadenza dal" :value="$filters['expires_from'] ?? ''" />
+                <x-ui.input type="date" name="expires_to" label="Scadenza al" :value="$filters['expires_to'] ?? ''" />
+
+                <div class="flex items-end gap-2 md:col-span-2 xl:col-span-5">
+                    <x-ui.button type="submit">Filtra</x-ui.button>
+                    <a href="{{ route('admin.job-postings.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Azzera</a>
+                </div>
+            </form>
+        </x-ui.card>
+
         @if ($jobPostings->isEmpty())
             <x-ui.empty-state
                 title="Nessun annuncio"
-                description="Non sono ancora presenti annunci sulla piattaforma."
+                description="Nessun annuncio corrisponde ai filtri selezionati."
             >
                 <a href="{{ route('admin.job-postings.create') }}" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
-                    Crea il primo annuncio
+                    Crea annuncio
                 </a>
             </x-ui.empty-state>
         @else
@@ -29,6 +48,7 @@
                                 <th class="px-5 py-3">Annuncio</th>
                                 <th class="px-5 py-3">Business</th>
                                 <th class="px-5 py-3">Stato</th>
+                                <th class="px-5 py-3">Pubblicato</th>
                                 <th class="px-5 py-3">Scadenza</th>
                                 <th class="px-5 py-3 text-right">Azioni</th>
                             </tr>
@@ -41,12 +61,15 @@
                                         <p class="mt-1 text-xs text-slate-500">{{ $jobPosting->positions }} {{ $jobPosting->positions === 1 ? 'posizione' : 'posizioni' }}</p>
                                     </td>
                                     <td class="px-5 py-4 text-slate-600">
-                                        {{ $jobPosting->owner?->businessProfile?->company_name ?: $jobPosting->owner?->name ?: 'Non assegnato' }}
+                                        {{ $jobPosting->businessProfile?->company_name ?: $jobPosting->owner?->businessProfile?->company_name ?: $jobPosting->owner?->name ?: 'Non assegnato' }}
                                     </td>
                                     <td class="px-5 py-4">
                                         <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'neutral'">
                                             {{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}
                                         </x-ui.badge>
+                                    </td>
+                                    <td class="px-5 py-4 text-slate-600">
+                                        {{ optional($jobPosting->created_at)->format('d/m/Y') ?: '—' }}
                                     </td>
                                     <td class="px-5 py-4 text-slate-600">
                                         {{ optional($jobPosting->expires_at)->format('d/m/Y') ?: '—' }}
