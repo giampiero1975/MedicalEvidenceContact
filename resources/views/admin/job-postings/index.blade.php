@@ -11,6 +11,10 @@
             </a>
         </x-ui.page-header>
 
+        @if (session('status'))
+            <x-ui.alert variant="success">{{ session('status') }}</x-ui.alert>
+        @endif
+
         <x-ui.card>
             <form method="GET" action="{{ route('admin.job-postings.index') }}" class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                 <x-ui.select name="status" label="Stato">
@@ -48,6 +52,7 @@
                                 <th class="px-5 py-3">Annuncio</th>
                                 <th class="px-5 py-3">Business</th>
                                 <th class="px-5 py-3">Stato</th>
+                                <th class="px-5 py-3">Pubblicazione</th>
                                 <th class="px-5 py-3">Pubblicato</th>
                                 <th class="px-5 py-3">Scadenza</th>
                                 <th class="px-5 py-3 text-right">Azioni</th>
@@ -68,6 +73,13 @@
                                             {{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}
                                         </x-ui.badge>
                                     </td>
+                                    <td class="px-5 py-4">
+                                        @if ($jobPosting->suspended_at)
+                                            <x-ui.badge variant="danger">Sospesa</x-ui.badge>
+                                        @else
+                                            <x-ui.badge variant="success">Visibile</x-ui.badge>
+                                        @endif
+                                    </td>
                                     <td class="px-5 py-4 text-slate-600">
                                         {{ optional($jobPosting->created_at)->format('d/m/Y') ?: '—' }}
                                     </td>
@@ -75,10 +87,17 @@
                                         {{ optional($jobPosting->expires_at)->format('d/m/Y') ?: '—' }}
                                     </td>
                                     <td class="px-5 py-4">
-                                        <div class="flex items-center justify-end gap-3">
+                                        <div class="flex flex-wrap items-center justify-end gap-3">
                                             <a href="{{ route('admin.job-postings.edit', $jobPosting) }}" class="text-sm font-semibold text-teal-700 hover:text-teal-900">
                                                 Modifica
                                             </a>
+                                            <form method="POST" action="{{ route('admin.job-postings.suspension', $jobPosting) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-sm font-semibold {{ $jobPosting->suspended_at ? 'text-emerald-700 hover:text-emerald-900' : 'text-amber-700 hover:text-amber-900' }}">
+                                                    {{ $jobPosting->suspended_at ? 'Riattiva' : 'Sospendi' }}
+                                                </button>
+                                            </form>
                                             <form method="POST" action="{{ route('admin.job-postings.destroy', $jobPosting) }}" onsubmit="return confirm('Eliminare definitivamente questo annuncio?');">
                                                 @csrf
                                                 @method('DELETE')
