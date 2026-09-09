@@ -34,6 +34,7 @@ class Interview extends Model
         'status',
         'contact_sharing_consent',
         'responded_at',
+        'reminder_sent_at',
     ];
 
     protected function casts(): array
@@ -43,6 +44,7 @@ class Interview extends Model
             'duration_minutes' => 'integer',
             'contact_sharing_consent' => 'boolean',
             'responded_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
         ];
     }
 
