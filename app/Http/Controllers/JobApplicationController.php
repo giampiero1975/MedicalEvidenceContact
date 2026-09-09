@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Mail\TransactionalActionMail;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
+use App\Services\TransactionalNotificationDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
@@ -53,31 +53,40 @@ class JobApplicationController extends Controller
 
         if ($created && $application !== null) {
             $jobPosting->loadMissing('owner');
+            $dispatcher = app(TransactionalNotificationDispatcher::class);
 
-            Mail::to($request->user()->email)->send(new TransactionalActionMail(
-                mailSubject: 'Candidatura inviata: '.$jobPosting->title,
-                heading: 'Candidatura inviata',
-                intro: 'La tua candidatura è stata registrata correttamente.',
-                actionLabel: 'Vedi le mie candidature',
-                actionUrl: route('professional.applications.index'),
-                details: [
-                    'Annuncio: '.$jobPosting->title,
-                    'Data invio: '.now()->format('d/m/Y H:i'),
-                ],
-            ));
-
-            if ($jobPosting->owner?->email) {
-                Mail::to($jobPosting->owner->email)->send(new TransactionalActionMail(
-                    mailSubject: 'Nuova candidatura: '.$jobPosting->title,
-                    heading: 'Hai ricevuto una nuova candidatura',
-                    intro: 'Un professionista si è candidato al tuo annuncio.',
-                    actionLabel: 'Apri la candidatura',
-                    actionUrl: route('business.applications.show', $application),
+            $dispatcher->dispatch(
+                $request->user(),
+                'applications',
+                new TransactionalActionMail(
+                    mailSubject: 'Candidatura inviata: '.$jobPosting->title,
+                    heading: 'Candidatura inviata',
+                    intro: 'La tua candidatura è stata registrata correttamente.',
+                    actionLabel: 'Vedi le mie candidature',
+                    actionUrl: route('professional.applications.index'),
                     details: [
                         'Annuncio: '.$jobPosting->title,
-                        'Candidato: '.$request->user()->name,
+                        'Data invio: '.now()->format('d/m/Y H:i'),
                     ],
-                ));
+                )
+            );
+
+            if ($jobPosting->owner) {
+                $dispatcher->dispatch(
+                    $jobPosting->owner,
+                    'applications',
+                    new TransactionalActionMail(
+                        mailSubject: 'Nuova candidatura: '.$jobPosting->title,
+                        heading: 'Hai ricevuto una nuova candidatura',
+                        intro: 'Un professionista si è candidato al tuo annuncio.',
+                        actionLabel: 'Apri la candidatura',
+                        actionUrl: route('business.applications.show', $application),
+                        details: [
+                            'Annuncio: '.$jobPosting->title,
+                            'Candidato: '.$request->user()->name,
+                        ],
+                    )
+                );
             }
         }
 
@@ -115,18 +124,22 @@ class JobApplicationController extends Controller
 
         if ($oldStatus !== JobApplication::STATUS_REJECTED
             && $data['status'] === JobApplication::STATUS_REJECTED
-            && $jobApplication->professional?->email) {
-            Mail::to($jobApplication->professional->email)->send(new TransactionalActionMail(
-                mailSubject: 'Aggiornamento candidatura: '.$jobApplication->jobPosting->title,
-                heading: 'Aggiornamento sulla tua candidatura',
-                intro: 'La struttura ha concluso negativamente la valutazione della tua candidatura.',
-                actionLabel: 'Vedi le mie candidature',
-                actionUrl: route('professional.applications.index'),
-                details: [
-                    'Annuncio: '.$jobApplication->jobPosting->title,
-                    'Stato: '.JobApplication::statusOptions()[JobApplication::STATUS_REJECTED],
-                ],
-            ));
+            && $jobApplication->professional) {
+            app(TransactionalNotificationDispatcher::class)->dispatch(
+                $jobApplication->professional,
+                'applications',
+                new TransactionalActionMail(
+                    mailSubject: 'Aggiornamento candidatura: '.$jobApplication->jobPosting->title,
+                    heading: 'Aggiornamento sulla tua candidatura',
+                    intro: 'La struttura ha concluso negativamente la valutazione della tua candidatura.',
+                    actionLabel: 'Vedi le mie candidature',
+                    actionUrl: route('professional.applications.index'),
+                    details: [
+                        'Annuncio: '.$jobApplication->jobPosting->title,
+                        'Stato: '.JobApplication::statusOptions()[JobApplication::STATUS_REJECTED],
+                    ],
+                )
+            );
         }
 
         return back()->with('status', 'Stato della candidatura aggiornato.')->with('status_variant', 'success');
