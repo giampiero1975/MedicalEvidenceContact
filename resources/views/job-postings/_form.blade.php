@@ -7,6 +7,7 @@
         ->mapWithKeys(fn ($location) => [(string) $location->id => $location->formattedAddress()]);
     $departmentLocations = ($businessDepartments ?? collect())
         ->mapWithKeys(fn ($department) => [(string) $department->id => (string) $department->business_location_id]);
+    $minimumExpiryDate = today()->addDays(7)->toDateString();
 @endphp
 
 <div
@@ -195,13 +196,17 @@
             @enderror
         </div>
 
-        <x-ui.input
-            name="expires_at"
-            type="date"
-            label="Data scadenza"
-            :value="isset($jobPosting) && $jobPosting->expires_at ? $jobPosting->expires_at->format('Y-m-d') : ''"
-            required
-        />
+        <div>
+            <x-ui.input
+                name="expires_at"
+                type="date"
+                label="Data scadenza"
+                :value="isset($jobPosting) && $jobPosting->expires_at ? $jobPosting->expires_at->format('Y-m-d') : ''"
+                :min="$minimumExpiryDate"
+                required
+            />
+            <p class="mt-1 text-xs text-slate-500">La scadenza deve essere almeno 7 giorni da oggi.</p>
+        </div>
     </div>
 
     @if (isset($jobPosting) && $jobPosting->exists)
