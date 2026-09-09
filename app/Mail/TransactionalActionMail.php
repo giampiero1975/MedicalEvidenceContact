@@ -20,7 +20,9 @@ class TransactionalActionMail extends Mailable
         public readonly string $intro,
         public readonly string $actionLabel,
         public readonly string $actionUrl,
-        public readonly array $details = []
+        public readonly array $details = [],
+        public readonly ?string $secondaryActionLabel = null,
+        public readonly ?string $secondaryActionUrl = null,
     ) {
     }
 
