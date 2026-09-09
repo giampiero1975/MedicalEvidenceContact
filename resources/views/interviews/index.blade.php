@@ -41,11 +41,24 @@
                                         <form method="POST" action="{{ route('business.interviews.confirm', $interview) }}">@csrf @method('PATCH')<input type="hidden" name="decision" value="declined"><x-ui.button type="submit" size="sm" variant="danger" class="w-full">Rifiuta</x-ui.button></form>
                                     </div>
                                 @elseif ($interview->status === \App\Models\Interview::STATUS_ACCEPTED)
-                                    <form method="POST" action="{{ route('interviews.cancel', $interview) }}" class="mt-3 space-y-2" onsubmit="return confirm('Annullare questo colloquio confermato?');">
+                                    <form method="POST" action="{{ route('interviews.reschedule', $interview) }}" class="mt-3 space-y-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="text" name="reschedule_reason" maxlength="500" placeholder="Motivo riprogrammazione (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
+                                        <x-ui.button type="submit" size="sm" variant="secondary" class="w-full">Riprogramma colloquio</x-ui.button>
+                                    </form>
+                                    <form method="POST" action="{{ route('interviews.cancel', $interview) }}" class="mt-2 space-y-2" onsubmit="return confirm('Annullare questo colloquio confermato?');">
                                         @csrf
                                         @method('PATCH')
                                         <input type="text" name="cancellation_reason" maxlength="500" placeholder="Motivo annullamento (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
                                         <x-ui.button type="submit" size="sm" variant="danger" class="w-full">Annulla colloquio</x-ui.button>
+                                    </form>
+                                @elseif ($interview->status === \App\Models\Interview::STATUS_CANCELLED)
+                                    <form method="POST" action="{{ route('interviews.reschedule', $interview) }}" class="mt-3 space-y-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="text" name="reschedule_reason" maxlength="500" placeholder="Motivo riprogrammazione (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
+                                        <x-ui.button type="submit" size="sm" variant="secondary" class="w-full">Riprogramma colloquio</x-ui.button>
                                     </form>
                                 @endif
                             </div>
@@ -76,11 +89,25 @@
                                     <p class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">Hai selezionato questo slot. La struttura deve ancora confermare il colloquio.</p>
                                 @elseif ($interview->status === \App\Models\Interview::STATUS_ACCEPTED)
                                     <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"><p class="text-sm font-semibold text-emerald-900">Colloquio confermato</p>@if ($interview->unlocksContacts()) @php($business = $interview->jobApplication->jobPosting->owner) <p class="mt-2 text-sm text-emerald-900">Contatti sbloccati: {{ $business->email }}@if($business->phone) · {{ $business->phone }}@endif</p> @endif</div>
-                                    <form method="POST" action="{{ route('interviews.cancel', $interview) }}" class="mt-3 space-y-2" onsubmit="return confirm('Annullare questo colloquio confermato?');">
+                                    <form method="POST" action="{{ route('interviews.reschedule', $interview) }}" class="mt-3 space-y-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="text" name="reschedule_reason" maxlength="500" placeholder="Motivo riprogrammazione (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
+                                        <x-ui.button type="submit" variant="secondary" class="w-full">Riprogramma colloquio</x-ui.button>
+                                    </form>
+                                    <form method="POST" action="{{ route('interviews.cancel', $interview) }}" class="mt-2 space-y-2" onsubmit="return confirm('Annullare questo colloquio confermato?');">
                                         @csrf
                                         @method('PATCH')
                                         <input type="text" name="cancellation_reason" maxlength="500" placeholder="Motivo annullamento (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
                                         <x-ui.button type="submit" variant="danger" class="w-full">Annulla colloquio</x-ui.button>
+                                    </form>
+                                @elseif ($interview->status === \App\Models\Interview::STATUS_CANCELLED)
+                                    <p class="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Il colloquio è stato annullato. Puoi richiedere una nuova pianificazione.</p>
+                                    <form method="POST" action="{{ route('interviews.reschedule', $interview) }}" class="mt-3 space-y-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="text" name="reschedule_reason" maxlength="500" placeholder="Motivo riprogrammazione (facoltativo)" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600">
+                                        <x-ui.button type="submit" variant="secondary" class="w-full">Riprogramma colloquio</x-ui.button>
                                     </form>
                                 @elseif ($interview->status === \App\Models\Interview::STATUS_DECLINED)
                                     <p class="mt-4 text-sm text-slate-600">Questo slot non è stato confermato dalla struttura. Puoi scegliere un altro slot disponibile.</p>
