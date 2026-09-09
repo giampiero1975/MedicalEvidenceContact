@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\JobPosting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -53,18 +54,21 @@ class JobPostingExpiryValidationTest extends TestCase
     public function test_business_can_publish_job_posting_expiring_exactly_in_seven_days(): void
     {
         $business = $this->business();
+        $expectedExpiryDate = today()->addDays(7)->toDateString();
 
         $response = $this->actingAs($business)->post(
             route('job-postings.store'),
-            $this->payload(today()->addDays(7)->toDateString())
+            $this->payload($expectedExpiryDate)
         );
 
         $response->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('job_postings', [
-            'user_id' => $business->id,
-            'expires_at' => today()->addDays(7)->toDateString(),
-            'status' => 'active',
-        ]);
+
+        $jobPosting = JobPosting::query()
+            ->where('user_id', $business->id)
+            ->firstOrFail();
+
+        $this->assertSame($expectedExpiryDate, $jobPosting->expires_at->toDateString());
+        $this->assertSame('active', $jobPosting->status);
     }
 
     public function test_job_posting_form_exposes_seven_day_minimum_expiry_date(): void
