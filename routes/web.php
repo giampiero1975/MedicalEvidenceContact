@@ -100,6 +100,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::delete('/business/reparti/{department}', [BusinessDepartmentController::class, 'destroy'])->name('business.departments.destroy');
     Route::get('/business/point-of-contact', [BusinessPointOfContactController::class, 'index'])->name('business-points-of-contact.index');
     Route::post('/business/point-of-contact', [BusinessPointOfContactController::class, 'store'])->name('business-points-of-contact.store');
+    Route::put('/business/point-of-contact/{pointOfContact}', [BusinessPointOfContactController::class, 'update'])->name('business-points-of-contact.update');
+    Route::delete('/business/point-of-contact/{pointOfContact}', [BusinessPointOfContactController::class, 'destroy'])->name('business-points-of-contact.destroy');
+    Route::patch('/business/point-of-contact/{pointOfContact}/principale', [BusinessPointOfContactController::class, 'designatePrimary'])->name('business-points-of-contact.primary');
 
     Route::get('/professionista/candidature', ProfessionalApplicationsController::class)->name('professional.applications.index');
     Route::get('/professionista/esperienze', ProfessionalExperienceController::class)->name('professional.experiences.index');
