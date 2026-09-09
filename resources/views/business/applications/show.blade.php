@@ -185,6 +185,22 @@
 
             <aside class="space-y-6 xl:sticky xl:top-6 xl:self-start">
                 <x-ui.card>
+                    <h3 class="text-base font-semibold text-slate-950">Azioni candidatura</h3>
+                    <p class="mt-1 text-sm text-slate-500">Avvia il colloquio oppure rifiuta la candidatura.</p>
+                    <div class="mt-4 grid gap-2">
+                        <a href="#fissa-colloquio" class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">Fissa colloquio</a>
+                        @if ($application->status !== \App\Models\JobApplication::STATUS_REJECTED)
+                            <form method="POST" action="{{ route('job-applications.status.update', $application) }}" onsubmit="return confirm('Rifiutare questa candidatura?');">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="{{ \App\Models\JobApplication::STATUS_REJECTED }}">
+                                <x-ui.button type="submit" variant="danger" class="w-full">Rifiuta candidatura</x-ui.button>
+                            </form>
+                        @endif
+                    </div>
+                </x-ui.card>
+
+                <x-ui.card>
                     <h3 class="text-base font-semibold text-slate-950">Workflow HR</h3>
                     <p class="mt-1 text-sm text-slate-500">Aggiorna la posizione del candidato nella pipeline.</p>
                     <form method="POST" action="{{ route('job-applications.status.update', $application) }}" class="mt-4 space-y-4">
@@ -199,41 +215,43 @@
                     </form>
                 </x-ui.card>
 
-                <x-ui.card>
-                    <div class="flex items-center justify-between gap-3">
-                        <div><h3 class="text-base font-semibold text-slate-950">Colloqui</h3><p class="mt-1 text-sm text-slate-500">Pianificazione e risposte.</p></div>
-                        <x-ui.badge variant="secondary">{{ $application->interviews->count() }}</x-ui.badge>
-                    </div>
-                    @if ($nextInterview)
-                        <div class="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-4">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-teal-800">Prossimo colloquio</p>
-                            <p class="mt-2 font-semibold text-slate-950">{{ $nextInterview->scheduled_at->format('d/m/Y H:i') }}</p>
-                            <p class="mt-1 text-sm text-slate-600">{{ $nextInterview->modeLabel() }} · {{ $nextInterview->duration_minutes }} minuti</p>
+                <div id="fissa-colloquio">
+                    <x-ui.card>
+                        <div class="flex items-center justify-between gap-3">
+                            <div><h3 class="text-base font-semibold text-slate-950">Colloqui</h3><p class="mt-1 text-sm text-slate-500">Pianificazione e risposte.</p></div>
+                            <x-ui.badge variant="secondary">{{ $application->interviews->count() }}</x-ui.badge>
                         </div>
-                    @endif
-                    <div class="mt-4 divide-y divide-slate-200">
-                        @forelse ($application->interviews as $interview)
-                            <div class="py-3 first:pt-0">
-                                <div class="flex items-center justify-between gap-3"><p class="font-semibold text-slate-900">{{ $interview->scheduled_at->format('d/m/Y H:i') }}</p><x-ui.badge variant="secondary">{{ $interview->statusLabel() }}</x-ui.badge></div>
-                                <p class="mt-1 text-sm text-slate-600">{{ $interview->modeLabel() }} · {{ $interview->duration_minutes }} minuti</p>
-                                @if($interview->location)<p class="mt-1 break-all text-xs text-slate-500">{{ $interview->location }}</p>@endif
+                        @if ($nextInterview)
+                            <div class="mt-4 rounded-xl border border-teal-200 bg-teal-50 p-4">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-teal-800">Prossimo colloquio</p>
+                                <p class="mt-2 font-semibold text-slate-950">{{ $nextInterview->scheduled_at->format('d/m/Y H:i') }}</p>
+                                <p class="mt-1 text-sm text-slate-600">{{ $nextInterview->modeLabel() }} · {{ $nextInterview->duration_minutes }} minuti</p>
                             </div>
-                        @empty
-                            <p class="text-sm text-slate-500">Nessun colloquio programmato.</p>
-                        @endforelse
-                    </div>
-                    <form method="POST" action="{{ route('business.applications.interviews.store', $application) }}" class="mt-4 space-y-3 border-t border-slate-200 pt-4">
-                        @csrf
-                        <x-ui.input name="scheduled_at" type="datetime-local" label="Data e ora" required />
-                        <div class="grid grid-cols-2 gap-3">
-                            <x-ui.select name="duration_minutes" label="Durata"><option value="30">30 minuti</option><option value="45">45 minuti</option><option value="60">60 minuti</option><option value="90">90 minuti</option></x-ui.select>
-                            <x-ui.select name="mode" label="Modalità"><option value="in_person">In presenza</option><option value="video">Videochiamata</option><option value="phone">Telefonico</option></x-ui.select>
+                        @endif
+                        <div class="mt-4 divide-y divide-slate-200">
+                            @forelse ($application->interviews as $interview)
+                                <div class="py-3 first:pt-0">
+                                    <div class="flex items-center justify-between gap-3"><p class="font-semibold text-slate-900">{{ $interview->scheduled_at->format('d/m/Y H:i') }}</p><x-ui.badge variant="secondary">{{ $interview->statusLabel() }}</x-ui.badge></div>
+                                    <p class="mt-1 text-sm text-slate-600">{{ $interview->modeLabel() }} · {{ $interview->duration_minutes }} minuti</p>
+                                    @if($interview->location)<p class="mt-1 break-all text-xs text-slate-500">{{ $interview->location }}</p>@endif
+                                </div>
+                            @empty
+                                <p class="text-sm text-slate-500">Nessun colloquio programmato.</p>
+                            @endforelse
                         </div>
-                        <x-ui.input name="location" label="Sede o link" placeholder="Indirizzo, Teams, Meet..." />
-                        <textarea name="notes" rows="2" maxlength="2000" placeholder="Note per il colloquio" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
-                        <x-ui.button type="submit" size="sm" class="w-full">Proponi slot</x-ui.button>
-                    </form>
-                </x-ui.card>
+                        <form method="POST" action="{{ route('business.applications.interviews.store', $application) }}" class="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                            @csrf
+                            <x-ui.input name="scheduled_at" type="datetime-local" label="Data e ora" required />
+                            <div class="grid grid-cols-2 gap-3">
+                                <x-ui.select name="duration_minutes" label="Durata"><option value="30">30 minuti</option><option value="45">45 minuti</option><option value="60">60 minuti</option><option value="90">90 minuti</option></x-ui.select>
+                                <x-ui.select name="mode" label="Modalità"><option value="in_person">In presenza</option><option value="video">Videochiamata</option><option value="phone">Telefonico</option></x-ui.select>
+                            </div>
+                            <x-ui.input name="location" label="Sede o link" placeholder="Indirizzo, Teams, Meet..." />
+                            <textarea name="notes" rows="2" maxlength="2000" placeholder="Note per il colloquio" class="block w-full rounded-xl border-slate-300 text-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
+                            <x-ui.button type="submit" size="sm" class="w-full">Proponi slot</x-ui.button>
+                        </form>
+                    </x-ui.card>
+                </div>
 
                 <x-ui.card>
                     <h3 class="text-base font-semibold text-slate-950">Note interne HR</h3>
