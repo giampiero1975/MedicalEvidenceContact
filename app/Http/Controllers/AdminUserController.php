@@ -152,6 +152,20 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.edit', $user)->with('status', 'Utente aggiornato.');
     }
 
+    public function toggleSuspension(Request $request, User $user): RedirectResponse
+    {
+        $this->authorizeAdmin($request);
+        abort_unless(in_array($user->role, ['professional', 'business'], true), 422, 'Solo gli account Professional e Business possono essere sospesi.');
+
+        $user->update([
+            'suspended_at' => $user->suspended_at ? null : now(),
+        ]);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('status', $user->suspended_at ? 'Account sospeso.' : 'Account riattivato.');
+    }
+
     public function destroy(Request $request, User $user): RedirectResponse
     {
         $this->authorizeAdmin($request);
