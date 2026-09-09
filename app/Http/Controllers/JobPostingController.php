@@ -38,7 +38,14 @@ class JobPostingController extends Controller
                 });
             })
             ->when($filters['location'] ?? null, fn ($query, string $location) => $query->where('workplace_address', 'like', "%{$location}%"))
-            ->when($filters['contract_type'] ?? null, fn ($query, string $contractType) => $query->where('contract_type', $contractType))
+            ->when(
+                $user->role === 'professional' && ! empty($filters['contract_types'] ?? []),
+                fn ($query) => $query->whereIn('contract_type', $filters['contract_types'])
+            )
+            ->when(
+                $user->role === 'business' && ($filters['contract_type'] ?? null),
+                fn ($query, string $contractType) => $query->where('contract_type', $contractType)
+            )
             ->when($filters['company_category'] ?? null, function ($query, string $companyCategory) {
                 $query->whereHas('businessProfile', fn ($profile) => $profile->where('company_type', 'like', "%{$companyCategory}%"));
             })
@@ -297,6 +304,8 @@ class JobPostingController extends Controller
             'keyword' => ['nullable', 'string', 'max:120'],
             'location' => ['nullable', 'string', 'max:120'],
             'contract_type' => ['nullable', 'string', 'max:120'],
+            'contract_types' => ['nullable', 'array'],
+            'contract_types.*' => ['string', 'max:120', Rule::in($this->contractTypes())],
             'company_category' => ['nullable', 'string', 'max:120'],
             'professional_category' => ['nullable', 'string', 'max:120'],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
