@@ -32,7 +32,7 @@
                     <h3 class="text-base font-semibold text-slate-950">Slot e colloqui</h3>
                     <div class="mt-4 divide-y divide-slate-200">
                         @forelse ($interviews as $interview)
-                            <div class="py-3 first:pt-0 last:pb-0">
+                            <div id="interview-{{ $interview->id }}" class="py-3 first:pt-0 last:pb-0 scroll-mt-6">
                                 <a href="{{ route('business.applications.show', $interview->jobApplication) }}" class="block"><div class="flex items-center justify-between gap-3"><p class="font-semibold text-slate-900">{{ $interview->jobApplication->professional->name }}</p><x-ui.badge variant="secondary">{{ $interview->statusLabel() }}</x-ui.badge></div><p class="mt-1 text-sm text-slate-600">{{ $interview->scheduled_at->format('d/m/Y H:i') }} · {{ $interview->modeLabel() }}</p></a>
                                 @if ($interview->status === \App\Models\Interview::STATUS_REQUESTED)
                                     <p class="mt-2 text-xs font-semibold text-amber-700">Richiesta da confermare</p>
@@ -78,7 +78,7 @@
                     <p class="mt-1 text-sm text-slate-500">Slot disponibili e colloqui.</p>
                     <div class="mt-4 space-y-4">
                         @forelse ($interviews as $interview)
-                            <article class="rounded-xl border border-slate-200 p-4">
+                            <article id="interview-{{ $interview->id }}" class="rounded-xl border border-slate-200 p-4 scroll-mt-6">
                                 <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-semibold text-slate-950">{{ $interview->jobApplication->jobPosting->title }}</p><p class="mt-1 text-sm text-slate-600">{{ $interview->scheduled_at->format('d/m/Y H:i') }} · {{ $interview->modeLabel() }}</p>@if($interview->location)<p class="mt-1 text-xs text-slate-500">{{ $interview->location }}</p>@endif</div><x-ui.badge variant="info">{{ $interview->statusLabel() }}</x-ui.badge></div>
                                 @if ($interview->isAvailableProposal())
                                     <form method="POST" action="{{ route('professional.interviews.respond', $interview) }}" class="mt-4 space-y-3">@csrf @method('PATCH')
