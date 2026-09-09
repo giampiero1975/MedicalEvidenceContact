@@ -18,16 +18,13 @@ class SendInterviewReminders extends Command
     {
         $now = now();
         $deadline = $now->copy()->addHours(5);
+        $sentCount = 0;
 
         $interviews = Interview::query()
             ->with(['jobApplication.jobPosting.owner', 'jobApplication.professional'])
             ->where('status', Interview::STATUS_ACCEPTED)
             ->where('scheduled_at', '>', $now)
             ->where('scheduled_at', '<=', $deadline)
-            ->whereDoesntHave('jobApplication.events', function ($query) {
-                $query->where('type', 'interview_reminder_sent')
-                    ->whereColumn('metadata->interview_id', 'interviews.id');
-            })
             ->orderBy('scheduled_at')
             ->get();
 
@@ -38,6 +35,16 @@ class SendInterviewReminders extends Command
             $business = $posting?->owner;
 
             if ($application === null || $posting === null) {
+                continue;
+            }
+
+            $alreadySent = JobApplicationEvent::query()
+                ->where('job_application_id', $application->id)
+                ->where('type', 'interview_reminder_sent')
+                ->get()
+                ->contains(fn (JobApplicationEvent $event) => (int) ($event->metadata['interview_id'] ?? 0) === (int) $interview->id);
+
+            if ($alreadySent) {
                 continue;
             }
 
@@ -88,9 +95,11 @@ class SendInterviewReminders extends Command
                     'scheduled_at' => $interview->scheduled_at->toIso8601String(),
                 ],
             ]);
+
+            $sentCount++;
         }
 
-        $this->info('Promemoria colloqui inviati: '.$interviews->count());
+        $this->info('Promemoria colloqui inviati: '.$sentCount);
 
         return self::SUCCESS;
     }
