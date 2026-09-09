@@ -52,7 +52,7 @@ class InterviewCancellationDecisionTest extends TestCase
         $this->actingAs($professional)
             ->get(route('interviews.cancellation.confirmation', $interview))
             ->assertOk()
-            ->assertSeeText("Confermare l'annullamento definitivo?")
+            ->assertSeeText("Confermare l'annullamento definitivo?", false)
             ->assertSeeText('Riprogramma')
             ->assertSeeText('Conferma annullamento definitivo');
     }
