@@ -15,11 +15,10 @@ class BusinessProfileManagementTest extends TestCase
 
     public function test_business_can_update_company_information_address_and_description(): void
     {
-        BusinessType::create([
-            'name' => 'RSA',
-            'is_active' => true,
-            'sort_order' => 10,
-        ]);
+        BusinessType::query()->updateOrCreate(
+            ['name' => 'RSA'],
+            ['is_active' => true, 'sort_order' => 10]
+        );
 
         $business = User::factory()->create(['role' => 'business']);
         $profile = BusinessProfile::create([
@@ -60,11 +59,10 @@ class BusinessProfileManagementTest extends TestCase
 
     public function test_business_profile_rejects_description_over_one_thousand_characters(): void
     {
-        BusinessType::create([
-            'name' => 'RSA',
-            'is_active' => true,
-            'sort_order' => 10,
-        ]);
+        BusinessType::query()->updateOrCreate(
+            ['name' => 'RSA'],
+            ['is_active' => true, 'sort_order' => 10]
+        );
 
         $business = User::factory()->create(['role' => 'business']);
         BusinessProfile::create([
