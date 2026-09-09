@@ -17,6 +17,40 @@
             <x-ui.alert variant="success">{{ session('status') }}</x-ui.alert>
         @endif
 
+        <x-ui.card>
+            <form method="GET" action="{{ route('admin.users.index') }}" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <x-ui.select name="role" label="Tipo account">
+                    <option value="">Tutti</option>
+                    <option value="professional" @selected(($filters['role'] ?? '') === 'professional')>Professional</option>
+                    <option value="business" @selected(($filters['role'] ?? '') === 'business')>Business</option>
+                    <option value="admin" @selected(($filters['role'] ?? '') === 'admin')>Admin</option>
+                </x-ui.select>
+
+                <x-ui.select name="professional_category" label="Categoria professionale">
+                    <option value="">Tutte</option>
+                    @foreach ($professionalCategories as $value => $label)
+                        <option value="{{ $value }}" @selected(($filters['professional_category'] ?? '') === $value)>{{ $label }}</option>
+                    @endforeach
+                </x-ui.select>
+
+                <x-ui.select name="business_type" label="Tipo azienda">
+                    <option value="">Tutti</option>
+                    @foreach ($businessTypes as $businessType)
+                        <option value="{{ $businessType->name }}" @selected(($filters['business_type'] ?? '') === $businessType->name)>{{ $businessType->name }}</option>
+                    @endforeach
+                </x-ui.select>
+
+                <x-ui.input name="location" label="Località" :value="$filters['location'] ?? ''" placeholder="Città o località" />
+                <x-ui.input type="date" name="registered_from" label="Registrati dal" :value="$filters['registered_from'] ?? ''" />
+                <x-ui.input type="date" name="registered_to" label="Registrati al" :value="$filters['registered_to'] ?? ''" />
+
+                <div class="flex items-end gap-2 md:col-span-2">
+                    <x-ui.button type="submit">Filtra</x-ui.button>
+                    <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Azzera</a>
+                </div>
+            </form>
+        </x-ui.card>
+
         <x-ui.card :padding="false">
             @if ($users->count())
                 <div class="overflow-x-auto">
@@ -26,6 +60,7 @@
                                 <th class="px-6 py-3 font-semibold text-slate-700">Nome</th>
                                 <th class="px-6 py-3 font-semibold text-slate-700">Email</th>
                                 <th class="px-6 py-3 font-semibold text-slate-700">Ruolo</th>
+                                <th class="px-6 py-3 font-semibold text-slate-700">Profilo</th>
                                 <th class="px-6 py-3 text-right font-semibold text-slate-700">Azioni</th>
                             </tr>
                         </thead>
@@ -41,7 +76,7 @@
                                 <tr class="transition hover:bg-slate-50/70">
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <div class="font-semibold text-slate-950">{{ $user->name }}</div>
-                                        <div class="mt-0.5 text-xs text-slate-500">ID {{ $user->id }}</div>
+                                        <div class="mt-0.5 text-xs text-slate-500">ID {{ $user->id }} · {{ optional($user->created_at)->format('d/m/Y') }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-slate-600">{{ $user->email }}</td>
                                     <td class="px-6 py-4">
@@ -53,6 +88,17 @@
                                                 default => ucfirst($user->role),
                                             } }}
                                         </x-ui.badge>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-600">
+                                        @if ($user->role === 'professional')
+                                            {{ data_get($professionalCategories, $user->professionalProfession?->profession, 'Categoria non indicata') }}
+                                            <div class="mt-0.5 text-xs text-slate-500">{{ $user->address_city ?: $user->residence ?: 'Località non indicata' }}</div>
+                                        @elseif ($user->role === 'business')
+                                            {{ $user->businessProfile?->company_type ?: 'Tipo non indicato' }}
+                                            <div class="mt-0.5 text-xs text-slate-500">{{ $user->businessProfile?->location ?: 'Località non indicata' }}</div>
+                                        @else
+                                            —
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-end gap-2">
@@ -80,14 +126,8 @@
                 <div class="p-6">
                     <x-ui.empty-state
                         title="Nessun utente"
-                        description="Crea il primo account della piattaforma."
-                    >
-                        <x-slot name="actions">
-                            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800">
-                                Crea utente
-                            </a>
-                        </x-slot>
-                    </x-ui.empty-state>
+                        description="Nessun profilo corrisponde ai filtri selezionati."
+                    />
                 </div>
             @endif
         </x-ui.card>
