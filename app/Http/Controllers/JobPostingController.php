@@ -172,7 +172,10 @@ class JobPostingController extends Controller
 
         abort_unless(
             ($user->role === 'business' && $this->businessCanAccessJobPosting($user, $jobPosting))
-            || ($user->role === 'professional' && $jobPosting->status === 'active' && $jobPosting->expires_at->toDateString() >= now()->toDateString()),
+            || ($user->role === 'professional'
+                && $jobPosting->suspended_at === null
+                && $jobPosting->status === 'active'
+                && $jobPosting->expires_at->toDateString() >= now()->toDateString()),
             403
         );
 
