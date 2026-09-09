@@ -118,6 +118,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(BusinessProfile::class);
     }
 
+    public function businessPointOfContact(): HasOne
+    {
+        return $this->hasOne(BusinessPointOfContact::class);
+    }
+
+    public function businessContextProfile(): ?BusinessProfile
+    {
+        return $this->businessProfile()->first()
+            ?? $this->businessPointOfContact()->with('businessProfile')->first()?->businessProfile;
+    }
+
     public function professionalDocument(): HasOne
     {
         return $this->hasOne(ProfessionalDocument::class);
