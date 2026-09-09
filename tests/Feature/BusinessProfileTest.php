@@ -3,10 +3,14 @@
 namespace Tests\Feature;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Mail\TransactionalActionMail;
 use App\Models\BusinessProfile;
 use App\Models\JobPosting;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class BusinessProfileTest extends TestCase
@@ -15,10 +19,7 @@ class BusinessProfileTest extends TestCase
 
     public function test_business_profile_belongs_to_a_business_user(): void
     {
-        $user = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $user = User::factory()->create(['role' => 'business']);
         $profile = BusinessProfile::create([
             'user_id' => $user->id,
             'company_name' => 'RSA Aurora',
@@ -59,10 +60,7 @@ class BusinessProfileTest extends TestCase
 
     public function test_business_profile_has_job_postings(): void
     {
-        $user = User::factory()->create([
-            'role' => 'business',
-        ]);
-
+        $user = User::factory()->create(['role' => 'business']);
         $profile = BusinessProfile::create([
             'user_id' => $user->id,
             'company_name' => 'Cooperativa Salute',
@@ -119,12 +117,12 @@ class BusinessProfileTest extends TestCase
         $this->assertSame('Titolare', $user->businessProfile->primaryPointOfContact->role);
     }
 
-    public function test_business_user_can_add_point_of_contact_from_internal_area(): void
+    public function test_business_user_can_add_point_of_contact_with_login_credentials(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
+        Mail::fake();
+        Notification::fake();
 
+        $business = User::factory()->create(['role' => 'business']);
         $profile = BusinessProfile::create([
             'user_id' => $business->id,
             'company_name' => 'Farmacia Centrale',
@@ -139,22 +137,34 @@ class BusinessProfileTest extends TestCase
                 'last_name' => 'Neri',
                 'email' => 'laura.neri@example.com',
                 'phone' => '06999888',
+                'role' => 'Responsabile HR',
             ]);
 
         $response->assertRedirect(route('business-points-of-contact.index', absolute: false));
+
+        $pocUser = User::where('email', 'laura.neri@example.com')->firstOrFail();
+        $this->assertSame('business', $pocUser->role);
+
         $this->assertDatabaseHas('business_points_of_contact', [
             'business_profile_id' => $profile->id,
+            'user_id' => $pocUser->id,
             'first_name' => 'Laura',
             'last_name' => 'Neri',
             'email' => 'laura.neri@example.com',
+            'role' => 'Responsabile HR',
         ]);
+
+        Mail::assertSent(TransactionalActionMail::class, function (TransactionalActionMail $mail) use ($pocUser): bool {
+            return $mail->hasTo($pocUser->email)
+                && str_contains($mail->mailSubject, 'Accesso Medical Evidence Contact');
+        });
+
+        Notification::assertSentTo($pocUser, VerifyEmail::class);
     }
 
     public function test_professional_user_cannot_access_business_points_of_contact(): void
     {
-        $professional = User::factory()->create([
-            'role' => 'professional',
-        ]);
+        $professional = User::factory()->create(['role' => 'professional']);
 
         $this->actingAs($professional)
             ->get(route('business-points-of-contact.index'))
