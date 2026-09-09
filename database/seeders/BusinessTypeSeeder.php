@@ -15,6 +15,8 @@ class BusinessTypeSeeder extends Seeder
             'Casa di comunità',
             'Clinica privata',
             'Farmacia',
+            'ASL',
+            'Altro',
         ];
 
         foreach ($types as $index => $name) {
