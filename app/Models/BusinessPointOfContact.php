@@ -14,6 +14,7 @@ class BusinessPointOfContact extends Model
 
     protected $fillable = [
         'business_profile_id',
+        'user_id',
         'first_name',
         'last_name',
         'email',
@@ -24,6 +25,11 @@ class BusinessPointOfContact extends Model
     public function businessProfile(): BelongsTo
     {
         return $this->belongsTo(BusinessProfile::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function fullName(): string
