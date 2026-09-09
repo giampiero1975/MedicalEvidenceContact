@@ -15,8 +15,28 @@ class AdminJobPostingController extends Controller
     {
         $this->authorizeAdmin($request);
 
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(['active', 'expired'])],
+            'published_from' => ['nullable', 'date'],
+            'published_to' => ['nullable', 'date', 'after_or_equal:published_from'],
+            'expires_from' => ['nullable', 'date'],
+            'expires_to' => ['nullable', 'date', 'after_or_equal:expires_from'],
+        ]);
+
+        $jobPostings = JobPosting::query()
+            ->with(['owner', 'businessProfile'])
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['published_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['published_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
+            ->when($filters['expires_from'] ?? null, fn ($query, string $date) => $query->whereDate('expires_at', '>=', $date))
+            ->when($filters['expires_to'] ?? null, fn ($query, string $date) => $query->whereDate('expires_at', '<=', $date))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.job-postings.index', [
-            'jobPostings' => JobPosting::with(['owner', 'businessProfile'])->latest()->paginate(15),
+            'jobPostings' => $jobPostings,
+            'filters' => $filters,
         ]);
     }
 
