@@ -94,7 +94,7 @@ class SendInterviewReminders extends Command
             $sentCount++;
         }
 
-        $this->info('Promemoria colloqui gestiti: '.$sentCount);
+        $this->info('Promemoria colloqui inviati: '.$sentCount);
 
         return self::SUCCESS;
     }
