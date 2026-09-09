@@ -110,14 +110,13 @@ return [
     |
     | By default, Fortify will throttle logins to five requests per minute for
     | every email and IP address combination. However, if you would like to
-    | specify a custom rate limiter to call then you may specify it here.
+    | specify a custom rate limiter to call, you may specify it here.
     |
     */
 
     'limiters' => [
         'login' => 'login',
         'two-factor' => 'two-factor',
-        'passkeys' => 'passkeys',
     ],
 
     /*
@@ -126,7 +125,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify if the routes returning views should be disabled as
-    | you may not need them when building your own application. This may be
+    | you may not need them when building your own application. This is
     | especially true if you're writing a custom single-page application.
     |
     */
@@ -140,7 +139,7 @@ return [
     |
     | These settings configure Fortify's passkey (WebAuthn) support. Passkeys
     | allow users to sign in without needing to remember credentials since
-    | they use public-key cryptography - making them immune to breaches.
+    | they use public key cryptography - making them immune to breaches.
     |
     */
 
@@ -164,7 +163,7 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        // Features::emailVerification(),
+        Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
         Features::twoFactorAuthentication([
