@@ -95,6 +95,19 @@ class AdminJobPostingController extends Controller
             ->with('status', 'Annuncio aggiornato.');
     }
 
+    public function toggleSuspension(Request $request, JobPosting $jobPosting): RedirectResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $jobPosting->update([
+            'suspended_at' => $jobPosting->suspended_at ? null : now(),
+        ]);
+
+        return redirect()
+            ->route('admin.job-postings.index')
+            ->with('status', $jobPosting->suspended_at ? 'Pubblicazione sospesa.' : 'Pubblicazione riattivata.');
+    }
+
     public function destroy(Request $request, JobPosting $jobPosting): RedirectResponse
     {
         $this->authorizeAdmin($request);
