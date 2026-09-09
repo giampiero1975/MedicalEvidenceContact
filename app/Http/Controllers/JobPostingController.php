@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\TransactionalActionMail;
 use App\Models\BusinessDepartment;
 use App\Models\BusinessLocation;
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -170,6 +171,22 @@ class JobPostingController extends Controller
     public function destroy(Request $request, JobPosting $jobPosting): RedirectResponse
     {
         $this->authorizeBusinessOwner($request, $jobPosting);
+
+        $hasActiveApplications = $jobPosting->applications()
+            ->whereNotIn('status', [
+                JobApplication::STATUS_REJECTED,
+                JobApplication::STATUS_WITHDRAWN,
+                JobApplication::STATUS_HIRED,
+            ])
+            ->exists();
+
+        if ($hasActiveApplications) {
+            return redirect()
+                ->route('job-postings.index')
+                ->with('status', 'Impossibile eliminare l’annuncio: sono presenti candidature attive. Chiudilo impostando lo stato su Scaduto.')
+                ->with('status_variant', 'warning');
+        }
+
         $jobPosting->delete();
 
         return redirect()->route('job-postings.index')->with('status', 'Annuncio eliminato.');
