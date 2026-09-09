@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Mail\TransactionalActionMail;
 use App\Models\JobPosting;
+use App\Models\NotificationEvent;
+use App\Models\NotificationPreference;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -72,6 +74,54 @@ class JobPostingExpiryReminderTest extends TestCase
         Artisan::call('job-postings:send-expiry-reminders');
 
         Mail::assertNothingSent();
+    }
+
+    public function test_disabled_job_posting_notifications_suppress_expiry_reminder(): void
+    {
+        Mail::fake();
+
+        $business = User::factory()->create(['role' => 'business']);
+        $posting = $this->posting($business, now()->addDays(7));
+
+        NotificationPreference::create([
+            'user_id' => $business->id,
+            'category' => 'job_postings',
+            'enabled' => false,
+            'frequency' => NotificationPreference::FREQUENCY_IMMEDIATE,
+        ]);
+
+        Artisan::call('job-postings:send-expiry-reminders');
+
+        Mail::assertNothingSent();
+        $this->assertNull($posting->fresh()->expiry_reminder_sent_at);
+        $this->assertDatabaseCount('notification_events', 0);
+    }
+
+    public function test_daily_job_posting_notifications_queue_expiry_reminder_for_digest(): void
+    {
+        Mail::fake();
+
+        $business = User::factory()->create(['role' => 'business']);
+        $posting = $this->posting($business, now()->addDays(7));
+
+        NotificationPreference::create([
+            'user_id' => $business->id,
+            'category' => 'job_postings',
+            'enabled' => true,
+            'frequency' => NotificationPreference::FREQUENCY_DAILY,
+        ]);
+
+        Artisan::call('job-postings:send-expiry-reminders');
+
+        Mail::assertNothingSent();
+        $this->assertNotNull($posting->fresh()->expiry_reminder_sent_at);
+        $this->assertDatabaseHas('notification_events', [
+            'user_id' => $business->id,
+            'category' => 'job_postings',
+            'frequency' => NotificationPreference::FREQUENCY_DAILY,
+            'subject' => 'Annuncio in scadenza tra 7 giorni: '.$posting->title,
+        ]);
+        $this->assertSame(1, NotificationEvent::query()->count());
     }
 
     private function posting(User $business, $expiresAt, string $status = 'active'): JobPosting
