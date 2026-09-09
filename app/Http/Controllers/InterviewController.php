@@ -395,6 +395,53 @@ class InterviewController extends Controller
             ->with('status_variant', 'success');
     }
 
+    public function cancellationConfirmation(Request $request, Interview $interview): View
+    {
+        $this->authorizeInterviewParticipant($request, $interview);
+
+        abort_unless($interview->status === Interview::STATUS_CANCELLED, 404);
+
+        return view('interviews.cancellation-confirmation', [
+            'interview' => $interview,
+            'application' => $interview->jobApplication,
+            'posting' => $interview->jobApplication->jobPosting,
+        ]);
+    }
+
+    public function confirmCancellation(Request $request, Interview $interview): RedirectResponse
+    {
+        $this->authorizeInterviewParticipant($request, $interview);
+
+        if ($interview->status !== Interview::STATUS_CANCELLED) {
+            return back()->withErrors(['interview' => 'Puoi confermare definitivamente solo un colloquio annullato.']);
+        }
+
+        $alreadyConfirmed = JobApplicationEvent::query()
+            ->where('job_application_id', $interview->job_application_id)
+            ->where('actor_user_id', $request->user()->id)
+            ->where('type', 'interview_cancellation_confirmed')
+            ->get()
+            ->contains(fn (JobApplicationEvent $event) => (int) data_get($event->metadata, 'interview_id') === (int) $interview->id);
+
+        if (! $alreadyConfirmed) {
+            JobApplicationEvent::create([
+                'job_application_id' => $interview->job_application_id,
+                'actor_user_id' => $request->user()->id,
+                'type' => 'interview_cancellation_confirmed',
+                'label' => 'Annullamento definitivo confermato da '.($request->user()->role === 'business' ? 'struttura' : 'professionista'),
+                'metadata' => [
+                    'interview_id' => $interview->id,
+                    'confirmed_by_role' => $request->user()->role,
+                ],
+            ]);
+        }
+
+        return redirect()
+            ->route('interviews.index')
+            ->with('status', 'Annullamento definitivo confermato.')
+            ->with('status_variant', 'success');
+    }
+
     public function cancel(Request $request, Interview $interview): RedirectResponse
     {
         abort_unless(in_array($request->user()->role, ['business', 'professional'], true), 403);
@@ -446,15 +493,19 @@ class InterviewController extends Controller
 
         $professional = $application->professional;
         $business = $posting->owner;
+        $rescheduleUrl = route('interviews.index').'#interview-'.$interview->id;
+        $confirmCancellationUrl = route('interviews.cancellation.confirmation', $interview);
 
         if ($professional?->email) {
             Mail::to($professional->email)->send(new TransactionalActionMail(
                 mailSubject: 'Colloquio annullato: '.$posting->title,
                 heading: 'Il colloquio è stato annullato',
-                intro: 'Puoi tornare nella sezione colloqui per verificare lo stato e riprogrammare un nuovo appuntamento.',
-                actionLabel: 'Gestisci colloqui',
-                actionUrl: route('interviews.index'),
+                intro: 'Puoi richiedere una nuova pianificazione oppure confermare definitivamente l’annullamento.',
+                actionLabel: 'Riprogramma colloquio',
+                actionUrl: $rescheduleUrl,
                 details: $details,
+                secondaryActionLabel: 'Conferma annullamento definitivo',
+                secondaryActionUrl: $confirmCancellationUrl,
             ));
         }
 
@@ -462,15 +513,35 @@ class InterviewController extends Controller
             Mail::to($business->email)->send(new TransactionalActionMail(
                 mailSubject: 'Colloquio annullato: '.$posting->title,
                 heading: 'Il colloquio è stato annullato',
-                intro: 'Puoi tornare nella sezione colloqui per verificare lo stato e riprogrammare un nuovo appuntamento.',
-                actionLabel: 'Gestisci colloqui',
-                actionUrl: route('interviews.index'),
+                intro: 'Puoi richiedere una nuova pianificazione oppure confermare definitivamente l’annullamento.',
+                actionLabel: 'Riprogramma colloquio',
+                actionUrl: $rescheduleUrl,
                 details: $details,
+                secondaryActionLabel: 'Conferma annullamento definitivo',
+                secondaryActionUrl: $confirmCancellationUrl,
             ));
         }
 
         return back()
             ->with('status', 'Colloquio annullato. Entrambe le parti sono state notificate.')
             ->with('status_variant', 'success');
+    }
+
+    private function authorizeInterviewParticipant(Request $request, Interview $interview): void
+    {
+        abort_unless(in_array($request->user()->role, ['business', 'professional'], true), 403);
+
+        $interview->loadMissing('jobApplication.jobPosting.owner', 'jobApplication.professional');
+
+        $application = $interview->jobApplication;
+        $posting = $application?->jobPosting;
+        abort_unless($application !== null && $posting !== null, 404);
+
+        $isBusinessOwner = $request->user()->role === 'business'
+            && (int) $posting->user_id === (int) $request->user()->id;
+        $isProfessionalOwner = $request->user()->role === 'professional'
+            && (int) $application->user_id === (int) $request->user()->id;
+
+        abort_unless($isBusinessOwner || $isProfessionalOwner, 403);
     }
 }
