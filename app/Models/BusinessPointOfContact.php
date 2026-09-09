@@ -20,7 +20,15 @@ class BusinessPointOfContact extends Model
         'email',
         'phone',
         'role',
+        'is_primary',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_primary' => 'boolean',
+        ];
+    }
 
     public function businessProfile(): BelongsTo
     {
