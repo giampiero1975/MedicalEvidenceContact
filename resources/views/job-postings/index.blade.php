@@ -16,6 +16,7 @@
         $favoriteJobPostingIds = $role === 'professional'
             ? auth()->user()->favoriteJobPostings()->pluck('job_postings.id')
             : collect();
+        $selectedContractTypes = $filters['contract_types'] ?? [];
     @endphp
 
     <div class="space-y-6">
@@ -29,15 +30,37 @@
                     <x-label for="location" value="Località" />
                     <x-input id="location" class="mt-1 block w-full" type="search" name="location" :value="$filters['location'] ?? ''" placeholder="Città, provincia, sede" />
                 </div>
-                <div class="lg:col-span-3">
-                    <x-label for="contract_type" value="Tipo contratto" />
-                    <select id="contract_type" name="contract_type" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
-                        <option value="">Tutti</option>
-                        @foreach ($contractTypes as $contractType)
-                            <option value="{{ $contractType }}" @selected(($filters['contract_type'] ?? '') === $contractType)>{{ $contractType }}</option>
-                        @endforeach
-                    </select>
-                </div>
+
+                @if ($role === 'professional')
+                    <fieldset class="lg:col-span-6">
+                        <legend class="text-sm font-medium text-gray-700">Tipo contratto</legend>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            @foreach ($contractTypes as $contractType)
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        name="contract_types[]"
+                                        value="{{ $contractType }}"
+                                        @checked(in_array($contractType, $selectedContractTypes, true))
+                                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                                    >
+                                    <span>{{ $contractType }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </fieldset>
+                @else
+                    <div class="lg:col-span-3">
+                        <x-label for="contract_type" value="Tipo contratto" />
+                        <select id="contract_type" name="contract_type" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
+                            <option value="">Tutti</option>
+                            @foreach ($contractTypes as $contractType)
+                                <option value="{{ $contractType }}" @selected(($filters['contract_type'] ?? '') === $contractType)>{{ $contractType }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <div class="lg:col-span-3">
                     <x-label for="professional_category" value="Categoria professionale" />
                     <x-input id="professional_category" class="mt-1 block w-full" type="search" name="professional_category" :value="$filters['professional_category'] ?? ''" placeholder="OSS, Infermiere, Fisioterapista" />
