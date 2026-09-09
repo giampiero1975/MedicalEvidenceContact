@@ -104,6 +104,7 @@ class CreateNewUser implements CreatesNewUsers
             ]);
 
             $businessProfile->addPointOfContact([
+                'user_id' => $user->id,
                 'first_name' => $input['first_name'],
                 'last_name' => $input['last_name'],
                 'email' => $input['email'],
