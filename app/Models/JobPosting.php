@@ -26,6 +26,7 @@ class JobPosting extends Model
         'salary_min',
         'salary_max',
         'expires_at',
+        'expiry_reminder_sent_at',
         'status',
     ];
 
@@ -33,6 +34,7 @@ class JobPosting extends Model
     {
         return [
             'expires_at' => 'date',
+            'expiry_reminder_sent_at' => 'datetime',
             'salary_min' => 'decimal:2',
             'salary_max' => 'decimal:2',
         ];
