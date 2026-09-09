@@ -21,7 +21,7 @@ class InterviewCancellationUiTest extends TestCase
             ->get(route('interviews.index'))
             ->assertOk()
             ->assertSee(route('interviews.cancel', $interview), false)
-            ->assertSeeText('Motivo annullamento (facoltativo)')
+            ->assertSee('placeholder="Motivo annullamento (facoltativo)"', false)
             ->assertSeeText('Annulla colloquio');
     }
 
@@ -33,7 +33,7 @@ class InterviewCancellationUiTest extends TestCase
             ->get(route('interviews.index'))
             ->assertOk()
             ->assertSee(route('interviews.cancel', $interview), false)
-            ->assertSeeText('Motivo annullamento (facoltativo)')
+            ->assertSee('placeholder="Motivo annullamento (facoltativo)"', false)
             ->assertSeeText('Annulla colloquio');
     }
 
