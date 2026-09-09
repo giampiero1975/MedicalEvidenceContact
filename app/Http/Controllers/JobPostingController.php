@@ -20,6 +20,7 @@ class JobPostingController extends Controller
     {
         $user = $request->user();
         $filters = $this->validateJobPostingFilters($request);
+        $businessProfileId = $user->role === 'business' ? $user->businessContextProfile()?->id : null;
 
         $jobPostings = JobPosting::query()
             ->with([
@@ -29,7 +30,21 @@ class JobPostingController extends Controller
                 'applications' => fn ($query) => $query->where('user_id', $user->id),
             ])
             ->when($user->role === 'professional', fn ($query) => $query->visibleToProfessionals())
-            ->when($user->role === 'business', fn ($query) => $query->where('user_id', $user->id))
+            ->when($user->role === 'business', function ($query) use ($user, $businessProfileId) {
+                if ($businessProfileId) {
+                    $query->where(function ($query) use ($user, $businessProfileId) {
+                        $query
+                            ->where('business_profile_id', $businessProfileId)
+                            ->orWhere(function ($query) use ($user) {
+                                $query->whereNull('business_profile_id')->where('user_id', $user->id);
+                            });
+                    });
+
+                    return;
+                }
+
+                $query->where('user_id', $user->id);
+            })
             ->when($filters['keyword'] ?? null, function ($query, string $keyword) {
                 $query->where(function ($query) use ($keyword) {
                     $query
@@ -124,7 +139,7 @@ class JobPostingController extends Controller
     {
         abort_unless($request->user()->role === 'business', 403);
 
-        $businessProfile = $request->user()->businessProfile;
+        $businessProfile = $request->user()->businessContextProfile();
         $data = $this->validatedJobPostingData($request, $businessProfile?->id);
 
         $jobPosting = JobPosting::create([
@@ -156,7 +171,7 @@ class JobPostingController extends Controller
         $user = $request->user();
 
         abort_unless(
-            ($user->role === 'business' && $jobPosting->user_id === $user->id)
+            ($user->role === 'business' && $this->businessCanAccessJobPosting($user, $jobPosting))
             || ($user->role === 'professional' && $jobPosting->status === 'active' && $jobPosting->expires_at->toDateString() >= now()->toDateString()),
             403
         );
@@ -220,7 +235,7 @@ class JobPostingController extends Controller
     public function applications(Request $request, JobPosting $jobPosting): View
     {
         abort_unless($request->user()->role === 'business', 403);
-        abort_unless($jobPosting->user_id === $request->user()->id, 403);
+        abort_unless($this->businessCanAccessJobPosting($request->user(), $jobPosting), 403);
 
         $jobPosting->load([
             'applications' => fn ($query) => $query
@@ -334,7 +349,7 @@ class JobPostingController extends Controller
 
     private function availableLocations(Request $request)
     {
-        return $request->user()->businessProfile?->locations()
+        return $request->user()->businessContextProfile()?->locations()
             ->where('is_active', true)
             ->orderByDesc('is_primary')
             ->orderBy('name')
@@ -343,7 +358,7 @@ class JobPostingController extends Controller
 
     private function availableDepartments(Request $request)
     {
-        return $request->user()->businessProfile?->departments()
+        return $request->user()->businessContextProfile()?->departments()
             ->with('location')
             ->where('is_active', true)
             ->orderBy('name')
@@ -399,9 +414,22 @@ class JobPostingController extends Controller
             ->all();
     }
 
+    private function businessCanAccessJobPosting($user, JobPosting $jobPosting): bool
+    {
+        if ($jobPosting->user_id === $user->id) {
+            return true;
+        }
+
+        $businessProfileId = $user->businessContextProfile()?->id;
+
+        return $businessProfileId !== null
+            && $jobPosting->business_profile_id !== null
+            && (int) $jobPosting->business_profile_id === (int) $businessProfileId;
+    }
+
     private function authorizeBusinessOwner(Request $request, JobPosting $jobPosting): void
     {
         abort_unless($request->user()->role === 'business', 403);
-        abort_unless($jobPosting->user_id === $request->user()->id, 403);
+        abort_unless($this->businessCanAccessJobPosting($request->user(), $jobPosting), 403);
     }
 }
