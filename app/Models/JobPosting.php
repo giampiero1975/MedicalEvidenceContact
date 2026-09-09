@@ -27,6 +27,7 @@ class JobPosting extends Model
         'salary_max',
         'expires_at',
         'expiry_reminder_sent_at',
+        'suspended_at',
         'status',
     ];
 
@@ -35,6 +36,7 @@ class JobPosting extends Model
         return [
             'expires_at' => 'date',
             'expiry_reminder_sent_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'salary_min' => 'decimal:2',
             'salary_max' => 'decimal:2',
         ];
@@ -68,6 +70,7 @@ class JobPosting extends Model
     public function scopeVisibleToProfessionals(Builder $query): Builder
     {
         return $query
+            ->whereNull('suspended_at')
             ->where('status', 'active')
             ->whereDate('expires_at', '>=', now()->toDateString());
     }
