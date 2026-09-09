@@ -314,6 +314,87 @@ class InterviewController extends Controller
             ->with('status_variant', 'success');
     }
 
+    public function reschedule(Request $request, Interview $interview): RedirectResponse
+    {
+        abort_unless(in_array($request->user()->role, ['business', 'professional'], true), 403);
+
+        $interview->loadMissing('jobApplication.jobPosting.owner', 'jobApplication.professional');
+
+        $application = $interview->jobApplication;
+        $posting = $application?->jobPosting;
+        abort_unless($application !== null && $posting !== null, 404);
+
+        $isBusinessOwner = $request->user()->role === 'business'
+            && (int) $posting->user_id === (int) $request->user()->id;
+        $isProfessionalOwner = $request->user()->role === 'professional'
+            && (int) $application->user_id === (int) $request->user()->id;
+
+        abort_unless($isBusinessOwner || $isProfessionalOwner, 403);
+
+        if (! in_array($interview->status, [Interview::STATUS_ACCEPTED, Interview::STATUS_CANCELLED], true)) {
+            return back()->withErrors(['interview' => 'Puoi riprogrammare solo un colloquio confermato o annullato.']);
+        }
+
+        $previousStatus = $interview->status;
+
+        DB::transaction(function () use ($interview, $request, $previousStatus): void {
+            if ($previousStatus === Interview::STATUS_ACCEPTED) {
+                $interview->update(['status' => Interview::STATUS_CANCELLED]);
+            }
+
+            JobApplicationEvent::create([
+                'job_application_id' => $interview->job_application_id,
+                'actor_user_id' => $request->user()->id,
+                'type' => 'interview_reschedule_requested',
+                'label' => 'Riprogrammazione colloquio richiesta da '.($request->user()->role === 'business' ? 'struttura' : 'professionista'),
+                'metadata' => [
+                    'interview_id' => $interview->id,
+                    'requested_by_role' => $request->user()->role,
+                    'previous_status' => $previousStatus,
+                ],
+            ]);
+        });
+
+        $professional = $application->professional;
+        $business = $posting->owner;
+        $details = [
+            'Annuncio: '.$posting->title,
+            'Data precedente: '.$interview->scheduled_at->format('d/m/Y H:i'),
+            'Richiesta da: '.($request->user()->role === 'business' ? 'Struttura' : 'Professionista'),
+        ];
+
+        if ($professional?->email) {
+            Mail::to($professional->email)->send(new TransactionalActionMail(
+                mailSubject: 'Riprogrammazione colloquio: '.$posting->title,
+                heading: 'È stata richiesta una nuova pianificazione del colloquio',
+                intro: 'La struttura potrà proporre nuovi slot. Quando saranno disponibili potrai selezionarne uno dalla sezione colloqui.',
+                actionLabel: 'Visualizza colloqui',
+                actionUrl: route('interviews.index'),
+                details: $details,
+            ));
+        }
+
+        if ($business?->email) {
+            Mail::to($business->email)->send(new TransactionalActionMail(
+                mailSubject: 'Riprogrammazione colloquio: '.$posting->title,
+                heading: 'È stata richiesta una nuova pianificazione del colloquio',
+                intro: 'Il colloquio precedente non è più attivo. Puoi proporre uno o più nuovi slot dalla candidatura.',
+                actionLabel: 'Proponi nuovi slot',
+                actionUrl: route('business.applications.show', $application),
+                details: $details,
+            ));
+        }
+
+        return back()
+            ->with(
+                'status',
+                $request->user()->role === 'business'
+                    ? 'Riprogrammazione avviata. Puoi proporre nuovi slot dalla candidatura.'
+                    : 'Richiesta di riprogrammazione inviata. La struttura potrà proporre nuovi slot.'
+            )
+            ->with('status_variant', 'success');
+    }
+
     public function cancel(Request $request, Interview $interview): RedirectResponse
     {
         abort_unless(in_array($request->user()->role, ['business', 'professional'], true), 403);
