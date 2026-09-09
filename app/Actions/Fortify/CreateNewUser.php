@@ -42,8 +42,14 @@ class CreateNewUser implements CreatesNewUsers
                 'nullable',
                 Rule::exists('business_types', 'name')->where(fn ($query) => $query->where('is_active', true)),
             ],
-            'location' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
-            'employee_count' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'vat_number' => ['required_if:account_type,business', 'nullable', 'regex:/^[0-9]{11}$/', 'unique:business_profiles,vat_number'],
+            'company_street_address' => ['required_if:account_type,business', 'nullable', 'string', 'max:255'],
+            'company_city' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
+            'company_province' => ['required_if:account_type,business', 'nullable', 'string', 'max:100'],
+            'company_postal_code' => ['required_if:account_type,business', 'nullable', 'string', 'max:20'],
+            'company_country' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
+            'employee_count' => ['required_if:account_type,business', 'nullable', 'integer', Rule::in([10, 50, 200, 500, 501])],
+            'poc_role' => ['required_if:account_type,business', 'nullable', 'string', 'max:150'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
@@ -83,12 +89,26 @@ class CreateNewUser implements CreatesNewUsers
                 return $user;
             }
 
-            BusinessProfile::create([
+            $businessProfile = BusinessProfile::create([
                 'user_id' => $user->id,
                 'company_name' => $input['company_name'],
                 'company_type' => $input['company_type'],
-                'location' => $input['location'],
-                'employee_count' => $input['employee_count'] ?? null,
+                'vat_number' => $input['vat_number'],
+                'location' => $input['company_city'],
+                'employee_count' => $input['employee_count'],
+                'address_street' => $input['company_street_address'],
+                'address_city' => $input['company_city'],
+                'address_province' => $input['company_province'],
+                'postal_code' => $input['company_postal_code'],
+                'address_country' => $input['company_country'],
+            ]);
+
+            $businessProfile->addPointOfContact([
+                'first_name' => $input['first_name'],
+                'last_name' => $input['last_name'],
+                'email' => $input['email'],
+                'phone' => $input['phone'],
+                'role' => $input['poc_role'],
             ]);
 
             return $user;
