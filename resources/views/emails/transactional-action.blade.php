@@ -11,8 +11,16 @@
             <td align="center">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
                     <tr>
-                        <td style="padding:28px 32px;border-bottom:1px solid #e2e8f0;">
-                            <div style="font-size:18px;font-weight:700;">Medical Evidence Contact</div>
+                        <td style="padding:24px 32px;border-bottom:1px solid #e2e8f0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="width:42px;height:42px;border-radius:12px;background:#0f766e;color:#ffffff;text-align:center;font-size:15px;font-weight:800;letter-spacing:.5px;">MEC</td>
+                                    <td style="padding-left:12px;">
+                                        <div style="font-size:18px;font-weight:700;color:#0f172a;">Medical Evidence Contact</div>
+                                        <div style="margin-top:2px;font-size:12px;color:#64748b;">Piattaforma professionale sanitaria</div>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     <tr>
@@ -33,8 +41,15 @@
                             @if ($secondaryActionLabel && $secondaryActionUrl)
                                 <a href="{{ $secondaryActionUrl }}" style="display:inline-block;margin-left:8px;padding:12px 18px;background:#ffffff;color:#334155;text-decoration:none;border:1px solid #cbd5e1;border-radius:10px;font-weight:700;font-size:14px;">{{ $secondaryActionLabel }}</a>
                             @endif
-
-                            <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#94a3b8;">Questa email è generata automaticamente dalla piattaforma.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:20px 32px;border-top:1px solid #e2e8f0;background:#f8fafc;">
+                            <p style="margin:0;font-size:12px;line-height:1.6;color:#64748b;">Questa email è generata automaticamente dalla piattaforma.</p>
+                            <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#64748b;">
+                                Puoi modificare o disattivare le notifiche dalla pagina
+                                <a href="{{ route('notification-preferences.edit') }}" style="color:#0f766e;text-decoration:underline;">Preferenze notifiche</a>.
+                            </p>
                         </td>
                     </tr>
                 </table>
