@@ -59,6 +59,14 @@ class JobPostingController extends Controller
                     $query->whereNull('salary_min')->orWhere('salary_min', '<=', $salaryMax);
                 });
             })
+            ->when(
+                $user->role === 'professional' && ($filters['publication_period'] ?? null) === 'week',
+                fn ($query) => $query->where('created_at', '>=', now()->subWeek())
+            )
+            ->when(
+                $user->role === 'professional' && ($filters['publication_period'] ?? null) === 'month',
+                fn ($query) => $query->where('created_at', '>=', now()->subMonth())
+            )
             ->when($filters['published_from'] ?? null, fn ($query, string $publishedFrom) => $query->whereDate('created_at', '>=', $publishedFrom))
             ->when($filters['published_to'] ?? null, fn ($query, string $publishedTo) => $query->whereDate('created_at', '<=', $publishedTo))
             ->when(
@@ -293,6 +301,7 @@ class JobPostingController extends Controller
             'professional_category' => ['nullable', 'string', 'max:120'],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
+            'publication_period' => ['nullable', 'in:recent,week,month'],
             'published_from' => ['nullable', 'date'],
             'published_to' => ['nullable', 'date', 'after_or_equal:published_from'],
             'status' => ['nullable', 'in:active,expired'],
