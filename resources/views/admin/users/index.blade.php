@@ -61,6 +61,7 @@
                                 <th class="px-6 py-3 font-semibold text-slate-700">Email</th>
                                 <th class="px-6 py-3 font-semibold text-slate-700">Ruolo</th>
                                 <th class="px-6 py-3 font-semibold text-slate-700">Profilo</th>
+                                <th class="px-6 py-3 font-semibold text-slate-700">Stato</th>
                                 <th class="px-6 py-3 text-right font-semibold text-slate-700">Azioni</th>
                             </tr>
                         </thead>
@@ -101,10 +102,27 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center justify-end gap-2">
+                                        @if ($user->suspended_at)
+                                            <x-ui.badge variant="danger">Sospeso</x-ui.badge>
+                                        @else
+                                            <x-ui.badge variant="success">Attivo</x-ui.badge>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap items-center justify-end gap-2">
                                             <a href="{{ route('admin.users.edit', $user) }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-900">
                                                 Modifica
                                             </a>
+
+                                            @if (in_array($user->role, ['professional', 'business'], true))
+                                                <form method="POST" action="{{ route('admin.users.suspension', $user) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold {{ $user->suspended_at ? 'text-emerald-700 hover:bg-emerald-50' : 'text-amber-700 hover:bg-amber-50' }}">
+                                                        {{ $user->suspended_at ? 'Riattiva' : 'Sospendi' }}
+                                                    </button>
+                                                </form>
+                                            @endif
 
                                             @unless (auth()->user()->is($user))
                                                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Eliminare definitivamente questo utente?');">
