@@ -5,10 +5,10 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -80,6 +80,11 @@ class User extends Authenticatable implements MustVerifyEmail
         });
     }
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -88,44 +93,9 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function professionalProfile(): HasOne
+    public function jobPostings(): HasMany
     {
-        return $this->hasOne(ProfessionalProfile::class);
-    }
-
-    public function professionalProfessions(): HasMany
-    {
-        return $this->hasMany(ProfessionalProfession::class);
-    }
-
-    public function professionalProfileItems(): HasMany
-    {
-        return $this->hasMany(ProfessionalProfileItem::class);
-    }
-
-    public function professionalDocument(): HasOne
-    {
-        return $this->hasOne(ProfessionalDocument::class);
-    }
-
-    public function experiences(): HasMany
-    {
-        return $this->hasMany(ProfessionalExperience::class);
-    }
-
-    public function certificates(): HasMany
-    {
-        return $this->hasMany(ProfessionalCertificate::class);
-    }
-
-    public function moodleLinks(): HasMany
-    {
-        return $this->hasMany(MoodleUserLink::class);
-    }
-
-    public function jobApplications(): HasMany
-    {
-        return $this->hasMany(JobApplication::class);
+        return $this->hasMany(JobPosting::class);
     }
 
     public function favoriteJobPostings(): BelongsToMany
@@ -133,9 +103,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(JobPosting::class, 'job_posting_favorites')->withTimestamps();
     }
 
-    public function jobPostings(): HasMany
+    public function jobApplications(): HasMany
     {
-        return $this->hasMany(JobPosting::class);
+        return $this->hasMany(JobApplication::class);
     }
 
     public function businessProfile(): HasOne
@@ -143,18 +113,33 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(BusinessProfile::class);
     }
 
-    public function businessPointsOfContact(): HasMany
+    public function professionalDocument(): HasOne
     {
-        return $this->hasMany(BusinessPointOfContact::class);
+        return $this->hasOne(ProfessionalDocument::class);
     }
 
-    public function businessLocations(): HasMany
+    public function professionalProfession(): HasOne
     {
-        return $this->hasMany(BusinessLocation::class);
+        return $this->hasOne(ProfessionalProfession::class);
     }
 
-    public function businessDepartments(): HasMany
+    public function professionalProfileItems(): HasMany
     {
-        return $this->hasMany(BusinessDepartment::class);
+        return $this->hasMany(ProfessionalProfileItem::class);
+    }
+
+    public function moodleUserLinks(): HasMany
+    {
+        return $this->hasMany(MoodleUserLink::class, 'laravel_user_id');
+    }
+
+    public function moodleLinkAttempts(): HasMany
+    {
+        return $this->hasMany(MoodleLinkAttempt::class, 'laravel_user_id');
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(UserCertificate::class, 'laravel_user_id');
     }
 }
