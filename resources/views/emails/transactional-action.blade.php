@@ -30,6 +30,10 @@
 
                             <a href="{{ $actionUrl }}" style="display:inline-block;padding:12px 18px;background:#0f766e;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">{{ $actionLabel }}</a>
 
+                            @if ($secondaryActionLabel && $secondaryActionUrl)
+                                <a href="{{ $secondaryActionUrl }}" style="display:inline-block;margin-left:8px;padding:12px 18px;background:#ffffff;color:#334155;text-decoration:none;border:1px solid #cbd5e1;border-radius:10px;font-weight:700;font-size:14px;">{{ $secondaryActionLabel }}</a>
+                            @endif
+
                             <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#94a3b8;">Questa email è generata automaticamente dalla piattaforma.</p>
                         </td>
                     </tr>
