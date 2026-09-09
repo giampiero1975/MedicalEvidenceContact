@@ -74,6 +74,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::post('/business/candidature/{jobApplication}/colloqui', [InterviewController::class, 'store'])->name('business.applications.interviews.store');
     Route::patch('/business/colloqui/{interview}/conferma', [InterviewController::class, 'confirm'])->name('business.interviews.confirm');
     Route::patch('/colloqui/{interview}/risposta', [InterviewController::class, 'respond'])->name('professional.interviews.respond');
+    Route::patch('/colloqui/{interview}/annulla', [InterviewController::class, 'cancel'])->name('interviews.cancel');
     Route::patch('/candidature/{jobApplication}/stato', [JobApplicationController::class, 'updateStatus'])->name('job-applications.status.update');
     Route::get('/colloqui', [InterviewController::class, 'index'])->name('interviews.index');
 
