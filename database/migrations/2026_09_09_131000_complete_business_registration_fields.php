@@ -15,7 +15,7 @@ return new class extends Migration
             if (! Schema::hasColumn('business_profiles', 'address_city')) {
                 $table->string('address_city', 150)->nullable();
             }
-            if (! Schema::hasColumn('business_profiles', 'address_province',)) {
+            if (! Schema::hasColumn('business_profiles', 'address_province')) {
                 $table->string('address_province', 100)->nullable();
             }
             if (! Schema::hasColumn('business_profiles', 'postal_code')) {
