@@ -18,17 +18,48 @@ class BusinessProfile extends Model
         'address_street', 'address_city', 'address_province', 'postal_code', 'address_country',
     ];
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function pointsOfContact(): HasMany { return $this->hasMany(BusinessPointOfContact::class); }
-    public function primaryPointOfContact(): HasOne { return $this->hasOne(BusinessPointOfContact::class)->oldestOfMany(); }
-    public function locations(): HasMany { return $this->hasMany(BusinessLocation::class); }
-    public function primaryLocation(): HasOne { return $this->hasOne(BusinessLocation::class)->where('is_primary', true); }
-    public function departments(): HasMany { return $this->hasMany(BusinessDepartment::class); }
-    public function jobPostings(): HasMany { return $this->hasMany(JobPosting::class); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    /** @param array{first_name:string,last_name:string,email:string,phone?:string|null,role?:string|null} $data */
+    public function pointsOfContact(): HasMany
+    {
+        return $this->hasMany(BusinessPointOfContact::class);
+    }
+
+    public function primaryPointOfContact(): HasOne
+    {
+        return $this->hasOne(BusinessPointOfContact::class)->where('is_primary', true);
+    }
+
+    public function locations(): HasMany
+    {
+        return $this->hasMany(BusinessLocation::class);
+    }
+
+    public function primaryLocation(): HasOne
+    {
+        return $this->hasOne(BusinessLocation::class)->where('is_primary', true);
+    }
+
+    public function departments(): HasMany
+    {
+        return $this->hasMany(BusinessDepartment::class);
+    }
+
+    public function jobPostings(): HasMany
+    {
+        return $this->hasMany(JobPosting::class);
+    }
+
+    /** @param array{first_name:string,last_name:string,email:string,phone?:string|null,role?:string|null,user_id?:int|null,is_primary?:bool} $data */
     public function addPointOfContact(array $data): BusinessPointOfContact
     {
+        if (! $this->pointsOfContact()->exists()) {
+            $data['is_primary'] = true;
+        }
+
         return $this->pointsOfContact()->create($data);
     }
 }
