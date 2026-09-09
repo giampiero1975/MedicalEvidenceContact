@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Mail\TransactionalActionMail;
 use App\Models\Interview;
-use App\Models\JobApplicationEvent;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -23,6 +22,7 @@ class SendInterviewReminders extends Command
         $interviews = Interview::query()
             ->with(['jobApplication.jobPosting.owner', 'jobApplication.professional'])
             ->where('status', Interview::STATUS_ACCEPTED)
+            ->whereNull('reminder_sent_at')
             ->where('scheduled_at', '>', $now)
             ->where('scheduled_at', '<=', $deadline)
             ->orderBy('scheduled_at')
@@ -35,16 +35,6 @@ class SendInterviewReminders extends Command
             $business = $posting?->owner;
 
             if ($application === null || $posting === null) {
-                continue;
-            }
-
-            $alreadySent = JobApplicationEvent::query()
-                ->where('job_application_id', $application->id)
-                ->where('type', 'interview_reminder_sent')
-                ->get()
-                ->contains(fn (JobApplicationEvent $event) => (int) ($event->metadata['interview_id'] ?? 0) === (int) $interview->id);
-
-            if ($alreadySent) {
                 continue;
             }
 
@@ -85,17 +75,7 @@ class SendInterviewReminders extends Command
                 ));
             }
 
-            JobApplicationEvent::create([
-                'job_application_id' => $application->id,
-                'actor_user_id' => null,
-                'type' => 'interview_reminder_sent',
-                'label' => 'Promemoria colloquio inviato a entrambe le parti',
-                'metadata' => [
-                    'interview_id' => $interview->id,
-                    'scheduled_at' => $interview->scheduled_at->toIso8601String(),
-                ],
-            ]);
-
+            $interview->forceFill(['reminder_sent_at' => now()])->save();
             $sentCount++;
         }
 
