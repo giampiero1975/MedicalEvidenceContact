@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\TransactionalActionMail;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
+use App\Services\TransactionalNotificationDispatcher;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class BusinessCandidateApplicationController extends Controller
@@ -48,17 +48,21 @@ class BusinessCandidateApplicationController extends Controller
                 ],
             ]);
 
-            if ($jobApplication->professional?->email) {
-                Mail::to($jobApplication->professional->email)->send(new TransactionalActionMail(
-                    mailSubject: 'La struttura ha visualizzato il tuo profilo',
-                    heading: 'Il tuo profilo è stato visualizzato',
-                    intro: 'La struttura che ha pubblicato l’annuncio ha aperto il tuo profilo professionale associato alla candidatura.',
-                    actionLabel: 'Visualizza candidature',
-                    actionUrl: route('professional.applications.index'),
-                    details: [
-                        'Annuncio: '.$jobApplication->jobPosting->title,
-                    ],
-                ));
+            if ($jobApplication->professional) {
+                app(TransactionalNotificationDispatcher::class)->dispatch(
+                    $jobApplication->professional,
+                    'profile_views',
+                    new TransactionalActionMail(
+                        mailSubject: 'La struttura ha visualizzato il tuo profilo',
+                        heading: 'Il tuo profilo è stato visualizzato',
+                        intro: 'La struttura che ha pubblicato l’annuncio ha aperto il tuo profilo professionale associato alla candidatura.',
+                        actionLabel: 'Visualizza candidature',
+                        actionUrl: route('professional.applications.index'),
+                        details: [
+                            'Annuncio: '.$jobApplication->jobPosting->title,
+                        ],
+                    )
+                );
             }
         }
 
