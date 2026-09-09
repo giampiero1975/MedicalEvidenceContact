@@ -16,8 +16,14 @@ class BusinessDashboardController extends Controller
 
         abort_unless($user->role === 'business', 403);
 
+        $businessProfileId = $user->businessContextProfile()?->id;
+
         $ownedPostingIds = JobPosting::query()
-            ->where('user_id', $user->id)
+            ->when(
+                $businessProfileId,
+                fn ($query, int $profileId) => $query->where('business_profile_id', $profileId),
+                fn ($query) => $query->where('user_id', $user->id)
+            )
             ->select('id');
 
         $applicationsQuery = JobApplication::query()
@@ -32,7 +38,11 @@ class BusinessDashboardController extends Controller
             ]);
 
         $postingApplicationCounts = JobPosting::query()
-            ->where('user_id', $user->id)
+            ->when(
+                $businessProfileId,
+                fn ($query, int $profileId) => $query->where('business_profile_id', $profileId),
+                fn ($query) => $query->where('user_id', $user->id)
+            )
             ->withCount('applications')
             ->latest()
             ->get(['id', 'title', 'status', 'expires_at']);
@@ -59,7 +69,11 @@ class BusinessDashboardController extends Controller
             ->get();
 
         $activePostings = JobPosting::query()
-            ->where('user_id', $user->id)
+            ->when(
+                $businessProfileId,
+                fn ($query, int $profileId) => $query->where('business_profile_id', $profileId),
+                fn ($query) => $query->where('user_id', $user->id)
+            )
             ->where('status', 'active')
             ->whereDate('expires_at', '>=', today())
             ->count();
@@ -85,7 +99,11 @@ class BusinessDashboardController extends Controller
                 ->whereDate('scheduled_at', today())
                 ->count(),
             'expiring_postings' => JobPosting::query()
-                ->where('user_id', $user->id)
+                ->when(
+                    $businessProfileId,
+                    fn ($query, int $profileId) => $query->where('business_profile_id', $profileId),
+                    fn ($query) => $query->where('user_id', $user->id)
+                )
                 ->where('status', 'active')
                 ->whereBetween('expires_at', [today(), today()->addDays(7)])
                 ->count(),
