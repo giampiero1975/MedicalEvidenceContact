@@ -48,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'ata_certificate_path',
         'email',
         'password',
+        'suspended_at',
     ];
 
     /**
@@ -89,6 +90,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
