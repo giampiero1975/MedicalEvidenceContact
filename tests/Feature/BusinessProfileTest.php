@@ -98,16 +98,12 @@ class BusinessProfileTest extends TestCase
             'company_name' => 'Farmacia Centrale',
             'company_type' => 'Farmacia',
             'vat_number' => '12345678901',
-            'business_address_street' => 'Via Nazionale 10',
-            'business_address_city' => 'Roma',
-            'business_address_province' => 'RM',
-            'business_postal_code' => '00100',
-            'business_address_country' => 'Italia',
-            'employee_count' => '11-50',
-            'poc_first_name' => 'Mario',
-            'poc_last_name' => 'Bianchi',
-            'poc_email' => 'mario.bianchi@example.com',
-            'poc_phone' => '021234567',
+            'company_street_address' => 'Via Nazionale 10',
+            'company_city' => 'Roma',
+            'company_province' => 'RM',
+            'company_postal_code' => '00100',
+            'company_country' => 'Italia',
+            'employee_count' => 50,
             'poc_role' => 'Titolare',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -116,6 +112,8 @@ class BusinessProfileTest extends TestCase
         $this->assertSame('business', $user->role);
         $this->assertSame('Farmacia Centrale', $user->businessProfile->company_name);
         $this->assertSame('12345678901', $user->businessProfile->vat_number);
+        $this->assertSame('Via Nazionale 10', $user->businessProfile->address_street);
+        $this->assertSame('Roma', $user->businessProfile->address_city);
         $this->assertNotNull($user->businessProfile->primaryPointOfContact);
         $this->assertSame('Mario Bianchi', $user->businessProfile->primaryPointOfContact->fullName());
         $this->assertSame('Titolare', $user->businessProfile->primaryPointOfContact->role);
