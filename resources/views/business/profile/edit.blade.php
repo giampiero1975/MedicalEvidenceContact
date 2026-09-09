@@ -11,7 +11,7 @@
             <x-ui.card>
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Identità</p>
                 <h2 class="mt-2 text-xl font-semibold text-slate-950">Immagine della struttura</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Il logo sarà usato nelle aree Business e, in seguito, negli annunci pubblici.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Il logo sarà usato nelle aree Business e negli annunci della struttura.</p>
 
                 <div class="mt-6 flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6">
                     @if ($businessProfile?->logo_path)
@@ -39,7 +39,7 @@
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Dati struttura</p>
                     <h2 class="mt-2 text-xl font-semibold text-slate-950">Informazioni principali</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-600">Questi dati costituiscono la base per sedi, reparti e operatori Business.</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Modifica le informazioni aziendali, la sede e la descrizione della struttura.</p>
                 </div>
 
                 <form method="POST" action="{{ route('business.profile.update') }}" enctype="multipart/form-data" class="mt-6 grid gap-5 md:grid-cols-2">
@@ -50,26 +50,42 @@
                     <x-ui.input name="legal_name" label="Ragione sociale" :value="old('legal_name', $businessProfile?->legal_name)" />
 
                     <x-ui.select name="company_type" label="Tipologia struttura" required>
-                        @foreach (['RSA', 'Casa di cura', 'Ospedale', 'Cooperativa', 'Agenzia per il lavoro', 'Assistenza domiciliare', 'Poliambulatorio', 'Altro'] as $type)
-                            <option value="{{ $type }}" @selected(old('company_type', $businessProfile?->company_type) === $type)>{{ $type }}</option>
+                        @foreach ($businessTypes as $businessType)
+                            <option value="{{ $businessType->name }}" @selected(old('company_type', $businessProfile?->company_type) === $businessType->name)>{{ $businessType->name }}</option>
                         @endforeach
                     </x-ui.select>
-                    <x-ui.input name="location" label="Località principale" :value="old('location', $businessProfile?->location)" />
+                    <x-ui.input name="employee_count" type="number" label="Numero dipendenti" :value="old('employee_count', $businessProfile?->employee_count)" min="0" />
 
                     <x-ui.input name="vat_number" label="Partita IVA" :value="old('vat_number', $businessProfile?->vat_number)" />
                     <x-ui.input name="tax_code" label="Codice fiscale" :value="old('tax_code', $businessProfile?->tax_code)" />
 
+                    <div class="border-t border-slate-100 pt-5 md:col-span-2">
+                        <h3 class="text-sm font-semibold text-slate-900">Indirizzo sede</h3>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <x-ui.input name="address_street" label="Via e numero civico" :value="old('address_street', $businessProfile?->address_street)" />
+                    </div>
+                    <x-ui.input name="address_city" label="Città" :value="old('address_city', $businessProfile?->address_city)" />
+                    <x-ui.input name="address_province" label="Provincia" :value="old('address_province', $businessProfile?->address_province)" />
+                    <x-ui.input name="postal_code" label="CAP" :value="old('postal_code', $businessProfile?->postal_code)" />
+                    <x-ui.input name="address_country" label="Paese" :value="old('address_country', $businessProfile?->address_country)" />
+                    <x-ui.input name="location" label="Località principale" :value="old('location', $businessProfile?->location)" />
+
+                    <div class="border-t border-slate-100 pt-5 md:col-span-2">
+                        <h3 class="text-sm font-semibold text-slate-900">Contatti struttura</h3>
+                    </div>
+
                     <x-ui.input type="email" name="email" label="Email struttura" :value="old('email', $businessProfile?->email)" />
                     <x-ui.input name="phone" label="Telefono" :value="old('phone', $businessProfile?->phone)" />
-
                     <x-ui.input type="email" name="pec" label="PEC" :value="old('pec', $businessProfile?->pec)" />
                     <x-ui.input type="url" name="website" label="Sito web" :value="old('website', $businessProfile?->website)" placeholder="https://" />
 
-                    <x-ui.input type="number" name="employee_count" label="Numero dipendenti" :value="old('employee_count', $businessProfile?->employee_count)" min="0" />
                     <x-ui.input type="file" name="logo" label="Logo" accept="image/jpeg,image/png,image/webp" help="PNG, JPG o WebP. Massimo 4 MB." />
 
                     <div class="md:col-span-2">
-                        <x-ui.textarea name="description" label="Descrizione struttura" rows="6">{{ old('description', $businessProfile?->description) }}</x-ui.textarea>
+                        <x-ui.textarea name="description" label="Descrizione azienda" rows="6" maxlength="1000">{{ old('description', $businessProfile?->description) }}</x-ui.textarea>
+                        <p class="mt-1 text-xs text-slate-500">Massimo 1000 caratteri.</p>
                     </div>
 
                     <div class="flex justify-end border-t border-slate-100 pt-5 md:col-span-2">
