@@ -18,6 +18,7 @@ class BusinessPointOfContact extends Model
         'last_name',
         'email',
         'phone',
+        'role',
     ];
 
     public function businessProfile(): BelongsTo
