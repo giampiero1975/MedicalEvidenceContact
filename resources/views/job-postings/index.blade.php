@@ -17,6 +17,7 @@
             ? auth()->user()->favoriteJobPostings()->pluck('job_postings.id')
             : collect();
         $selectedContractTypes = $filters['contract_types'] ?? [];
+        $selectedCompanyCategories = $filters['company_categories'] ?? [];
     @endphp
 
     <div class="space-y-6">
@@ -65,10 +66,32 @@
                     <x-label for="professional_category" value="Categoria professionale" />
                     <x-input id="professional_category" class="mt-1 block w-full" type="search" name="professional_category" :value="$filters['professional_category'] ?? ''" placeholder="OSS, Infermiere, Fisioterapista" />
                 </div>
-                <div class="lg:col-span-3">
-                    <x-label for="company_category" value="Categoria azienda" />
-                    <x-input id="company_category" class="mt-1 block w-full" type="search" name="company_category" :value="$filters['company_category'] ?? ''" placeholder="RSA, clinica, farmacia" />
-                </div>
+
+                @if ($role === 'professional')
+                    <fieldset class="lg:col-span-6">
+                        <legend class="text-sm font-medium text-gray-700">Categoria azienda</legend>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            @foreach ($companyCategories as $companyCategory)
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        name="company_categories[]"
+                                        value="{{ $companyCategory }}"
+                                        @checked(in_array($companyCategory, $selectedCompanyCategories, true))
+                                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                                    >
+                                    <span>{{ $companyCategory }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </fieldset>
+                @else
+                    <div class="lg:col-span-3">
+                        <x-label for="company_category" value="Categoria azienda" />
+                        <x-input id="company_category" class="mt-1 block w-full" type="search" name="company_category" :value="$filters['company_category'] ?? ''" placeholder="RSA, clinica, farmacia" />
+                    </div>
+                @endif
+
                 <div class="lg:col-span-2">
                     <x-label for="salary_min" value="Retribuzione da" />
                     <x-input id="salary_min" class="mt-1 block w-full" type="number" min="0" step="100" name="salary_min" :value="$filters['salary_min'] ?? ''" />
