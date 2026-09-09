@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Mail\TransactionalActionMail;
 use App\Models\JobPosting;
+use App\Services\TransactionalNotificationDispatcher;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 
 class SendJobPostingExpiryReminders extends Command
 {
@@ -17,6 +17,7 @@ class SendJobPostingExpiryReminders extends Command
     {
         $targetDate = now()->addDays(7)->toDateString();
         $sentCount = 0;
+        $dispatcher = app(TransactionalNotificationDispatcher::class);
 
         $postings = JobPosting::query()
             ->with('owner')
@@ -29,28 +30,36 @@ class SendJobPostingExpiryReminders extends Command
         foreach ($postings as $posting) {
             $business = $posting->owner;
 
-            if (! $business?->email) {
+            if (! $business) {
                 continue;
             }
 
-            Mail::to($business->email)->send(new TransactionalActionMail(
-                mailSubject: 'Annuncio in scadenza tra 7 giorni: '.$posting->title,
-                heading: 'Il tuo annuncio scade tra 7 giorni',
-                intro: 'Controlla l’annuncio e, se necessario, estendi la data di scadenza prima che non sia più visibile ai professionisti.',
-                actionLabel: 'Gestisci annuncio',
-                actionUrl: route('job-postings.edit', $posting),
-                details: [
-                    'Annuncio: '.$posting->title,
-                    'Scadenza: '.$posting->expires_at->format('d/m/Y'),
-                    'Località: '.$posting->workplace_address,
-                ],
-            ));
+            $handled = $dispatcher->dispatch(
+                $business,
+                'job_postings',
+                new TransactionalActionMail(
+                    mailSubject: 'Annuncio in scadenza tra 7 giorni: '.$posting->title,
+                    heading: 'Il tuo annuncio scade tra 7 giorni',
+                    intro: 'Controlla l’annuncio e, se necessario, estendi la data di scadenza prima che non sia più visibile ai professionisti.',
+                    actionLabel: 'Gestisci annuncio',
+                    actionUrl: route('job-postings.edit', $posting),
+                    details: [
+                        'Annuncio: '.$posting->title,
+                        'Scadenza: '.$posting->expires_at->format('d/m/Y'),
+                        'Località: '.$posting->workplace_address,
+                    ],
+                )
+            );
+
+            if (! $handled) {
+                continue;
+            }
 
             $posting->forceFill(['expiry_reminder_sent_at' => now()])->save();
             $sentCount++;
         }
 
-        $this->info('Promemoria scadenza annunci inviati: '.$sentCount);
+        $this->info('Promemoria scadenza annunci gestiti: '.$sentCount);
 
         return self::SUCCESS;
     }
