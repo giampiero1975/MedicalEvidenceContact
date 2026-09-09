@@ -93,7 +93,7 @@
             name="business_department_id"
             label="Reparto / unità operativa"
             x-model="selectedDepartment"
-            :disabled="selectedLocation === ''"
+            x-bind:disabled="selectedLocation === ''"
             help="Sono disponibili solo i reparti attivi della sede selezionata."
         >
             <option value="">Nessun reparto specifico</option>
