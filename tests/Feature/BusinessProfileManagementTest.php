@@ -70,6 +70,7 @@ class BusinessProfileManagementTest extends TestCase
             'company_name' => 'RSA Prima',
             'company_type' => 'RSA',
             'vat_number' => '12345678901',
+            'location' => 'Milano',
         ]);
 
         $this->actingAs($business)
@@ -78,6 +79,7 @@ class BusinessProfileManagementTest extends TestCase
                 'company_name' => 'RSA Prima',
                 'company_type' => 'RSA',
                 'vat_number' => '12345678901',
+                'location' => 'Milano',
                 'description' => str_repeat('A', 1001),
             ])
             ->assertSessionHasErrors('description');
@@ -167,6 +169,7 @@ class BusinessProfileManagementTest extends TestCase
             'user_id' => $otherOwner->id,
             'company_name' => 'Altra RSA',
             'company_type' => 'RSA',
+            'location' => 'Torino',
         ]);
         $otherPoc = BusinessPointOfContact::create([
             'business_profile_id' => $otherProfile->id,
@@ -194,6 +197,7 @@ class BusinessProfileManagementTest extends TestCase
             'user_id' => $business->id,
             'company_name' => 'Clinica Test',
             'company_type' => 'RSA',
+            'location' => 'Milano',
         ]);
 
         $primary = $profile->addPointOfContact([
