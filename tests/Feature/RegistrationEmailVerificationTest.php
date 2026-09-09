@@ -41,6 +41,40 @@ class RegistrationEmailVerificationTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
+    public function test_business_registration_sends_confirmation_to_primary_poc(): void
+    {
+        Notification::fake();
+
+        $this->post('/register', [
+            'account_type' => 'business',
+            'first_name' => 'Laura',
+            'last_name' => 'Bianchi',
+            'email' => 'laura.rf011@example.test',
+            'phone' => '021234567',
+            'company_name' => 'Clinica RF011',
+            'company_type' => 'Clinica privata',
+            'vat_number' => '12345678901',
+            'company_street_address' => 'Via Milano 20',
+            'company_city' => 'Milano',
+            'company_province' => 'MI',
+            'company_postal_code' => '20100',
+            'company_country' => 'Italia',
+            'employee_count' => 50,
+            'poc_role' => 'Responsabile HR',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+        ])->assertSessionHasNoErrors();
+
+        $user = User::where('email', 'laura.rf011@example.test')->firstOrFail();
+        $primaryPoc = $user->businessProfile?->primaryPointOfContact;
+
+        $this->assertNotNull($primaryPoc);
+        $this->assertSame($user->email, $primaryPoc->email);
+        $this->assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
     public function test_unverified_user_is_sent_to_verification_notice_before_dashboard(): void
     {
         $user = User::factory()->unverified()->create([
