@@ -19,8 +19,72 @@ class AdminUserController extends Controller
     {
         $this->authorizeAdmin($request);
 
+        $filters = $request->validate([
+            'role' => ['nullable', Rule::in(['professional', 'business', 'admin'])],
+            'professional_category' => ['nullable', Rule::in(array_keys(config('professional-professions.values')))],
+            'business_type' => ['nullable', 'string', 'max:120', Rule::exists('business_types', 'name')],
+            'location' => ['nullable', 'string', 'max:150'],
+            'registered_from' => ['nullable', 'date'],
+            'registered_to' => ['nullable', 'date', 'after_or_equal:registered_from'],
+        ]);
+
+        $users = User::query()
+            ->with(['businessProfile', 'professionalProfession'])
+            ->when($filters['role'] ?? null, fn ($query, string $role) => $query->where('role', $role))
+            ->when($filters['professional_category'] ?? null, function ($query, string $profession) {
+                $query->where('role', 'professional')
+                    ->whereHas('professionalProfession', fn ($professionQuery) => $professionQuery->where('profession', $profession));
+            })
+            ->when($filters['business_type'] ?? null, function ($query, string $businessType) {
+                $query->where('role', 'business')
+                    ->whereHas('businessProfile', fn ($profileQuery) => $profileQuery->where('company_type', $businessType));
+            })
+            ->when($filters['location'] ?? null, function ($query, string $location) use ($filters) {
+                $role = $filters['role'] ?? null;
+
+                if ($role === 'business') {
+                    $query->whereHas('businessProfile', fn ($profileQuery) => $profileQuery->where('location', 'like', "%{$location}%"));
+                    return;
+                }
+
+                if ($role === 'professional') {
+                    $query->where(function ($userQuery) use ($location) {
+                        $userQuery
+                            ->where('address_city', 'like', "%{$location}%")
+                            ->orWhere('residence', 'like', "%{$location}%");
+                    });
+                    return;
+                }
+
+                $query->where(function ($userQuery) use ($location) {
+                    $userQuery
+                        ->where(function ($professionalQuery) use ($location) {
+                            $professionalQuery
+                                ->where('role', 'professional')
+                                ->where(function ($addressQuery) use ($location) {
+                                    $addressQuery
+                                        ->where('address_city', 'like', "%{$location}%")
+                                        ->orWhere('residence', 'like', "%{$location}%");
+                                });
+                        })
+                        ->orWhere(function ($businessQuery) use ($location) {
+                            $businessQuery
+                                ->where('role', 'business')
+                                ->whereHas('businessProfile', fn ($profileQuery) => $profileQuery->where('location', 'like', "%{$location}%"));
+                        });
+                });
+            })
+            ->when($filters['registered_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['registered_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.users.index', [
-            'users' => User::with('businessProfile')->latest()->paginate(15),
+            'users' => $users,
+            'filters' => $filters,
+            'businessTypes' => BusinessType::query()->ordered()->get(),
+            'professionalCategories' => config('professional-professions.values'),
         ]);
     }
 
