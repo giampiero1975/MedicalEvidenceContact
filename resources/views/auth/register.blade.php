@@ -19,7 +19,7 @@
                         </div>
                         <div class="rounded-md border border-gray-200 p-4">
                             <p class="font-semibold text-gray-900">Business</p>
-                            <p class="mt-1 text-gray-600">Dati azienda per gestire annunci, candidature e colloqui.</p>
+                            <p class="mt-1 text-gray-600">Dati azienda e contatto principale per gestire annunci, candidature e colloqui.</p>
                         </div>
                         <div class="rounded-md border border-gray-200 p-4">
                             <p class="font-semibold text-gray-900">Staff</p>
@@ -52,12 +52,14 @@
                         </fieldset>
 
                         <fieldset class="mt-6">
-                            <legend class="text-base font-semibold text-gray-900">Dati account</legend>
+                            <legend class="text-base font-semibold text-gray-900" x-text="accountType === 'business' ? 'Point of Contact principale' : 'Dati account'"></legend>
+                            <p x-cloak x-show="accountType === 'business'" class="mt-1 text-sm text-gray-500">Questo contatto sarà creato come POC principale dell'azienda.</p>
                             <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div><x-label for="first_name" value="Nome" /><x-input id="first_name" class="mt-1 block w-full" type="text" name="first_name" :value="old('first_name')" required autofocus autocomplete="given-name" /></div>
                                 <div><x-label for="last_name" value="Cognome" /><x-input id="last_name" class="mt-1 block w-full" type="text" name="last_name" :value="old('last_name')" required autocomplete="family-name" /></div>
                                 <div><x-label for="email" value="Email" /><x-input id="email" class="mt-1 block w-full" type="email" name="email" :value="old('email')" required autocomplete="username" /></div>
                                 <div><x-label for="phone" value="Telefono" /><x-input id="phone" class="mt-1 block w-full" type="text" name="phone" :value="old('phone')" required autocomplete="tel" /></div>
+                                <div x-cloak x-show="accountType === 'business'" class="sm:col-span-2"><x-label for="poc_role" value="Ruolo in azienda" /><x-input id="poc_role" class="mt-1 block w-full" type="text" name="poc_role" :value="old('poc_role')" /></div>
                                 <div><x-label for="password" value="Password" /><x-input id="password" class="mt-1 block w-full" type="password" name="password" required autocomplete="new-password" /></div>
                                 <div><x-label for="password_confirmation" value="Conferma password" /><x-input id="password_confirmation" class="mt-1 block w-full" type="password" name="password_confirmation" required autocomplete="new-password" /></div>
                             </div>
@@ -93,7 +95,7 @@
                         <fieldset x-cloak x-show="accountType === 'business'" class="mt-6">
                             <legend class="text-base font-semibold text-gray-900">Profilo azienda</legend>
                             <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div class="sm:col-span-2"><x-label for="company_name" value="Nome azienda" /><x-input id="company_name" class="mt-1 block w-full" type="text" name="company_name" :value="old('company_name')" /></div>
+                                <div class="sm:col-span-2"><x-label for="company_name" value="Nome azienda / struttura" /><x-input id="company_name" class="mt-1 block w-full" type="text" name="company_name" :value="old('company_name')" /></div>
                                 <div>
                                     <x-label for="company_type" value="Tipo azienda" />
                                     <select id="company_type" name="company_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -103,8 +105,23 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div><x-label for="location" value="Località" /><x-input id="location" class="mt-1 block w-full" type="text" name="location" :value="old('location')" /></div>
-                                <div class="sm:col-span-2"><x-label for="employee_count" value="Numero dipendenti" /><x-input id="employee_count" class="mt-1 block w-full" type="number" min="1" name="employee_count" :value="old('employee_count')" /></div>
+                                <div><x-label for="vat_number" value="Partita IVA" /><x-input id="vat_number" class="mt-1 block w-full" type="text" inputmode="numeric" maxlength="11" name="vat_number" :value="old('vat_number')" /></div>
+                                <div>
+                                    <x-label for="employee_count" value="Numero dipendenti" />
+                                    <select id="employee_count" name="employee_count" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="">Seleziona</option>
+                                        <option value="10" @selected((string) old('employee_count') === '10')>1-10</option>
+                                        <option value="50" @selected((string) old('employee_count') === '50')>11-50</option>
+                                        <option value="200" @selected((string) old('employee_count') === '200')>51-200</option>
+                                        <option value="500" @selected((string) old('employee_count') === '500')>201-500</option>
+                                        <option value="501" @selected((string) old('employee_count') === '501')>500+</option>
+                                    </select>
+                                </div>
+                                <div><x-label for="company_country" value="Paese" /><x-input id="company_country" class="mt-1 block w-full" type="text" name="company_country" :value="old('company_country', 'Italia')" /></div>
+                                <div class="sm:col-span-2"><x-label for="company_street_address" value="Via / indirizzo" /><x-input id="company_street_address" class="mt-1 block w-full" type="text" name="company_street_address" :value="old('company_street_address')" /></div>
+                                <div><x-label for="company_city" value="Città" /><x-input id="company_city" class="mt-1 block w-full" type="text" name="company_city" :value="old('company_city')" /></div>
+                                <div><x-label for="company_province" value="Provincia" /><x-input id="company_province" class="mt-1 block w-full" type="text" name="company_province" :value="old('company_province')" /></div>
+                                <div><x-label for="company_postal_code" value="CAP" /><x-input id="company_postal_code" class="mt-1 block w-full" type="text" name="company_postal_code" :value="old('company_postal_code')" /></div>
                             </div>
                         </fieldset>
 
