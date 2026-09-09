@@ -26,8 +26,8 @@ class JobPostingDeletionGuardTest extends TestCase
 
         $this->actingAs($business)
             ->delete(route('job-postings.destroy', $posting))
-            ->assertRedirect(route('job-postings.index', absolute: false))
-            ->assertSessionHas('status_variant', 'warning');
+            ->assertRedirect(route('job-postings.show', $posting, absolute: false))
+            ->assertSessionHas('warning', 'Non puoi eliminare un annuncio con candidature attive. Puoi chiuderlo impostando lo stato su Scaduto.');
 
         $this->assertDatabaseHas('job_postings', ['id' => $posting->id]);
     }
