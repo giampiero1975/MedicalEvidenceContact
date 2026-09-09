@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
 
@@ -80,11 +80,6 @@ class User extends Authenticatable
         });
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -93,34 +88,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function jobPostings(): HasMany
+    public function professionalProfile(): HasOne
     {
-        return $this->hasMany(JobPosting::class);
+        return $this->hasOne(ProfessionalProfile::class);
     }
 
-    public function favoriteJobPostings(): BelongsToMany
+    public function professionalProfessions(): HasMany
     {
-        return $this->belongsToMany(JobPosting::class, 'job_posting_favorites')->withTimestamps();
-    }
-
-    public function jobApplications(): HasMany
-    {
-        return $this->hasMany(JobApplication::class);
-    }
-
-    public function businessProfile(): HasOne
-    {
-        return $this->hasOne(BusinessProfile::class);
-    }
-
-    public function professionalDocument(): HasOne
-    {
-        return $this->hasOne(ProfessionalDocument::class);
-    }
-
-    public function professionalProfession(): HasOne
-    {
-        return $this->hasOne(ProfessionalProfession::class);
+        return $this->hasMany(ProfessionalProfession::class);
     }
 
     public function professionalProfileItems(): HasMany
@@ -128,18 +103,58 @@ class User extends Authenticatable
         return $this->hasMany(ProfessionalProfileItem::class);
     }
 
-    public function moodleUserLinks(): HasMany
+    public function professionalDocument(): HasOne
     {
-        return $this->hasMany(MoodleUserLink::class, 'laravel_user_id');
+        return $this->hasOne(ProfessionalDocument::class);
     }
 
-    public function moodleLinkAttempts(): HasMany
+    public function experiences(): HasMany
     {
-        return $this->hasMany(MoodleLinkAttempt::class, 'laravel_user_id');
+        return $this->hasMany(ProfessionalExperience::class);
     }
 
     public function certificates(): HasMany
     {
-        return $this->hasMany(UserCertificate::class, 'laravel_user_id');
+        return $this->hasMany(ProfessionalCertificate::class);
+    }
+
+    public function moodleLinks(): HasMany
+    {
+        return $this->hasMany(MoodleUserLink::class);
+    }
+
+    public function jobApplications(): HasMany
+    {
+        return $this->hasMany(JobApplication::class);
+    }
+
+    public function favoriteJobPostings(): BelongsToMany
+    {
+        return $this->belongsToMany(JobPosting::class, 'job_posting_favorites')->withTimestamps();
+    }
+
+    public function jobPostings(): HasMany
+    {
+        return $this->hasMany(JobPosting::class);
+    }
+
+    public function businessProfile(): HasOne
+    {
+        return $this->hasOne(BusinessProfile::class);
+    }
+
+    public function businessPointsOfContact(): HasMany
+    {
+        return $this->hasMany(BusinessPointOfContact::class);
+    }
+
+    public function businessLocations(): HasMany
+    {
+        return $this->hasMany(BusinessLocation::class);
+    }
+
+    public function businessDepartments(): HasMany
+    {
+        return $this->hasMany(BusinessDepartment::class);
     }
 }
