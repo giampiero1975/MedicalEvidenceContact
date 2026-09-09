@@ -17,11 +17,13 @@ class JobPostingCompanyCategoryFilterTest extends TestCase
         $professional = User::factory()->create(['role' => 'professional']);
 
         foreach (['RSA', 'Farmacia', 'Clinica privata'] as $index => $name) {
-            BusinessType::create([
-                'name' => $name,
-                'is_active' => true,
-                'sort_order' => $index + 1,
-            ]);
+            BusinessType::updateOrCreate(
+                ['name' => $name],
+                [
+                    'is_active' => true,
+                    'sort_order' => $index + 1,
+                ]
+            );
         }
 
         $rsa = $this->businessWithPosting('RSA', 'OSS RSA Milano');
@@ -42,23 +44,20 @@ class JobPostingCompanyCategoryFilterTest extends TestCase
     {
         $professional = User::factory()->create(['role' => 'professional']);
 
-        BusinessType::create([
-            'name' => 'RSA',
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
+        BusinessType::updateOrCreate(
+            ['name' => 'RSA'],
+            ['is_active' => true, 'sort_order' => 1]
+        );
 
-        BusinessType::create([
-            'name' => 'Farmacia',
-            'is_active' => true,
-            'sort_order' => 2,
-        ]);
+        BusinessType::updateOrCreate(
+            ['name' => 'Farmacia'],
+            ['is_active' => true, 'sort_order' => 2]
+        );
 
-        BusinessType::create([
-            'name' => 'Tipo disattivato',
-            'is_active' => false,
-            'sort_order' => 3,
-        ]);
+        BusinessType::updateOrCreate(
+            ['name' => 'Tipo disattivato'],
+            ['is_active' => false, 'sort_order' => 3]
+        );
 
         $this->actingAs($professional)
             ->get(route('job-postings.index'))
@@ -73,11 +72,10 @@ class JobPostingCompanyCategoryFilterTest extends TestCase
     {
         $professional = User::factory()->create(['role' => 'professional']);
 
-        BusinessType::create([
-            'name' => 'RSA',
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
+        BusinessType::updateOrCreate(
+            ['name' => 'RSA'],
+            ['is_active' => true, 'sort_order' => 1]
+        );
 
         $this->actingAs($professional)
             ->get(route('job-postings.index', [
