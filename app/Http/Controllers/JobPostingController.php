@@ -172,19 +172,16 @@ class JobPostingController extends Controller
     {
         $this->authorizeBusinessOwner($request, $jobPosting);
 
-        $hasActiveApplications = $jobPosting->applications()
-            ->whereNotIn('status', [
-                JobApplication::STATUS_REJECTED,
-                JobApplication::STATUS_WITHDRAWN,
-                JobApplication::STATUS_HIRED,
-            ])
-            ->exists();
+        $terminalStatuses = [
+            JobApplication::STATUS_REJECTED,
+            JobApplication::STATUS_WITHDRAWN,
+            JobApplication::STATUS_HIRED,
+        ];
 
-        if ($hasActiveApplications) {
+        if ($jobPosting->applications()->whereNotIn('status', $terminalStatuses)->exists()) {
             return redirect()
-                ->route('job-postings.index')
-                ->with('status', 'Impossibile eliminare l’annuncio: sono presenti candidature attive. Chiudilo impostando lo stato su Scaduto.')
-                ->with('status_variant', 'warning');
+                ->route('job-postings.show', $jobPosting)
+                ->with('warning', 'Non puoi eliminare un annuncio con candidature attive. Puoi chiuderlo impostando lo stato su Scaduto.');
         }
 
         $jobPosting->delete();
@@ -216,6 +213,8 @@ class JobPostingController extends Controller
             'salary_max' => $this->normalizeMoney($request->input('salary_max')),
         ]);
 
+        $minimumExpiryDate = today()->addDays(7)->toDateString();
+
         $data = $request->validate([
             'business_location_id' => [
                 'nullable',
@@ -243,7 +242,7 @@ class JobPostingController extends Controller
             'contract_type' => ['required', 'string', 'max:120'],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
-            'expires_at' => ['required', 'date', 'after_or_equal:today'],
+            'expires_at' => ['required', 'date', 'after_or_equal:'.$minimumExpiryDate],
             'status' => ['sometimes', 'in:active,expired'],
         ], [
             'business_location_id.exists' => 'La sede selezionata non è disponibile per questa struttura.',
@@ -252,6 +251,7 @@ class JobPostingController extends Controller
             'salary_min.numeric' => 'La retribuzione minima deve essere un importo valido.',
             'salary_max.numeric' => 'La retribuzione massima deve essere un importo valido.',
             'salary_max.gte' => 'La retribuzione massima deve essere uguale o superiore alla retribuzione minima.',
+            'expires_at.after_or_equal' => 'La data di scadenza deve essere almeno 7 giorni da oggi.',
         ]);
 
         if (! empty($data['business_location_id'])) {
