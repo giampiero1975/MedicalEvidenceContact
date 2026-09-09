@@ -54,14 +54,26 @@
                     <x-label for="salary_max" value="Retribuzione a" />
                     <x-input id="salary_max" class="mt-1 block w-full" type="number" min="0" step="100" name="salary_max" :value="$filters['salary_max'] ?? ''" />
                 </div>
-                <div class="lg:col-span-2">
-                    <x-label for="published_from" value="Pubblicato da" />
-                    <x-input id="published_from" class="mt-1 block w-full" type="date" name="published_from" :value="$filters['published_from'] ?? ''" />
-                </div>
-                <div class="lg:col-span-2">
-                    <x-label for="published_to" value="Pubblicato a" />
-                    <x-input id="published_to" class="mt-1 block w-full" type="date" name="published_to" :value="$filters['published_to'] ?? ''" />
-                </div>
+                @if ($role === 'professional')
+                    <div class="lg:col-span-3">
+                        <x-label for="publication_period" value="Data pubblicazione" />
+                        <select id="publication_period" name="publication_period" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
+                            <option value="">Tutte</option>
+                            <option value="recent" @selected(($filters['publication_period'] ?? '') === 'recent')>Più recenti</option>
+                            <option value="week" @selected(($filters['publication_period'] ?? '') === 'week')>Ultima settimana</option>
+                            <option value="month" @selected(($filters['publication_period'] ?? '') === 'month')>Ultimo mese</option>
+                        </select>
+                    </div>
+                @else
+                    <div class="lg:col-span-2">
+                        <x-label for="published_from" value="Pubblicato da" />
+                        <x-input id="published_from" class="mt-1 block w-full" type="date" name="published_from" :value="$filters['published_from'] ?? ''" />
+                    </div>
+                    <div class="lg:col-span-2">
+                        <x-label for="published_to" value="Pubblicato a" />
+                        <x-input id="published_to" class="mt-1 block w-full" type="date" name="published_to" :value="$filters['published_to'] ?? ''" />
+                    </div>
+                @endif
                 @if ($role === 'business')
                     <div class="lg:col-span-1">
                         <x-label for="status" value="Stato" />
