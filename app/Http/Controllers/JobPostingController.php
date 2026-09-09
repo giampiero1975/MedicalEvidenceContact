@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\TransactionalActionMail;
 use App\Models\BusinessDepartment;
 use App\Models\BusinessLocation;
+use App\Models\BusinessType;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use Illuminate\Http\RedirectResponse;
@@ -46,9 +47,20 @@ class JobPostingController extends Controller
                 $user->role === 'business' && ($filters['contract_type'] ?? null),
                 fn ($query, string $contractType) => $query->where('contract_type', $contractType)
             )
-            ->when($filters['company_category'] ?? null, function ($query, string $companyCategory) {
-                $query->whereHas('businessProfile', fn ($profile) => $profile->where('company_type', 'like', "%{$companyCategory}%"));
-            })
+            ->when(
+                $user->role === 'professional' && ! empty($filters['company_categories'] ?? []),
+                fn ($query) => $query->whereHas(
+                    'businessProfile',
+                    fn ($profile) => $profile->whereIn('company_type', $filters['company_categories'])
+                )
+            )
+            ->when(
+                $user->role === 'business' && ($filters['company_category'] ?? null),
+                fn ($query, string $companyCategory) => $query->whereHas(
+                    'businessProfile',
+                    fn ($profile) => $profile->where('company_type', 'like', "%{$companyCategory}%")
+                )
+            )
             ->when($filters['professional_category'] ?? null, function ($query, string $professionalCategory) {
                 $query->where(function ($query) use ($professionalCategory) {
                     $query
@@ -93,6 +105,7 @@ class JobPostingController extends Controller
             'acceptedJobApplications' => $acceptedJobApplications,
             'filters' => $filters,
             'contractTypes' => $this->contractTypes(),
+            'companyCategories' => $this->companyCategories(),
             'role' => $user->role,
         ]);
     }
@@ -307,6 +320,8 @@ class JobPostingController extends Controller
             'contract_types' => ['nullable', 'array'],
             'contract_types.*' => ['string', 'max:120', Rule::in($this->contractTypes())],
             'company_category' => ['nullable', 'string', 'max:120'],
+            'company_categories' => ['nullable', 'array'],
+            'company_categories.*' => ['string', 'max:120', Rule::in($this->companyCategories())],
             'professional_category' => ['nullable', 'string', 'max:120'],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
@@ -373,6 +388,15 @@ class JobPostingController extends Controller
     private function contractTypes(): array
     {
         return ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
+    }
+
+    private function companyCategories(): array
+    {
+        return BusinessType::query()
+            ->active()
+            ->ordered()
+            ->pluck('name')
+            ->all();
     }
 
     private function authorizeBusinessOwner(Request $request, JobPosting $jobPosting): void
