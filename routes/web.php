@@ -42,7 +42,7 @@ Route::get('/admin', function (Request $request) {
 Route::get('/admin/login', fn () => view('auth.staff-login'))->middleware('guest')->name('admin.login');
 Route::redirect('/staff/login', '/admin/login')->middleware('guest')->name('staff.login');
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'not-suspended', 'verified'])->group(function () {
     Route::get('/dashboard', function (Request $request) {
         if ($request->user()->role === 'admin') return redirect()->route('admin.dashboard');
         if ($request->user()->role === 'professional') return app(ProfessionalDashboardController::class)($request);
@@ -54,7 +54,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/admin/dashboard', AdminDashboardController::class)->name('admin.dashboard');
     Route::get('/admin/ui', AdminUiPlaygroundController::class)->name('admin.ui.index');
+    Route::patch('/admin/users/{user}/sospensione', [AdminUserController::class, 'toggleSuspension'])->name('admin.users.suspension');
     Route::resource('/admin/users', AdminUserController::class)->names('admin.users')->except('show');
+    Route::patch('/admin/annunci/{jobPosting}/sospensione', [AdminJobPostingController::class, 'toggleSuspension'])->name('admin.job-postings.suspension');
     Route::resource('/admin/annunci', AdminJobPostingController::class)->names('admin.job-postings')->parameters(['annunci' => 'jobPosting'])->except('show');
     Route::patch('/admin/business-types/{businessType}/toggle', [AdminBusinessTypeController::class, 'toggle'])->name('admin.business-types.toggle');
     Route::resource('/admin/business-types', AdminBusinessTypeController::class)
