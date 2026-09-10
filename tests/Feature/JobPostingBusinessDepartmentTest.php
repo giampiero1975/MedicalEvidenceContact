@@ -29,6 +29,7 @@ class JobPostingBusinessDepartmentTest extends TestCase
             'type' => 'operational',
             'street_address' => 'Via Roma 10',
             'city' => 'Milano',
+            'province' => 'MI',
             'country' => 'Italia',
             'is_primary' => true,
             'is_active' => true,
@@ -47,16 +48,20 @@ class JobPostingBusinessDepartmentTest extends TestCase
                 'business_department_id' => $department->id,
                 'title' => 'OSS per Nucleo Alzheimer',
                 'description' => 'Ricerca operatore socio sanitario.',
+                'professional_category' => 'OSS',
                 'positions' => 2,
                 'contract_type' => 'Tempo determinato',
                 'expires_at' => now()->addMonth()->toDateString(),
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect(route('job-postings.index', absolute: false));
 
         $this->assertDatabaseHas('job_postings', [
             'business_profile_id' => $profile->id,
             'business_location_id' => $location->id,
             'business_department_id' => $department->id,
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
         ]);
     }
 
@@ -75,6 +80,7 @@ class JobPostingBusinessDepartmentTest extends TestCase
             'type' => 'operational',
             'street_address' => 'Via Roma 10',
             'city' => 'Milano',
+            'province' => 'MI',
             'country' => 'Italia',
             'is_active' => true,
         ]);
@@ -108,6 +114,7 @@ class JobPostingBusinessDepartmentTest extends TestCase
                 'business_department_id' => $otherDepartment->id,
                 'title' => 'OSS',
                 'description' => 'Ricerca operatore socio sanitario.',
+                'professional_category' => 'OSS',
                 'positions' => 1,
                 'contract_type' => 'Tempo determinato',
                 'expires_at' => now()->addMonth()->toDateString(),
