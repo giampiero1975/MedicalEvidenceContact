@@ -4,7 +4,7 @@
     <div class="mx-auto max-w-5xl space-y-6">
         <x-ui.page-header
             title="Crea annuncio"
-            subtitle="Pubblica un nuovo annuncio per conto di un business registrato."
+            subtitle="Pubblica un nuovo annuncio per conto di un’azienda registrata o non registrata."
         />
 
         @if ($errors->any())
