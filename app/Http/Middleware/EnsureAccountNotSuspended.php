@@ -10,13 +10,7 @@ class EnsureAccountNotSuspended
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
-
-        if ($user?->suspended_at) {
-            auth()->guard()->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
+        if ($request->user()?->suspended_at) {
             abort(403, 'Account sospeso.');
         }
 
