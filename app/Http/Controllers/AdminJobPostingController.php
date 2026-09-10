@@ -141,6 +141,12 @@ class AdminJobPostingController extends Controller
     /** @return array<string, mixed> */
     private function validateJobPosting(Request $request): array
     {
+        if (! $request->filled('company_source')) {
+            $request->merge([
+                'company_source' => $request->filled('external_company_name') ? 'external' : 'registered',
+            ]);
+        }
+
         return $request->validate([
             'company_source' => ['required', Rule::in(['registered', 'external'])],
             'user_id' => [
