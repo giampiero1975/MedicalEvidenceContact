@@ -24,9 +24,12 @@ class JobPostingPublicationMailTest extends TestCase
         $this->actingAs($business)
             ->post(route('job-postings.store'), [
                 'title' => 'Infermiere reparto degenza',
-                'description' => 'Cerchiamo un infermiere per reparto degenza.',
+                'description' => '<p>Cerchiamo un <strong>infermiere</strong> per reparto degenza.</p>',
+                'professional_category' => 'Infermiere',
                 'positions' => 2,
-                'workplace_address' => 'Via Roma 10, Milano',
+                'workplace_address' => 'Via Roma 10',
+                'workplace_city' => 'Milano',
+                'workplace_province' => 'MI',
                 'contract_type' => 'Tempo indeterminato',
                 'salary_min' => 28000,
                 'salary_max' => 34000,
