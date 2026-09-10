@@ -14,9 +14,7 @@ class JobPostingTest extends TestCase
 
     public function test_business_user_can_publish_a_job_posting(): void
     {
-        $business = User::factory()->create([
-            'role' => 'business',
-        ]);
+        $business = User::factory()->create(['role' => 'business']);
 
         $businessProfile = $business->businessProfile()->create([
             'user_id' => $business->id,
@@ -29,8 +27,11 @@ class JobPostingTest extends TestCase
         $response = $this->actingAs($business)->post('/annunci', [
             'title' => 'Infermiere reparto degenza',
             'description' => 'Cerchiamo un infermiere per reparto degenza.',
+            'professional_category' => 'Infermiere',
             'positions' => 2,
-            'workplace_address' => 'Via Roma 10, Milano',
+            'workplace_address' => 'Via Roma 10',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'required_skills' => 'Iscrizione OPI, disponibilita turni',
             'contract_type' => 'Tempo indeterminato',
             'salary_min' => 28000,
@@ -44,6 +45,7 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'business_profile_id' => $businessProfile->id,
             'title' => 'Infermiere reparto degenza',
+            'professional_category' => 'Infermiere',
             'positions' => 2,
             'contract_type' => 'Tempo indeterminato',
             'status' => 'active',
@@ -59,8 +61,11 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'OSS struttura residenziale',
             'description' => 'Annuncio visibile ai professionisti.',
+            'professional_category' => 'OSS',
             'positions' => 3,
             'workplace_address' => 'Via Milano 3, Roma',
+            'workplace_city' => 'Roma',
+            'workplace_province' => 'RM',
             'contract_type' => 'Tempo determinato',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
@@ -70,9 +75,12 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Annuncio scaduto',
             'description' => 'Non deve comparire.',
+            'professional_category' => 'Altra',
             'positions' => 1,
             'workplace_address' => 'Via Torino 1, Roma',
-            'contract_type' => 'Part-time',
+            'workplace_city' => 'Roma',
+            'workplace_province' => 'RM',
+            'contract_type' => 'Altro',
             'expires_at' => now()->subDay()->toDateString(),
             'status' => 'expired',
         ]);
@@ -100,8 +108,11 @@ class JobPostingTest extends TestCase
             'business_profile_id' => $matchingProfile->id,
             'title' => 'OSS RSA Milano',
             'description' => 'Posizione per reparto assistenziale.',
+            'professional_category' => 'OSS',
             'positions' => 2,
             'workplace_address' => 'Via Padova 10, Milano',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'required_skills' => 'OSS, turni diurni',
             'contract_type' => 'Tempo indeterminato',
             'salary_min' => 28000,
@@ -124,10 +135,13 @@ class JobPostingTest extends TestCase
             'business_profile_id' => $otherProfile->id,
             'title' => 'Infermiere sala operatoria',
             'description' => 'Posizione non coerente con i filtri.',
+            'professional_category' => 'Infermiere',
             'positions' => 1,
             'workplace_address' => 'Via Indipendenza 2, Bologna',
+            'workplace_city' => 'Bologna',
+            'workplace_province' => 'BO',
             'required_skills' => 'OPI, sala operatoria',
-            'contract_type' => 'Part-time',
+            'contract_type' => 'A chiamata',
             'salary_min' => 42000,
             'salary_max' => 46000,
             'expires_at' => now()->addWeek()->toDateString(),
@@ -138,8 +152,6 @@ class JobPostingTest extends TestCase
             ->get(route('job-postings.index', [
                 'keyword' => 'assistenziale',
                 'location' => 'Milano',
-                'contract_type' => 'Tempo indeterminato',
-                'company_category' => 'RSA',
                 'professional_category' => 'OSS',
                 'salary_min' => 25000,
                 'salary_max' => 35000,
@@ -179,9 +191,12 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Fisioterapista ambulatoriale',
             'description' => 'Opportunita per fisioterapista in ambulatorio.',
+            'professional_category' => 'Fisioterapista',
             'positions' => 1,
             'workplace_address' => 'Via Napoli 8, Torino',
-            'contract_type' => 'Collaborazione',
+            'workplace_city' => 'Torino',
+            'workplace_province' => 'TO',
+            'contract_type' => 'Altro',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
@@ -212,8 +227,11 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Annuncio business',
             'description' => 'Un business non puo candidarsi.',
+            'professional_category' => 'OSS',
             'positions' => 1,
             'workplace_address' => 'Via Firenze 1, Milano',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'contract_type' => 'Tempo determinato',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
@@ -237,8 +255,11 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Tecnico radiologo',
             'description' => 'Posizione aperta in diagnostica.',
+            'professional_category' => 'Altra',
             'positions' => 1,
             'workplace_address' => 'Via San Luca 12, Bologna',
+            'workplace_city' => 'Bologna',
+            'workplace_province' => 'BO',
             'contract_type' => 'Tempo indeterminato',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
@@ -265,28 +286,21 @@ class JobPostingTest extends TestCase
     public function test_business_user_can_view_interviews_frontend_section(): void
     {
         $business = User::factory()->create(['role' => 'business']);
-        $professional = User::factory()->create([
-            'role' => 'professional',
-            'name' => 'Giulia Rossi',
-            'first_name' => 'Giulia',
-            'last_name' => 'Rossi',
-            'residence' => 'Bologna',
-        ]);
+        $professional = User::factory()->create(['role' => 'professional', 'name' => 'Giulia Rossi', 'first_name' => 'Giulia', 'last_name' => 'Rossi', 'residence' => 'Bologna']);
         $jobPosting = JobPosting::create([
             'user_id' => $business->id,
             'title' => 'Tecnico radiologo',
             'description' => 'Posizione aperta in diagnostica.',
+            'professional_category' => 'Altra',
             'positions' => 1,
             'workplace_address' => 'Via San Luca 12, Bologna',
+            'workplace_city' => 'Bologna',
+            'workplace_province' => 'BO',
             'contract_type' => 'Tempo indeterminato',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-        JobApplication::create([
-            'job_posting_id' => $jobPosting->id,
-            'user_id' => $professional->id,
-            'status' => 'inviata',
-        ]);
+        JobApplication::create(['job_posting_id' => $jobPosting->id, 'user_id' => $professional->id, 'status' => 'inviata']);
 
         $this->actingAs($business)
             ->get(route('interviews.index'))
@@ -308,17 +322,16 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Fisioterapista ambulatoriale',
             'description' => 'Opportunita per fisioterapista in ambulatorio.',
+            'professional_category' => 'Fisioterapista',
             'positions' => 1,
             'workplace_address' => 'Via Napoli 8, Torino',
-            'contract_type' => 'Collaborazione',
+            'workplace_city' => 'Torino',
+            'workplace_province' => 'TO',
+            'contract_type' => 'Altro',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
-        JobApplication::create([
-            'job_posting_id' => $jobPosting->id,
-            'user_id' => $professional->id,
-            'status' => 'inviata',
-        ]);
+        JobApplication::create(['job_posting_id' => $jobPosting->id, 'user_id' => $professional->id, 'status' => 'inviata']);
 
         $this->actingAs($professional)
             ->get(route('interviews.index'))
@@ -337,8 +350,11 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Titolo iniziale',
             'description' => 'Descrizione iniziale.',
+            'professional_category' => 'OSS',
             'positions' => 1,
             'workplace_address' => 'Via Roma 1, Milano',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'contract_type' => 'Tempo determinato',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
@@ -347,8 +363,11 @@ class JobPostingTest extends TestCase
         $response = $this->actingAs($business)->put(route('job-postings.update', $jobPosting), [
             'title' => 'Titolo aggiornato',
             'description' => 'Descrizione aggiornata.',
+            'professional_category' => 'Infermiere',
             'positions' => 3,
-            'workplace_address' => 'Via Milano 20, Milano',
+            'workplace_address' => 'Via Milano 20',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'required_skills' => 'Esperienza reparto',
             'contract_type' => 'Tempo indeterminato',
             'salary_min' => 30000,
@@ -357,10 +376,12 @@ class JobPostingTest extends TestCase
             'status' => 'active',
         ]);
 
+        $response->assertSessionHasNoErrors();
         $response->assertRedirect(route('job-postings.show', $jobPosting, absolute: false));
         $this->assertDatabaseHas('job_postings', [
             'id' => $jobPosting->id,
             'title' => 'Titolo aggiornato',
+            'professional_category' => 'Infermiere',
             'positions' => 3,
             'contract_type' => 'Tempo indeterminato',
         ]);
@@ -373,9 +394,12 @@ class JobPostingTest extends TestCase
             'user_id' => $business->id,
             'title' => 'Annuncio da eliminare',
             'description' => 'Questo annuncio verra eliminato.',
+            'professional_category' => 'Altra',
             'positions' => 1,
             'workplace_address' => 'Via Venezia 2, Padova',
-            'contract_type' => 'Collaborazione',
+            'workplace_city' => 'Padova',
+            'workplace_province' => 'PD',
+            'contract_type' => 'Altro',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
@@ -393,9 +417,12 @@ class JobPostingTest extends TestCase
             'user_id' => $owner->id,
             'title' => 'Annuncio protetto',
             'description' => 'Solo il proprietario puo gestirlo.',
+            'professional_category' => 'OSS',
             'positions' => 1,
             'workplace_address' => 'Via Como 5, Monza',
-            'contract_type' => 'Part-time',
+            'workplace_city' => 'Monza',
+            'workplace_province' => 'MB',
+            'contract_type' => 'Altro',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
@@ -403,8 +430,11 @@ class JobPostingTest extends TestCase
         $this->actingAs($otherBusiness)->put(route('job-postings.update', $jobPosting), [
             'title' => 'Tentativo modifica',
             'description' => 'Non autorizzato.',
+            'professional_category' => 'OSS',
             'positions' => 2,
             'workplace_address' => 'Via Test 1',
+            'workplace_city' => 'Monza',
+            'workplace_province' => 'MB',
             'contract_type' => 'Tempo determinato',
             'expires_at' => now()->addWeek()->toDateString(),
         ])->assertForbidden();
@@ -419,9 +449,12 @@ class JobPostingTest extends TestCase
             'user_id' => $owner->id,
             'title' => 'Infermiera sala operatoria',
             'description' => 'Posizione riservata al business proprietario.',
+            'professional_category' => 'Infermiere',
             'positions' => 1,
             'workplace_address' => 'Via Verdi 4, Firenze',
-            'contract_type' => 'Turni',
+            'workplace_city' => 'Firenze',
+            'workplace_province' => 'FI',
+            'contract_type' => 'Altro',
             'expires_at' => now()->addWeek()->toDateString(),
             'status' => 'active',
         ]);
