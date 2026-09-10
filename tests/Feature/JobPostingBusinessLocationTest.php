@@ -40,6 +40,7 @@ class JobPostingBusinessLocationTest extends TestCase
                 'business_location_id' => $location->id,
                 'title' => 'OSS per RSA',
                 'description' => 'Ricerca operatore socio sanitario.',
+                'professional_category' => 'OSS',
                 'positions' => 2,
                 'required_skills' => 'Qualifica OSS',
                 'contract_type' => 'Tempo determinato',
@@ -47,12 +48,15 @@ class JobPostingBusinessLocationTest extends TestCase
                 'salary_max' => '1.500,00',
                 'expires_at' => now()->addMonth()->toDateString(),
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect(route('job-postings.index', absolute: false));
 
         $this->assertDatabaseHas('job_postings', [
             'business_profile_id' => $profile->id,
             'business_location_id' => $location->id,
             'workplace_address' => 'Via Roma 10, 20100 Milano (MI), Italia',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'salary_min' => 1200,
             'salary_max' => 1500,
         ]);
@@ -92,6 +96,7 @@ class JobPostingBusinessLocationTest extends TestCase
                 'business_location_id' => $otherLocation->id,
                 'title' => 'OSS per RSA',
                 'description' => 'Ricerca operatore socio sanitario.',
+                'professional_category' => 'OSS',
                 'positions' => 1,
                 'contract_type' => 'Tempo determinato',
                 'expires_at' => now()->addMonth()->toDateString(),
