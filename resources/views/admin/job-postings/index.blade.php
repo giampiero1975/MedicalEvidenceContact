@@ -66,7 +66,10 @@
                                         <p class="mt-1 text-xs text-slate-500">{{ $jobPosting->positions }} {{ $jobPosting->positions === 1 ? 'posizione' : 'posizioni' }}</p>
                                     </td>
                                     <td class="px-5 py-4 text-slate-600">
-                                        {{ $jobPosting->businessProfile?->company_name ?: $jobPosting->owner?->businessProfile?->company_name ?: $jobPosting->owner?->name ?: 'Non assegnato' }}
+                                        {{ $jobPosting->companyName() }}
+                                        @if ($jobPosting->external_company_name)
+                                            <div class="mt-1"><x-ui.badge variant="info">Non registrata</x-ui.badge></div>
+                                        @endif
                                     </td>
                                     <td class="px-5 py-4">
                                         <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'neutral'">
