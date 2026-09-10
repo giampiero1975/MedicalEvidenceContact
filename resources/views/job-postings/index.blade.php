@@ -164,7 +164,7 @@
                                         <x-ui.badge variant="info">Nuova</x-ui.badge>
                                     @endif
                                 </div>
-                                <p class="mt-1 text-sm font-medium text-slate-700">{{ $jobPosting->businessProfile?->company_name ?: 'Struttura non specificata' }}</p>
+                                <p class="mt-1 text-sm font-medium text-slate-700">{{ $jobPosting->companyName() }}</p>
                                 <p class="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{{ $jobPosting->description }}</p>
                                 @if ($jobPosting->required_skills)
                                     <p class="mt-2 line-clamp-1 text-xs text-slate-500"><span class="font-semibold text-slate-700">Abilità:</span> {{ $jobPosting->required_skills }}</p>
