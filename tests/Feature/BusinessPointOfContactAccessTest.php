@@ -39,8 +39,11 @@ class BusinessPointOfContactAccessTest extends TestCase
             'business_profile_id' => $profile->id,
             'title' => 'Annuncio aziendale condiviso',
             'description' => 'Annuncio visibile a tutti i POC della stessa azienda.',
+            'professional_category' => 'Infermiere',
             'positions' => 1,
             'workplace_address' => 'Via Roma 10, Milano',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'contract_type' => 'Tempo indeterminato',
             'expires_at' => now()->addMonth()->toDateString(),
             'status' => 'active',
@@ -59,26 +62,19 @@ class BusinessPointOfContactAccessTest extends TestCase
             'business_profile_id' => $otherProfile->id,
             'title' => 'Annuncio altra azienda',
             'description' => 'Non deve essere visibile al POC.',
+            'professional_category' => 'OSS',
             'positions' => 1,
             'workplace_address' => 'Via Torino 2, Torino',
+            'workplace_city' => 'Torino',
+            'workplace_province' => 'TO',
             'contract_type' => 'Tempo determinato',
             'expires_at' => now()->addMonth()->toDateString(),
             'status' => 'active',
         ]);
 
-        $this->actingAs($pocUser)
-            ->get(route('job-postings.index'))
-            ->assertOk()
-            ->assertSee('Annuncio aziendale condiviso')
-            ->assertDontSee('Annuncio altra azienda');
-
-        $this->actingAs($pocUser)
-            ->get(route('job-postings.show', $companyPosting))
-            ->assertOk();
-
-        $this->actingAs($pocUser)
-            ->get(route('job-postings.show', $otherPosting))
-            ->assertForbidden();
+        $this->actingAs($pocUser)->get(route('job-postings.index'))->assertOk()->assertSee('Annuncio aziendale condiviso')->assertDontSee('Annuncio altra azienda');
+        $this->actingAs($pocUser)->get(route('job-postings.show', $companyPosting))->assertOk();
+        $this->actingAs($pocUser)->get(route('job-postings.show', $otherPosting))->assertForbidden();
     }
 
     public function test_additional_poc_publishes_job_posting_under_shared_company_profile(): void
@@ -108,8 +104,11 @@ class BusinessPointOfContactAccessTest extends TestCase
             ->post(route('job-postings.store'), [
                 'title' => 'OSS per RSA condivisa',
                 'description' => 'Ricerca OSS per struttura residenziale.',
+                'professional_category' => 'OSS',
                 'positions' => 2,
-                'workplace_address' => 'Via Appia 20, Roma',
+                'workplace_address' => 'Via Appia 20',
+                'workplace_city' => 'Roma',
+                'workplace_province' => 'RM',
                 'contract_type' => 'Tempo determinato',
                 'expires_at' => now()->addMonth()->toDateString(),
             ])
@@ -120,6 +119,7 @@ class BusinessPointOfContactAccessTest extends TestCase
             'user_id' => $pocUser->id,
             'business_profile_id' => $profile->id,
             'title' => 'OSS per RSA condivisa',
+            'professional_category' => 'OSS',
             'status' => 'active',
         ]);
     }
@@ -150,16 +150,16 @@ class BusinessPointOfContactAccessTest extends TestCase
             'business_profile_id' => $profile->id,
             'title' => 'Farmacista sede Bologna',
             'description' => 'Posizione condivisa nel dashboard aziendale.',
+            'professional_category' => 'Altra',
             'positions' => 1,
             'workplace_address' => 'Via Indipendenza 1, Bologna',
+            'workplace_city' => 'Bologna',
+            'workplace_province' => 'BO',
             'contract_type' => 'Tempo indeterminato',
             'expires_at' => now()->addMonth()->toDateString(),
             'status' => 'active',
         ]);
 
-        $this->actingAs($pocUser)
-            ->get(route('dashboard'))
-            ->assertOk()
-            ->assertSee('Farmacista sede Bologna');
+        $this->actingAs($pocUser)->get(route('dashboard'))->assertOk()->assertSee('Farmacista sede Bologna');
     }
 }
