@@ -15,6 +15,7 @@ class JobPosting extends Model
     protected $fillable = [
         'user_id',
         'business_profile_id',
+        'external_company_name',
         'business_location_id',
         'business_department_id',
         'title',
@@ -65,6 +66,15 @@ class JobPosting extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function companyName(): string
+    {
+        return $this->external_company_name
+            ?: $this->businessProfile?->company_name
+            ?: $this->owner?->businessProfile?->company_name
+            ?: $this->owner?->name
+            ?: 'Struttura non specificata';
     }
 
     public function scopeVisibleToProfessionals(Builder $query): Builder
