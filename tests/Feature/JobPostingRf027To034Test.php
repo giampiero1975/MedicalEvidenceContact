@@ -163,7 +163,17 @@ class JobPostingRf027To034Test extends TestCase
         $posting = JobPosting::create([
             'user_id' => $business->id,
             'business_profile_id' => $business->businessProfile->id,
-            ...$this->payload(),
+            'title' => 'Infermiere reparto medicina',
+            'description' => 'Annuncio con candidatura attiva.',
+            'professional_category' => 'Infermiere',
+            'positions' => 2,
+            'workplace_address' => 'Via Roma 10',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
+            'contract_type' => 'Tempo indeterminato',
+            'salary_min' => 1800,
+            'salary_max' => 2200,
+            'expires_at' => today()->addDays(14)->toDateString(),
             'status' => 'active',
         ]);
 
