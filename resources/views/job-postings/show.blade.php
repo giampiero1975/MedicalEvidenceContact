@@ -3,7 +3,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ $jobPosting->title }}</h2>
-                <p class="mt-1 text-sm text-gray-600">{{ $jobPosting->contract_type }} - {{ $jobPosting->workplace_address }}</p>
+                <p class="mt-1 text-sm text-gray-600">{{ $jobPosting->contract_type }} - {{ $jobPosting->workplace_city ?: $jobPosting->workplace_address }}{{ $jobPosting->workplace_province ? ' ('.$jobPosting->workplace_province.')' : '' }}</p>
             </div>
             <a href="{{ route('job-postings.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50">Torna agli annunci</a>
         </div>
@@ -14,12 +14,17 @@
             @session('status')
                 <div class="mb-6 rounded-md bg-green-50 p-4 text-sm font-medium text-green-700">{{ $value }}</div>
             @endsession
+            @session('warning')
+                <div class="mb-6 rounded-md bg-amber-50 p-4 text-sm font-medium text-amber-800">{{ $value }}</div>
+            @endsession
 
             <article class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-200">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <span class="inline-flex rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">{{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}</span>
-                        <h3 class="mt-4 text-lg font-semibold text-gray-900">Dettagli posizione</h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <x-ui.badge :variant="$jobPosting->status === 'active' ? 'success' : 'warning'">{{ $jobPosting->status === 'active' ? 'Attivo' : 'Scaduto' }}</x-ui.badge>
+                        @if ($jobPosting->professional_category)
+                            <x-ui.badge variant="info">{{ $jobPosting->professional_category }}</x-ui.badge>
+                        @endif
                     </div>
                     @if ($role === 'business')
                         <div class="flex flex-wrap gap-2">
@@ -30,16 +35,29 @@
                     @endif
                 </div>
 
-                <div class="mt-6 grid gap-4 text-sm text-gray-700 sm:grid-cols-3">
+                <div class="mt-6 grid gap-4 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-md bg-gray-50 p-4"><p class="font-semibold text-gray-900">Categoria</p><p class="mt-1">{{ $jobPosting->professional_category ?: 'Non specificata' }}</p></div>
                     <div class="rounded-md bg-gray-50 p-4"><p class="font-semibold text-gray-900">Posizioni</p><p class="mt-1">{{ $jobPosting->positions }}</p></div>
                     <div class="rounded-md bg-gray-50 p-4"><p class="font-semibold text-gray-900">Contratto</p><p class="mt-1">{{ $jobPosting->contract_type }}</p></div>
                     <div class="rounded-md bg-gray-50 p-4"><p class="font-semibold text-gray-900">Scadenza</p><p class="mt-1">{{ $jobPosting->expires_at->format('d/m/Y') }}</p></div>
                 </div>
 
                 <div class="mt-6 space-y-5 border-t border-gray-100 pt-6 text-sm leading-6 text-gray-700">
-                    <div><p class="font-semibold text-gray-900">Descrizione</p><p class="mt-2 whitespace-pre-line">{{ $jobPosting->description }}</p></div>
-                    <div><p class="font-semibold text-gray-900">Sede</p><p class="mt-2">{{ $jobPosting->workplace_address }}</p></div>
-                    <div><p class="font-semibold text-gray-900">Abilita richieste</p><p class="mt-2 whitespace-pre-line">{{ $jobPosting->required_skills ?: 'Non specificate' }}</p></div>
+                    <div>
+                        <p class="font-semibold text-gray-900">Descrizione</p>
+                        <div class="mt-2 space-y-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5">{!! $jobPosting->description !!}</div>
+                    </div>
+                    <div><p class="font-semibold text-gray-900">Sede</p><p class="mt-2">{{ $jobPosting->workplace_address }}</p>@if ($jobPosting->workplace_city || $jobPosting->workplace_province)<p class="mt-1 text-xs text-gray-500">{{ $jobPosting->workplace_city }}{{ $jobPosting->workplace_province ? ' ('.$jobPosting->workplace_province.')' : '' }}</p>@endif</div>
+                    <div><p class="font-semibold text-gray-900">Abilità richieste</p><p class="mt-2 whitespace-pre-line">{{ $jobPosting->required_skills ?: 'Non specificate' }}</p></div>
+                    @if ($jobPosting->benefits)
+                        <div><p class="font-semibold text-gray-900">Benefit</p><p class="mt-2 whitespace-pre-line">{{ $jobPosting->benefits }}</p></div>
+                    @endif
+                    @if ($jobPosting->preferred_requirements)
+                        <div><p class="font-semibold text-gray-900">Requisiti preferenziali</p><p class="mt-2 whitespace-pre-line">{{ $jobPosting->preferred_requirements }}</p></div>
+                    @endif
+                    @if ($jobPosting->work_schedule)
+                        <div><p class="font-semibold text-gray-900">Orario di lavoro</p><p class="mt-2">{{ $jobPosting->work_schedule }}</p></div>
+                    @endif
                     <div>
                         <p class="font-semibold text-gray-900">Retribuzione</p>
                         <p class="mt-2">@if ($jobPosting->salary_min || $jobPosting->salary_max){{ $jobPosting->salary_min ? 'EUR '.number_format((float) $jobPosting->salary_min, 0, ',', '.') : 'Da definire' }} - {{ $jobPosting->salary_max ? 'EUR '.number_format((float) $jobPosting->salary_max, 0, ',', '.') : 'Da definire' }}@else Da definire @endif</p>
