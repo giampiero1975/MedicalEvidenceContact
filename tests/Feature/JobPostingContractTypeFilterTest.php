@@ -18,7 +18,7 @@ class JobPostingContractTypeFilterTest extends TestCase
 
         $this->posting($business, 'Annuncio indeterminato', 'Tempo indeterminato');
         $this->posting($business, 'Annuncio determinato', 'Tempo determinato');
-        $this->posting($business, 'Annuncio collaborazione', 'Collaborazione');
+        $this->posting($business, 'Annuncio stage', 'Stage');
 
         $this->actingAs($professional)
             ->get(route('job-postings.index', [
@@ -27,7 +27,7 @@ class JobPostingContractTypeFilterTest extends TestCase
             ->assertOk()
             ->assertSee('Annuncio indeterminato')
             ->assertSee('Annuncio determinato')
-            ->assertDontSee('Annuncio collaborazione')
+            ->assertDontSee('Annuncio stage')
             ->assertSee('2 risultati');
     }
 
@@ -41,7 +41,9 @@ class JobPostingContractTypeFilterTest extends TestCase
             ->assertSee('name="contract_types[]"', false)
             ->assertSee('Tempo indeterminato')
             ->assertSee('Tempo determinato')
-            ->assertSee('Collaborazione');
+            ->assertSee('A chiamata')
+            ->assertSee('Stage')
+            ->assertSee('Altro');
     }
 
     public function test_invalid_contract_type_filter_is_rejected(): void
@@ -61,8 +63,11 @@ class JobPostingContractTypeFilterTest extends TestCase
             'user_id' => $business->id,
             'title' => $title,
             'description' => 'Annuncio di test per filtro multiplo.',
+            'professional_category' => 'OSS',
             'positions' => 1,
             'workplace_address' => 'Milano',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'contract_type' => $contractType,
             'expires_at' => now()->addMonth(),
             'status' => 'active',
