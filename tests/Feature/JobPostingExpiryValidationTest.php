@@ -31,8 +31,11 @@ class JobPostingExpiryValidationTest extends TestCase
         return [
             'title' => 'OSS reparto assistenziale',
             'description' => 'Ricerca professionista per attività assistenziali.',
+            'professional_category' => 'OSS',
             'positions' => 1,
-            'workplace_address' => 'Via Roma 10, Milano',
+            'workplace_address' => 'Via Roma 10',
+            'workplace_city' => 'Milano',
+            'workplace_province' => 'MI',
             'contract_type' => 'Tempo determinato',
             'expires_at' => $expiresAt,
         ];
