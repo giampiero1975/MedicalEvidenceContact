@@ -24,7 +24,7 @@ class AdminJobPostingController extends Controller
         ]);
 
         $jobPostings = JobPosting::query()
-            ->with(['owner', 'businessProfile'])
+            ->with(['owner.businessProfile', 'businessProfile'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['published_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['published_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
@@ -55,11 +55,18 @@ class AdminJobPostingController extends Controller
         $this->authorizeAdmin($request);
 
         $data = $this->validateJobPosting($request);
-        $owner = User::with('businessProfile')->findOrFail($data['user_id']);
+        $registeredCompany = $data['company_source'] === 'registered';
+        $owner = $registeredCompany
+            ? User::with('businessProfile')->findOrFail($data['user_id'])
+            : $request->user();
+
+        unset($data['company_source']);
 
         $jobPosting = JobPosting::create([
             ...$data,
-            'business_profile_id' => $owner->businessProfile?->id,
+            'user_id' => $owner->id,
+            'business_profile_id' => $registeredCompany ? $owner->businessProfile?->id : null,
+            'external_company_name' => $registeredCompany ? null : $data['external_company_name'],
             'status' => $data['status'] ?? 'active',
         ]);
 
@@ -83,11 +90,18 @@ class AdminJobPostingController extends Controller
         $this->authorizeAdmin($request);
 
         $data = $this->validateJobPosting($request);
-        $owner = User::with('businessProfile')->findOrFail($data['user_id']);
+        $registeredCompany = $data['company_source'] === 'registered';
+        $owner = $registeredCompany
+            ? User::with('businessProfile')->findOrFail($data['user_id'])
+            : $request->user();
+
+        unset($data['company_source']);
 
         $jobPosting->update([
             ...$data,
-            'business_profile_id' => $owner->businessProfile?->id,
+            'user_id' => $owner->id,
+            'business_profile_id' => $registeredCompany ? $owner->businessProfile?->id : null,
+            'external_company_name' => $registeredCompany ? null : $data['external_company_name'],
         ]);
 
         return redirect()
@@ -124,16 +138,17 @@ class AdminJobPostingController extends Controller
         abort_unless($request->user()->role === 'admin', 403);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function validateJobPosting(Request $request): array
     {
         return $request->validate([
+            'company_source' => ['required', Rule::in(['registered', 'external'])],
             'user_id' => [
-                'required',
+                'nullable',
+                'required_if:company_source,registered',
                 Rule::exists('users', 'id')->where('role', 'business'),
             ],
+            'external_company_name' => ['nullable', 'required_if:company_source,external', 'string', 'max:180'],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['required', 'string', 'max:5000'],
             'positions' => ['required', 'integer', 'min:1', 'max:1000'],
