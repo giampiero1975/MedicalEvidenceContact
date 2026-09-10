@@ -49,11 +49,17 @@ class JobPostingController extends Controller
                 $query->where(function ($query) use ($keyword) {
                     $query
                         ->where('title', 'like', "%{$keyword}%")
-                        ->orWhere('description', 'like', "%{$keyword}%")
-                        ->orWhere('required_skills', 'like', "%{$keyword}%");
+                        ->orWhere('description', 'like', "%{$keyword}%");
                 });
             })
-            ->when($filters['location'] ?? null, fn ($query, string $location) => $query->where('workplace_address', 'like', "%{$location}%"))
+            ->when($filters['location'] ?? null, function ($query, string $location) {
+                $query->where(function ($query) use ($location) {
+                    $query
+                        ->where('workplace_city', 'like', "%{$location}%")
+                        ->orWhere('workplace_province', 'like', "%{$location}%")
+                        ->orWhere('workplace_address', 'like', "%{$location}%");
+                });
+            })
             ->when(
                 $user->role === 'professional' && ! empty($filters['contract_types'] ?? []),
                 fn ($query) => $query->whereIn('contract_type', $filters['contract_types'])
@@ -76,13 +82,10 @@ class JobPostingController extends Controller
                     fn ($profile) => $profile->where('company_type', 'like', "%{$companyCategory}%")
                 )
             )
-            ->when($filters['professional_category'] ?? null, function ($query, string $professionalCategory) {
-                $query->where(function ($query) use ($professionalCategory) {
-                    $query
-                        ->where('title', 'like', "%{$professionalCategory}%")
-                        ->orWhere('required_skills', 'like', "%{$professionalCategory}%");
-                });
-            })
+            ->when(
+                $filters['professional_category'] ?? null,
+                fn ($query, string $professionalCategory) => $query->where('professional_category', $professionalCategory)
+            )
             ->when($filters['salary_min'] ?? null, function ($query, string $salaryMin) {
                 $query->where(function ($query) use ($salaryMin) {
                     $query->whereNull('salary_max')->orWhere('salary_max', '>=', $salaryMin);
@@ -121,6 +124,7 @@ class JobPostingController extends Controller
             'filters' => $filters,
             'contractTypes' => $this->contractTypes(),
             'companyCategories' => $this->companyCategories(),
+            'professionalCategories' => $this->professionalCategories(),
             'role' => $user->role,
         ]);
     }
@@ -280,12 +284,37 @@ class JobPostingController extends Controller
                         ->where('is_active', true)
                 ),
             ],
-            'title' => ['required', 'string', 'max:180'],
-            'description' => ['required', 'string', 'max:5000'],
+            'title' => ['required', 'string', 'max:100'],
+            'description' => [
+                'required',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $plainText = trim(html_entity_decode(strip_tags((string) $value)));
+                    if ($plainText === '') {
+                        $fail('La descrizione è obbligatoria.');
+                    } elseif (mb_strlen($plainText) > 3000) {
+                        $fail('La descrizione non può superare 3000 caratteri.');
+                    }
+                },
+            ],
+            'professional_category' => ['required', Rule::in($this->professionalCategories())],
             'positions' => ['required', 'integer', 'min:1', 'max:1000'],
             'workplace_address' => ['required_without:business_location_id', 'nullable', 'string', 'max:255'],
-            'required_skills' => ['nullable', 'string', 'max:3000'],
-            'contract_type' => ['required', 'string', 'max:120'],
+            'workplace_city' => ['required_without:business_location_id', 'nullable', 'string', 'max:150'],
+            'workplace_province' => ['required_without:business_location_id', 'nullable', 'string', 'max:100'],
+            'required_skills' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (count($this->skillTags((string) $value)) > 10) {
+                        $fail('Puoi indicare al massimo 10 abilità richieste.');
+                    }
+                },
+            ],
+            'benefits' => ['nullable', 'string'],
+            'preferred_requirements' => ['nullable', 'string'],
+            'work_schedule' => ['nullable', 'string', 'max:255'],
+            'contract_type' => ['required', Rule::in($this->contractTypes())],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
             'expires_at' => ['required', 'date', 'after_or_equal:'.$minimumExpiryDate],
@@ -294,11 +323,18 @@ class JobPostingController extends Controller
             'business_location_id.exists' => 'La sede selezionata non è disponibile per questa struttura.',
             'business_department_id.exists' => 'Il reparto selezionato non è disponibile per questa struttura.',
             'workplace_address.required_without' => 'Seleziona una sede oppure inserisci un indirizzo di lavoro.',
+            'workplace_city.required_without' => 'Indica la città della sede di lavoro.',
+            'workplace_province.required_without' => 'Indica la provincia della sede di lavoro.',
             'salary_min.numeric' => 'La retribuzione minima deve essere un importo valido.',
             'salary_max.numeric' => 'La retribuzione massima deve essere un importo valido.',
             'salary_max.gte' => 'La retribuzione massima deve essere uguale o superiore alla retribuzione minima.',
             'expires_at.after_or_equal' => 'La data di scadenza deve essere almeno 7 giorni da oggi.',
         ]);
+
+        $data['description'] = $this->sanitizeRichText($data['description']);
+        $data['required_skills'] = empty($data['required_skills'])
+            ? null
+            : implode(', ', $this->skillTags($data['required_skills']));
 
         if (! empty($data['business_location_id'])) {
             $location = BusinessLocation::query()
@@ -308,6 +344,8 @@ class JobPostingController extends Controller
                 ->firstOrFail();
 
             $data['workplace_address'] = $location->formattedAddress();
+            $data['workplace_city'] = $location->city;
+            $data['workplace_province'] = $location->province;
         }
 
         if (! empty($data['business_department_id'])) {
@@ -334,13 +372,13 @@ class JobPostingController extends Controller
         return $request->validate([
             'keyword' => ['nullable', 'string', 'max:120'],
             'location' => ['nullable', 'string', 'max:120'],
-            'contract_type' => ['nullable', 'string', 'max:120'],
+            'contract_type' => ['nullable', 'string', Rule::in($this->contractTypes())],
             'contract_types' => ['nullable', 'array'],
-            'contract_types.*' => ['string', 'max:120', Rule::in($this->contractTypes())],
+            'contract_types.*' => ['string', Rule::in($this->contractTypes())],
             'company_category' => ['nullable', 'string', 'max:120'],
             'company_categories' => ['nullable', 'array'],
             'company_categories.*' => ['string', 'max:120', Rule::in($this->companyCategories())],
-            'professional_category' => ['nullable', 'string', 'max:120'],
+            'professional_category' => ['nullable', Rule::in($this->professionalCategories())],
             'salary_min' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'salary_max' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'gte:salary_min'],
             'publication_period' => ['nullable', 'in:recent,week,month'],
@@ -405,7 +443,31 @@ class JobPostingController extends Controller
 
     private function contractTypes(): array
     {
-        return ['Tempo indeterminato', 'Tempo determinato', 'Part-time', 'Collaborazione', 'Libero professionista', 'Somministrazione'];
+        return ['Tempo determinato', 'Tempo indeterminato', 'A chiamata', 'Stage', 'Altro'];
+    }
+
+    private function professionalCategories(): array
+    {
+        return ['OSS', 'Infermiere', 'Anestesista', 'Fisioterapista', 'Altra'];
+    }
+
+    /** @return array<int, string> */
+    private function skillTags(string $value): array
+    {
+        return collect(preg_split('/[\r\n,]+/u', $value) ?: [])
+            ->map(fn ($tag) => trim((string) $tag))
+            ->filter()
+            ->unique(fn ($tag) => mb_strtolower($tag))
+            ->values()
+            ->all();
+    }
+
+    private function sanitizeRichText(string $value): string
+    {
+        $safe = strip_tags($value, '<p><br><strong><b><em><i><u><ul><ol><li>');
+        $safe = preg_replace('/<(p|br|strong|b|em|i|u|ul|ol|li)\b[^>]*>/iu', '<$1>', $safe) ?? $safe;
+
+        return trim($safe);
     }
 
     private function companyCategories(): array
