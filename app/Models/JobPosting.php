@@ -49,6 +49,14 @@ class JobPosting extends Model
         ];
     }
 
+    public function setDescriptionAttribute(?string $value): void
+    {
+        $safe = strip_tags((string) $value, '<p><br><strong><b><em><i><u><ul><ol><li>');
+        $safe = preg_replace('/<(p|br|strong|b|em|i|u|ul|ol|li)\b[^>]*>/iu', '<$1>', $safe) ?? $safe;
+
+        $this->attributes['description'] = trim($safe);
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
